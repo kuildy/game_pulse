@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="GAME PULSE — 跨平台熱門、新上市與即將推出遊戲播報">
+  <title>GAME PULSE｜全平台遊戲播報</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+
+  <header class="nav">
+    <a class="logo" href="#">
+      <span class="logo-mark">GP</span>
+      <span class="logo-copy"><b>GAME PULSE</b><small>全平台遊戲播報</small></span>
+    </a>
+
+    <nav class="nav-links">
+      <button data-section="hot" class="nav-tab active">熱門</button>
+      <button data-section="new" class="nav-tab">新上市</button>
+      <button data-section="upcoming" class="nav-tab">即將推出</button>
+    </nav>
+
+    <div id="modeBadge" class="mode-badge">讀取中</div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="live-dot"></span> CROSS-PLATFORM GAME SIGNAL</div>
+        <h1>今天大家<br><em>都在玩什麼？</em></h1>
+        <p>
+          整合 IGDB、Twitch 與 Steam 等訊號，不被單一商店綁住。
+          熱門、新上市、即將推出，一個頁面快速掌握。
+        </p>
+        <div class="hero-actions">
+          <button class="primary" data-go-hot>查看今日熱門</button>
+          <a class="secondary" href="#method">熱門怎麼算？</a>
+        </div>
+      </div>
+
+      <div class="signal-panel">
+        <div class="signal-top">
+          <span>GAME PULSE SIGNAL</span>
+          <span id="lastStatus">資料載入中</span>
+        </div>
+        <div class="signal-ring">
+          <div class="ring-inner">
+            <strong id="heroScore">--</strong>
+            <small>TOP SCORE</small>
+          </div>
+        </div>
+        <div class="source-mini">
+          <div><b>IGDB</b><span>跨平台資料</span></div>
+          <div><b>Twitch</b><span>即時熱門</span></div>
+          <div><b>Steam</b><span>PC 活躍度</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="control-bar" id="games">
+      <div class="section-title">
+        <span id="sectionEyebrow">TRENDING NOW</span>
+        <h2 id="sectionTitle">近日熱門</h2>
+        <p id="sectionDescription">跨來源訊號計算出的 GAME PULSE 熱門榜。</p>
+      </div>
+
+      <div class="filters">
+        <label class="search">
+          <span>⌕</span>
+          <input id="searchInput" type="search" placeholder="搜尋遊戲、類型、平台">
+        </label>
+        <select id="platformFilter">
+          <option value="all">全部平台</option>
+          <option value="pc">PC</option>
+          <option value="playstation">PlayStation</option>
+          <option value="xbox">Xbox</option>
+          <option value="nintendo">Nintendo</option>
+        </select>
+      </div>
+    </section>
+
+    <section>
+      <div class="tab-strip">
+        <button class="section-tab active" data-section="hot"><span>🔥</span>近日熱門</button>
+        <button class="section-tab" data-section="new"><span>✦</span>新上市</button>
+        <button class="section-tab" data-section="upcoming"><span>◷</span>即將推出</button>
+      </div>
+
+      <div id="gameGrid" class="game-grid">
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+      </div>
+    </section>
+
+    <section class="method" id="method">
+      <div class="method-copy">
+        <span class="micro">HOW IT WORKS</span>
+        <h2>不是「Steam 第一名」<br>就叫全平台最熱門。</h2>
+        <p>
+          GAME PULSE 會把不同來源先正規化，再混合成 0–100 分。
+          IGDB PopScore 可涵蓋 IGDB 行為、Steam 指標與 Twitch 觀看等 primitives；
+          Twitch Top Games 則補上更即時的直播熱門訊號。
+        </p>
+      </div>
+      <div class="formula">
+        <div class="formula-row"><b>65%</b><span>IGDB PopScore 組合指標</span></div>
+        <div class="formula-row"><b>35%</b><span>Twitch 即時 Top Games</span></div>
+        <div class="formula-row soft"><b>+</b><span>Steam CCU（有 App ID 時補充）</span></div>
+        <div class="formula-note">若某來源缺資料，系統會以目前可用來源重新正規化，不直接判零分。</div>
+      </div>
+    </section>
+
+    <section class="source-section">
+      <div class="section-title">
+        <span>SOURCES</span>
+        <h2>資料來源狀態</h2>
+      </div>
+      <div id="sourceStatus" class="source-grid"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div>
+      <b>GAME PULSE</b>
+      <p>近日熱門・新上市・跨平台遊戲播報</p>
+    </div>
+    <p>資料與商標屬各自權利人所有。排名為本站自訂指標，不代表官方排行。</p>
+  </footer>
+
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal></div>
+    <article class="modal-card">
+      <button class="modal-close" data-close-modal>×</button>
+      <div id="modalContent"></div>
+    </article>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
