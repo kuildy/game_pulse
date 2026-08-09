@@ -6,13 +6,13 @@ from services.aggregator import refresh_all
 app = Flask(__name__)
 init_db()
 
-# 第一次啟動若資料庫為空，自動建立 Demo / Live 資料
-if not get_games("hot", 1):
-    try:
+try:
+    if effective_mode() == "live":
         refresh_all()
-    except Exception:
-        # 即使網路/API 暫時失敗，網站仍可啟動；使用者可稍後執行更新程式
-        pass
+    elif not get_games("hot", 1):
+        refresh_all()
+except Exception as e:
+    print("GAME PULSE update failed:", e)
 
 @app.get("/")
 def index():
