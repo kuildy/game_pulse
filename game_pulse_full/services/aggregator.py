@@ -184,7 +184,11 @@ twitch_hot = [
     for g in raw_twitch_hot
     if not is_non_game_twitch_category(g.get("title", ""))
 ][:HOT_LIMIT]
-        set_source_status("Twitch", "ok", f"取得 {len(twitch_hot)} 筆 Top Games")
+       set_source_status(
+    "Twitch",
+    "ok",
+    f"取得 {len(twitch_hot)} 筆遊戲熱門資料"
+)
     except Exception as e:
         set_source_status("Twitch", "error", str(e)[:240])
 
