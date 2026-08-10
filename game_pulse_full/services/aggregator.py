@@ -92,6 +92,19 @@ def refresh_live():
     igdb = IGDBClient()
     twitch = TwitchClient()
 
+    if STEAM_WEB_API_KEY:
+    set_source_status(
+        "Steam",
+        "ok",
+        "Steam API 金鑰已設定，Steam 資料補充功能啟用"
+    )
+else:
+    set_source_status(
+        "Steam",
+        "optional",
+        "尚未設定 Steam API 金鑰；IGDB 與 Twitch Live Data 不受影響"
+    )
+
     # 1) 跨平台熱門：IGDB PopScore + Twitch 即時 Top Games
     igdb_hot = []
     twitch_hot = []
