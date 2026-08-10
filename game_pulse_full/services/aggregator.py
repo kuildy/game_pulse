@@ -3,7 +3,13 @@ import unicodedata
 from datetime import datetime, timedelta, timezone
 from urllib.parse import quote_plus
 
-from config import HOT_LIMIT, RECENT_LIMIT, UPCOMING_LIMIT, effective_mode
+from config import (
+    HOT_LIMIT,
+    RECENT_LIMIT,
+    UPCOMING_LIMIT,
+    STEAM_WEB_API_KEY,
+    effective_mode
+)
 from db import replace_section, set_source_status
 from services.igdb import IGDBClient
 from services.twitch import TwitchClient
