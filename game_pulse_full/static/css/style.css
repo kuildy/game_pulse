@@ -23,3 +23,35 @@ footer{width:min(1240px,92vw);margin:auto;padding:28px 0 42px;border-top:1px sol
 .modal{position:fixed;inset:0;display:none;z-index:100}.modal.open{display:block}.modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.68);backdrop-filter:blur(8px)}.modal-card{position:relative;z-index:2;width:min(680px,92vw);max-height:84vh;overflow:auto;margin:8vh auto;padding:28px;border-radius:22px;background:#11151d;border:1px solid var(--line);box-shadow:0 40px 100px rgba(0,0,0,.55)}.modal-close{position:absolute;right:14px;top:12px;border:0;background:transparent;color:white;font-size:28px;cursor:pointer}.modal-title{font-size:32px;margin:4px 40px 8px 0}.modal-summary{color:var(--muted);line-height:1.8}.modal-stores{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}.modal-stores a{padding:10px 13px;border-radius:10px;background:#202637;border:1px solid var(--line);color:white;text-decoration:none;font-size:12px;font-weight:800}
 @media(max-width:930px){.nav-links{display:none}.hero{grid-template-columns:1fr;gap:25px}.signal-panel{max-width:620px}.hero h1{letter-spacing:-3px}.control-bar{align-items:stretch;flex-direction:column}.filters{width:100%}.search{flex:1}.search input{width:100%}.game-grid{grid-template-columns:repeat(2,1fr)}.method{grid-template-columns:1fr}.source-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:620px){.nav{padding:0 16px}.logo-copy small{display:none}.mode-badge{font-size:9px}.hero{min-height:auto;padding-top:48px}.hero h1{font-size:55px}.hero-actions{flex-direction:column}.signal-ring{width:190px;height:190px}.source-mini{grid-template-columns:1fr}.filters{flex-direction:column}.game-grid{grid-template-columns:1fr}.method{padding:28px}.method h2{font-size:30px}.source-grid{grid-template-columns:1fr}footer{flex-direction:column}}
+
+.player-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  margin: 10px 0 12px;
+  padding: 9px 11px;
+
+  background: rgba(85, 230, 165, 0.07);
+  border: 1px solid rgba(85, 230, 165, 0.15);
+  border-radius: 9px;
+
+  font-size: 11px;
+  color: #9aa3b4;
+}
+
+.player-count strong {
+  color: #55e6a5;
+  font-size: 13px;
+}
+
+.player-dot {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+  background: #55e6a5;
+
+  box-shadow:
+    0 0 10px rgba(85, 230, 165, 0.7);
+}
