@@ -21,6 +21,26 @@ def norm_title(value):
     value = "".join(ch for ch in value if ch.isalnum() or ch.isspace())
     return re.sub(r"\s+", " ", value).strip().lower()
 
+    NON_GAME_TWITCH_CATEGORIES = {
+    "irl",
+    "slots",
+    "sports",
+    "just chatting",
+    "music",
+    "talk shows & podcasts",
+    "pools, hot tubs, and beaches",
+    "art",
+    "food & drink",
+    "travel & outdoors",
+    "special events",
+}
+
+
+def is_non_game_twitch_category(title):
+    return norm_title(title) in {
+        norm_title(x) for x in NON_GAME_TWITCH_CATEGORIES
+    }
+
 def best_igdb_match(title, candidates):
     """從 IGDB 搜尋候選中挑出可信度足夠的名稱配對。"""
     target = norm_title(title)
