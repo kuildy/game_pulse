@@ -171,7 +171,19 @@ def refresh_live():
         set_source_status("IGDB", "error", str(e)[:240])
 
     try:
-        twitch_hot = twitch.top_games(max(HOT_LIMIT, 30))
+        raw_twitch_hot = twitch.top_games(max(HOT_LIMIT + 20, 50))
+
+filtered_categories = [
+    g["title"]
+    for g in raw_twitch_hot
+    if is_non_game_twitch_category(g.get("title", ""))
+]
+
+twitch_hot = [
+    g
+    for g in raw_twitch_hot
+    if not is_non_game_twitch_category(g.get("title", ""))
+][:HOT_LIMIT]
         set_source_status("Twitch", "ok", f"取得 {len(twitch_hot)} 筆 Top Games")
     except Exception as e:
         set_source_status("Twitch", "error", str(e)[:240])
