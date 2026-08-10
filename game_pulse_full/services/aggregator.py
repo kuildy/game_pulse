@@ -167,6 +167,7 @@ def refresh_live():
     search_attempts = 0
     search_matches = 0
     search_misses = 0
+    unmatched_titles = []
 
     for tg in twitch_hot:
         key = norm_title(tg["title"])
@@ -230,13 +231,31 @@ def refresh_live():
                 "_igdb_enriched": False,
             }
             search_misses += 1
+            unmatched_titles.append(tg.get("title") or "未知遊戲")
 
     if search_attempts:
         set_source_status(
             "IGDB Match",
-            "ok" if search_matches else "partial",
+            "ok" if search_misses == 0 else "partial",
             f"Twitch 額外查詢 {search_attempts} 筆：IGDB 補齊 {search_matches} 筆，仍缺 {search_misses} 筆"
         )
+
+        if unmatched_titles:
+            # 額外保留未配對名稱，方便直接從 /api/status 診斷。
+            missing_text = "、".join(unmatched_titles[:10])
+            if len(unmatched_titles) > 10:
+                missing_text += f"（另有 {len(unmatched_titles) - 10} 款）"
+            set_source_status(
+                "IGDB Missing",
+                "partial",
+                f"未配對：{missing_text}"
+            )
+        else:
+            set_source_status(
+                "IGDB Missing",
+                "ok",
+                "全部 Twitch 熱門遊戲皆已取得可靠的 IGDB 對應資料"
+            )
 
     hot_records = []
     for g in merged.values():
