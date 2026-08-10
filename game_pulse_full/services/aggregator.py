@@ -8,7 +8,7 @@ from config import (
     RECENT_LIMIT,
     UPCOMING_LIMIT,
     STEAM_WEB_API_KEY,
-    effective_mode,
+    effective_mode
 )
 from db import replace_section, set_source_status
 from services.igdb import IGDBClient
