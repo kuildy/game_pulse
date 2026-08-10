@@ -93,32 +93,49 @@ def refresh_live():
     twitch = TwitchClient()
 
     if STEAM_WEB_API_KEY:
-    set_source_status(
-        "Steam",
-        "ok",
-        "Steam API 金鑰已設定，Steam 資料補充功能啟用"
-    )
-else:
-    set_source_status(
-        "Steam",
-        "optional",
-        "尚未設定 Steam API 金鑰；IGDB 與 Twitch Live Data 不受影響"
-    )
+        set_source_status(
+            "Steam",
+            "ok",
+            "Steam API 金鑰已設定，Steam 資料補充功能啟用"
+        )
+    else:
+        set_source_status(
+            "Steam",
+            "optional",
+            "尚未設定 Steam API 金鑰；IGDB 與 Twitch Live Data 不受影響"
+        )
 
     # 1) 跨平台熱門：IGDB PopScore + Twitch 即時 Top Games
     igdb_hot = []
     twitch_hot = []
+
     try:
         igdb_hot = igdb.hot_games(max(HOT_LIMIT, 30))
-        set_source_status("IGDB", "ok", f"取得 {len(igdb_hot)} 筆熱門資料")
+        set_source_status(
+            "IGDB",
+            "ok",
+            f"取得 {len(igdb_hot)} 筆熱門資料"
+        )
     except Exception as e:
-        set_source_status("IGDB", "error", str(e)[:240])
+        set_source_status(
+            "IGDB",
+            "error",
+            str(e)[:240]
+        )
 
     try:
         twitch_hot = twitch.top_games(max(HOT_LIMIT, 30))
-        set_source_status("Twitch", "ok", f"取得 {len(twitch_hot)} 筆 Top Games")
+        set_source_status(
+            "Twitch",
+            "ok",
+            f"取得 {len(twitch_hot)} 筆 Top Games"
+        )
     except Exception as e:
-        set_source_status("Twitch", "error", str(e)[:240])
+        set_source_status(
+            "Twitch",
+            "error",
+            str(e)[:240]
+        )
 
     # Exact-normalized title merge.
     merged = {}
