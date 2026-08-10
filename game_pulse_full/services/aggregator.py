@@ -240,6 +240,19 @@ def refresh_live():
             f"Twitch 額外查詢 {search_attempts} 筆：IGDB 補齊 {search_matches} 筆，仍缺 {search_misses} 筆"
         )
 
+        if missing_titles:
+    set_source_status(
+        "IGDB Missing",
+        "partial",
+        "未配對：" + "、".join(missing_titles)
+            )
+       else:
+        set_source_status(
+            "IGDB Missing",
+            "ok",
+            "全部 Twitch 熱門遊戲皆已取得可靠的 IGDB 對應資料"
+            )
+
         if unmatched_titles:
             # 額外保留未配對名稱，方便直接從 /api/status 診斷。
             missing_text = "、".join(unmatched_titles[:10])
