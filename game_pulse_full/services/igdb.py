@@ -21,6 +21,7 @@ class IGDBClient:
         self.client_secret = TWITCH_CLIENT_SECRET
         self._token = None
         self._token_expiry = 0
+        self._last_request_at = 0.0
 
     @property
     def enabled(self):
@@ -45,6 +46,12 @@ class IGDBClient:
         return self._token
 
     def post(self, endpoint, query):
+        # IGDB 官方限制 4 requests/sec；保留約 0.27 秒間隔避免 429。
+        elapsed = time.monotonic() - self._last_request_at
+        if elapsed < 0.27:
+            time.sleep(0.27 - elapsed)
+        self._last_request_at = time.monotonic()
+
         r = requests.post(
             f"{IGDB_BASE}/{endpoint}",
             headers={
@@ -138,6 +145,29 @@ class IGDBClient:
             "games",
             f"fields {GAME_FIELDS}; where id = ({joined}); limit 100;"
         )
+
+    def search_games(self, title, limit=5):
+        """
+        依遊戲名稱搜尋 IGDB，供 Twitch 熱門項目補齊中繼資料。
+        IGDB search 會依名稱相似度排序；這裡先回傳候選清單，
+        最終是否採用由 aggregator 的相似度門檻決定。
+        """
+        title = (title or "").strip()
+        if not title:
+            return []
+
+        # APICalypse search 字串需要避免未轉義的反斜線與雙引號。
+        safe_title = title.replace("\\", "\\\\").replace('"', '\\"')
+        safe_limit = max(1, min(int(limit), 10))
+
+        rows = self.post(
+            "games",
+            f'search "{safe_title}"; '
+            f'fields {GAME_FIELDS}; '
+            f'where version_parent = null; '
+            f'limit {safe_limit};'
+        )
+        return [self.transform_game(g) for g in rows]
 
     def games_by_release_window(self, start_ts, end_ts, limit=30, newest_first=True):
         direction = "desc" if newest_first else "asc"
