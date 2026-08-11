@@ -75,7 +75,30 @@
       const rows = data.news || [];
       $("#newsSource").textContent = data.source || "News";
       if(!rows.length){
-        target.innerHTML = `<div class="detail-notice">這款遊戲目前沒有可用的 Steam News；非 Steam 遊戲之後可再接其他新聞來源。</div>`;
+        const publishers = Array.isArray(data.publishers) ? data.publishers : [];
+        const publisherNames = publishers.map(p=>p?.name).filter(Boolean);
+        const publisherCards = publishers.filter(p=>p?.url).map(p=>`
+          <a class="publisher-source-card" href="${escapeHtml(p.url)}" target="_blank" rel="noopener noreferrer">
+            <span>發行商官方來源</span>
+            <b>${escapeHtml(p.name)}</b>
+            <em>前往官方網站 ↗</em>
+          </a>`).join("");
+        const gameOfficial = data.official_game_url ? `
+          <a class="publisher-source-card" href="${escapeHtml(data.official_game_url)}" target="_blank" rel="noopener noreferrer">
+            <span>遊戲官方來源</span>
+            <b>${escapeHtml(document.querySelector("h1")?.textContent || "官方網站")}</b>
+            <em>前往官方網站 ↗</em>
+          </a>` : "";
+        const publisherLine = publisherNames.length
+          ? `<p class="publisher-fallback-copy">發行商：<strong>${escapeHtml(publisherNames.join("、"))}</strong></p>`
+          : `<p class="publisher-fallback-copy">目前尚未取得可靠的發行商網站資料。</p>`;
+        target.innerHTML = `
+          <div class="publisher-fallback">
+            <div class="publisher-fallback-head"><span>OFFICIAL SOURCE</span><h3>目前尚無可顯示的 Steam 最新消息</h3></div>
+            ${publisherLine}
+            <p>GAME PULSE 已改為提供發行商或遊戲官方來源，不會用不明第三方新聞填補空缺。</p>
+            <div class="publisher-source-grid">${publisherCards || gameOfficial || ""}</div>
+          </div>`;
         return;
       }
       target.innerHTML = rows.map(n=>{

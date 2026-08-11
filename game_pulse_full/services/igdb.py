@@ -20,7 +20,9 @@ DETAIL_FIELDS = (
     ",storyline,themes.name,screenshots.image_id,"
     "videos.name,videos.video_id,"
     "involved_companies.developer,involved_companies.publisher,"
-    "involved_companies.company.name"
+    "involved_companies.company.name,"
+    "involved_companies.company.websites.url,"
+    "involved_companies.company.websites.trusted"
 )
 
 class IGDBClient:
@@ -223,17 +225,51 @@ class IGDBClient:
                     "watch_url": f"https://www.youtube.com/watch?v={video_id}",
                 })
 
+        def company_detail(company):
+            if not isinstance(company, dict):
+                return None
+            name = (company.get("name") or "").strip()
+            if not name:
+                return None
+
+            # IGDB Company.websites is documented as the company's official websites.
+            # Prefer a trusted, non-social URL when multiple links are present.
+            social_or_reference = (
+                "wikipedia.org", "fandom.com", "facebook.com", "x.com", "twitter.com",
+                "instagram.com", "youtube.com", "youtu.be", "reddit.com", "discord.",
+                "twitch.tv", "linkedin.com"
+            )
+            candidates = []
+            for website in (company.get("websites") or []):
+                if not isinstance(website, dict):
+                    continue
+                url = (website.get("url") or "").strip()
+                if not url:
+                    continue
+                low = url.lower()
+                social = any(domain in low for domain in social_or_reference)
+                candidates.append((bool(website.get("trusted")), not social, url))
+
+            candidates.sort(key=lambda row: (row[0], row[1]), reverse=True)
+            website = candidates[0][2] if candidates else ""
+            return {"name": name, "website": website}
+
         developers = []
         publishers = []
+        developer_details = []
+        publisher_details = []
         for item in (g.get("involved_companies") or []):
             company = item.get("company") or {}
-            name = company.get("name") if isinstance(company, dict) else None
-            if not name:
+            detail = company_detail(company)
+            if not detail:
                 continue
+            name = detail["name"]
             if item.get("developer") and name not in developers:
                 developers.append(name)
+                developer_details.append(detail)
             if item.get("publisher") and name not in publishers:
                 publishers.append(name)
+                publisher_details.append(detail)
 
         base.update({
             "storyline": (g.get("storyline") or "").strip(),
@@ -242,6 +278,8 @@ class IGDBClient:
             "videos": videos,
             "developers": developers,
             "publishers": publishers,
+            "developer_details": developer_details,
+            "publisher_details": publisher_details,
         })
         return base
 

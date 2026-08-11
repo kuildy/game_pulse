@@ -85,6 +85,56 @@ def admin_required(fn):
     return wrapped
 
 
+def _detail_for_game(game):
+    """Read IGDB detail metadata with the same 30-minute cache used by detail pages."""
+    if not game or not game.get("igdb_id") or effective_mode() != "live":
+        return {}
+    cache_key = str(game["igdb_id"])
+    cached = _DETAIL_CACHE.get(cache_key)
+    if cached and time.time() - cached["at"] < _DETAIL_CACHE_TTL:
+        return cached["data"]
+    detail = IGDBClient().game_details(game["igdb_id"]) or {}
+    _DETAIL_CACHE[cache_key] = {"at": time.time(), "data": detail}
+    return detail
+
+
+def _publisher_fallback(game, detail):
+    publisher_details = detail.get("publisher_details") or []
+    publishers = detail.get("publishers") or []
+    links = []
+    seen = set()
+
+    for item in publisher_details:
+        if not isinstance(item, dict):
+            continue
+        name = (item.get("name") or "").strip()
+        url = (item.get("website") or "").strip()
+        key = (name.lower(), url.lower())
+        if name and key not in seen:
+            links.append({"name": name, "url": url, "kind": "publisher"})
+            seen.add(key)
+
+    # If IGDB knows the publisher name but not its company website, keep the name visible.
+    known_names = {x.get("name", "").lower() for x in links}
+    for name in publishers:
+        name = (name or "").strip()
+        if name and name.lower() not in known_names:
+            links.append({"name": name, "url": "", "kind": "publisher"})
+            known_names.add(name.lower())
+
+    # Last-resort official game site from GAME PULSE store metadata.
+    official_url = ""
+    for store in game.get("stores") or []:
+        if isinstance(store, dict) and store.get("kind") == "official" and store.get("url"):
+            official_url = store["url"]
+            break
+
+    return {
+        "publishers": links,
+        "official_game_url": official_url,
+    }
+
+
 @app.get("/")
 def index():
     return render_template("index.html")
@@ -108,17 +158,10 @@ def game_detail(identifier):
 
     detail = {}
     detail_error = None
-    if game.get("igdb_id") and effective_mode() == "live":
-        try:
-            cache_key = str(game["igdb_id"])
-            cached = _DETAIL_CACHE.get(cache_key)
-            if cached and time.time() - cached["at"] < _DETAIL_CACHE_TTL:
-                detail = cached["data"]
-            else:
-                detail = IGDBClient().game_details(game["igdb_id"]) or {}
-                _DETAIL_CACHE[cache_key] = {"at": time.time(), "data": detail}
-        except Exception as exc:
-            detail_error = str(exc)[:180]
+    try:
+        detail = _detail_for_game(game)
+    except Exception as exc:
+        detail_error = str(exc)[:180]
 
     view_game = dict(game)
     for key, value in detail.items():
@@ -161,21 +204,51 @@ def api_game_news(identifier):
     game = get_game_by_identifier(identifier)
     if not game:
         abort(404)
-    appid = str(game.get("steam_appid") or "").strip()
-    if not appid.isdigit():
-        return jsonify({"game_key": game["game_key"], "source": "none", "news": []})
 
-    cache_key = appid
-    cached = _NEWS_CACHE.get(cache_key)
+    detail = {}
+    detail_error = None
     try:
-        if cached and time.time() - cached["at"] < _NEWS_CACHE_TTL:
-            rows = cached["data"]
-        else:
-            rows = app_news(appid, count=8, maxlength=900)
-            _NEWS_CACHE[cache_key] = {"at": time.time(), "data": rows}
-        return jsonify({"game_key": game["game_key"], "source": "Steam News", "news": rows})
+        detail = _detail_for_game(game)
     except Exception as exc:
-        return jsonify({"game_key": game["game_key"], "source": "Steam News", "news": [], "error": str(exc)[:180]}), 502
+        detail_error = str(exc)[:180]
+
+    fallback = _publisher_fallback(game, detail)
+    appid = str(game.get("steam_appid") or "").strip()
+    rows = []
+    steam_error = None
+
+    if appid.isdigit():
+        cache_key = appid
+        cached = _NEWS_CACHE.get(cache_key)
+        try:
+            if cached and time.time() - cached["at"] < _NEWS_CACHE_TTL:
+                rows = cached["data"]
+            else:
+                rows = app_news(appid, count=8, maxlength=900)
+                _NEWS_CACHE[cache_key] = {"at": time.time(), "data": rows}
+        except Exception as exc:
+            steam_error = str(exc)[:180]
+
+    if rows:
+        return jsonify({
+            "game_key": game["game_key"],
+            "source": "Steam News",
+            "news": rows,
+            "publishers": fallback["publishers"],
+            "official_game_url": fallback["official_game_url"],
+        })
+
+    # Steam has no usable post (or the game is not on Steam): surface publisher/official links
+    # instead of leaving the section as an engineering-style empty state.
+    return jsonify({
+        "game_key": game["game_key"],
+        "source": "官方來源",
+        "news": [],
+        "publishers": fallback["publishers"],
+        "official_game_url": fallback["official_game_url"],
+        "steam_error": steam_error,
+        "detail_error": detail_error,
+    })
 
 
 @app.get("/api/calendar")

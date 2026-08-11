@@ -123,7 +123,7 @@
         <div class="info-grid">
           <div><small>發售日期</small><b>{{ game.release_date or '尚未公布' }}</b></div>
           <div><small>開發商</small><b>{{ (game.developers or [])|join('、') or '資料整理中' }}</b></div>
-          <div><small>發行商</small><b>{{ (game.publishers or [])|join('、') or '資料整理中' }}</b></div>
+          <div><small>發行商</small><b class="company-links">{% if game.publisher_details %}{% for company in game.publisher_details %}{% if company.website %}<a href="{{ company.website }}" target="_blank" rel="noopener noreferrer">{{ company.name }} ↗</a>{% else %}<span>{{ company.name }}</span>{% endif %}{% if not loop.last %}<em>、</em>{% endif %}{% endfor %}{% else %}{{ (game.publishers or [])|join('、') or '資料整理中' }}{% endif %}</b></div>
           <div><small>資料來源</small><b>{{ (game.sources or [])|join(' + ') or 'GAME PULSE' }}</b></div>
         </div>
 
@@ -188,7 +188,7 @@
     <section class="media-section news-section">
       <div class="detail-section-head">
         <div><span class="micro">NEWS & UPDATES</span><h2>最新消息 / 更新</h2></div>
-        <span id="newsSource">Steam News</span>
+        <span id="newsSource">新聞來源</span>
       </div>
       <div id="newsList" class="news-list"><div class="detail-notice">正在讀取最新消息…</div></div>
     </section>
