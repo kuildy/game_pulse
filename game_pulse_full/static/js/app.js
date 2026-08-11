@@ -214,6 +214,52 @@ async function loadRadar(){
   }
 }
 
+
+function whyMetric(metric){
+  const dir = metric.direction || "flat";
+  return `<div class="why-metric ${escapeHtml(dir)}"><span>${escapeHtml(metric.label || "")}</span><strong>${escapeHtml(metric.value || "—")}</strong></div>`;
+}
+
+function whyCard(item){
+  const detailUrl = `/game/${encodeURIComponent(item.slug || item.game_key || "")}`;
+  const image = item.cover_url
+    ? `<img src="${escapeHtml(item.cover_url)}" alt="${escapeHtml(item.title)}" loading="lazy">`
+    : `<div class="why-cover-fallback">${escapeHtml(item.title)}</div>`;
+  const evidence = (item.evidence || []).slice(0,4).map(whyMetric).join("");
+  return `<article class="why-card ${escapeHtml((item.why_code || "steady").toLowerCase())}">
+    <a class="why-cover" href="${detailUrl}">${image}<span class="why-icon">${escapeHtml(item.icon || "◆")}</span></a>
+    <div class="why-body">
+      <div class="why-topline"><span class="why-type">${escapeHtml(item.type_zh || "熱度解讀")}</span><strong>可信度 ${Number(item.confidence || 0).toFixed(0)}%</strong></div>
+      <h3><a href="${detailUrl}">${escapeHtml(item.title)}</a></h3>
+      <h4>${escapeHtml(item.headline || "近期熱度出現變化")}</h4>
+      <p>${escapeHtml(item.explanation || "GAME PULSE 正在分析多來源訊號。")}</p>
+      <div class="why-evidence">${evidence}</div>
+    </div>
+  </article>`;
+}
+
+async function loadWhy(){
+  const grid = $("#whyGrid");
+  const note = $("#whyNote");
+  if(!grid || !note) return;
+  try{
+    const r = await fetch("/api/why?limit=6&window=24");
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    const items = data.items || [];
+    if(items.length){
+      grid.innerHTML = items.map(whyCard).join("");
+      note.textContent = data.disclaimer || "PULSE WHY 依近期歷史訊號解讀熱度型態。";
+    }else{
+      grid.innerHTML = `<div class="why-empty">🔥 PULSE WHY 正在累積比較資料。至少需要兩次、間隔約 1 小時以上的歷史快照後，才會開始解讀熱度來源。</div>`;
+      note.textContent = data.pending_games ? `目前有 ${data.pending_games} 款遊戲等待更多歷史資料。` : "目前沒有足夠的變化可解讀。";
+    }
+  }catch(e){
+    grid.innerHTML = `<div class="why-empty">PULSE WHY 暫時無法讀取，其他排行榜與 RADAR 不受影響。</div>`;
+    note.textContent = "";
+  }
+}
+
 async function loadStatus(){
   try{
     const r = await fetch("/api/status");
@@ -267,4 +313,5 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeModal(); });
 
 loadStatus();
 loadRadar();
+loadWhy();
 loadSection("hot");

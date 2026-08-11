@@ -474,6 +474,240 @@ def get_pulse_radar(limit=6, window_hours=12):
     }
 
 
+
+def _why_release_age_days(release_date):
+    if not release_date:
+        return None
+    try:
+        release = datetime.fromisoformat(str(release_date)[:10]).replace(tzinfo=timezone.utc)
+        now = datetime.now(timezone.utc)
+        return int((now.date() - release.date()).days)
+    except Exception:
+        return None
+
+
+def _why_abs_delta(previous, current):
+    if previous is None or current is None:
+        return None
+    try:
+        return float(current) - float(previous)
+    except (TypeError, ValueError):
+        return None
+
+
+def _why_strength(percent_value, absolute_delta, percent_cap=30.0, abs_floor=0.0):
+    if percent_value is None or absolute_delta is None:
+        return 0.0
+    magnitude = abs(float(percent_value))
+    if abs(float(absolute_delta)) < float(abs_floor):
+        magnitude *= 0.35
+    return min(float(percent_cap), magnitude / 4.0)
+
+
+def get_pulse_why(limit=6, window_hours=24):
+    """Explain the dominant reason a hot game's momentum changed.
+
+    PULSE WHY is deterministic signal interpretation, not causal proof. It compares the
+    earliest and latest snapshots in the requested window and classifies the strongest
+    observable pattern across PULSE, Twitch and Steam, with release timing as context.
+    """
+    limit = max(1, min(int(limit), 12))
+    window_hours = max(3, min(int(window_hours), 72))
+    since = (datetime.now(timezone.utc) - timedelta(hours=window_hours)).isoformat()
+
+    current_games = get_games("hot", 100)
+    items = []
+    pending = 0
+
+    with connect() as conn:
+        for game in current_games:
+            rows = conn.execute(
+                """
+                SELECT pulse_score,twitch_viewers,steam_players,recorded_at
+                FROM game_history
+                WHERE game_key=? AND recorded_at >= ?
+                ORDER BY recorded_at ASC
+                LIMIT 192
+                """,
+                (game["game_key"], since),
+            ).fetchall()
+
+            if len(rows) < 2:
+                pending += 1
+                continue
+
+            first = rows[0]
+            last = rows[-1]
+            try:
+                first_dt = datetime.fromisoformat(first["recorded_at"].replace("Z", "+00:00"))
+                last_dt = datetime.fromisoformat(last["recorded_at"].replace("Z", "+00:00"))
+                span_hours = max(0.0, (last_dt - first_dt).total_seconds() / 3600.0)
+            except Exception:
+                span_hours = 0.0
+
+            if span_hours < 1.0:
+                pending += 1
+                continue
+
+            pulse_before = float(first["pulse_score"] or 0)
+            pulse_now = float(game.get("pulse_score") or last["pulse_score"] or 0)
+            pulse_delta = round(pulse_now - pulse_before, 1)
+
+            twitch_before = first["twitch_viewers"]
+            twitch_now = game.get("twitch_viewers")
+            steam_before = first["steam_players"]
+            steam_now = game.get("steam_players")
+
+            twitch_pct = _radar_percent(twitch_before, twitch_now)
+            steam_pct = _radar_percent(steam_before, steam_now)
+            twitch_abs = _why_abs_delta(twitch_before, twitch_now)
+            steam_abs = _why_abs_delta(steam_before, steam_now)
+            release_age = _why_release_age_days(game.get("release_date"))
+
+            twitch_up = bool(twitch_pct is not None and twitch_pct >= 35 and (twitch_abs or 0) >= 1500)
+            steam_up = bool(steam_pct is not None and steam_pct >= 20 and (steam_abs or 0) >= 800)
+            twitch_down = bool(twitch_pct is not None and twitch_pct <= -22 and (twitch_abs or 0) <= -1000)
+            steam_down = bool(steam_pct is not None and steam_pct <= -18 and (steam_abs or 0) <= -500)
+            pulse_up = pulse_delta >= 4.0
+            pulse_down = pulse_delta <= -4.0
+            very_twitch_up = bool(twitch_pct is not None and twitch_pct >= 70 and (twitch_abs or 0) >= 2500)
+            steam_flat_or_down = steam_pct is not None and steam_pct <= 8
+            twitch_flat_or_down = twitch_pct is not None and twitch_pct <= 12
+            recent_release = release_age is not None and -2 <= release_age <= 7
+
+            code = "STEADY"
+            type_zh = "穩定熱門型"
+            icon = "〰"
+            headline = "熱度目前以穩定盤整為主"
+            explanation = "多來源訊號沒有出現足以判定單一驅動因素的明顯分歧。"
+
+            # Order matters: contextual release timing, cooling, then multi/single-source growth.
+            if recent_release and (pulse_up or twitch_up or steam_up):
+                code = "NEW_RELEASE"
+                type_zh = "新作發售型"
+                icon = "🆕"
+                headline = "上市時點正在帶動熱度"
+                explanation = "遊戲剛上市或接近上市，同期 PULSE / Twitch / Steam 至少一項明顯升溫。"
+            elif pulse_down and (twitch_down or steam_down):
+                code = "COOLING"
+                type_zh = "熱度退燒型"
+                icon = "❄️"
+                headline = "多來源熱度正在降溫"
+                explanation = "PULSE 已回落，且 Twitch 或 Steam 活躍度同步下降。"
+            elif twitch_up and steam_up and pulse_up:
+                code = "FULL_BREAKOUT"
+                type_zh = "全面爆發型"
+                icon = "🔥"
+                headline = "觀看與遊玩正在同步爆發"
+                explanation = "Twitch 觀看與 Steam 玩家同時增加，PULSE 也同步上升。"
+            elif very_twitch_up and steam_flat_or_down:
+                code = "WATCH_ONLY"
+                type_zh = "只看不玩型"
+                icon = "👀"
+                headline = "直播熱度跑在實際遊玩前面"
+                explanation = "Twitch 觀看快速增加，但 Steam 玩家沒有同步成長；目前更像觀看事件帶動。"
+            elif twitch_up and (steam_pct is None or steam_flat_or_down):
+                code = "STREAM_DRIVEN"
+                type_zh = "直播帶動型"
+                icon = "📺"
+                headline = "Twitch 正在成為主要升溫來源"
+                explanation = "直播觀看增加幅度明顯高於 Steam 玩家變化。"
+            elif steam_up and (twitch_pct is None or twitch_flat_or_down):
+                code = "PLAYER_RETURN"
+                type_zh = "玩家回流型"
+                icon = "🎮"
+                headline = "實際玩家正在比直播更快回流"
+                explanation = "Steam 玩家明顯增加，但 Twitch 觀看變化較溫和。"
+            elif twitch_up and steam_up:
+                code = "FULL_BREAKOUT"
+                type_zh = "全面升溫型"
+                icon = "🔥"
+                headline = "觀看與遊玩同步升溫"
+                explanation = "Twitch 與 Steam 同時增長，顯示這波熱度不是單一來源。"
+            elif twitch_up:
+                code = "STREAM_DRIVEN"
+                type_zh = "直播帶動型"
+                icon = "📺"
+                headline = "直播觀看正在快速增加"
+                explanation = "目前最明顯的變化來自 Twitch 觀看訊號。"
+            elif steam_up:
+                code = "PLAYER_RETURN"
+                type_zh = "玩家回流型"
+                icon = "🎮"
+                headline = "Steam 玩家數正在增加"
+                explanation = "目前最明顯的變化來自實際 Steam 玩家活躍度。"
+            elif pulse_up:
+                code = "MOMENTUM"
+                type_zh = "綜合升溫型"
+                icon = "↗"
+                headline = "PULSE 正在持續上升"
+                explanation = "綜合分數上升，但目前還沒有單一來源明顯主導。"
+
+            evidence = []
+            if twitch_pct is not None:
+                evidence.append({"label": "Twitch", "value": f"{twitch_pct:+.1f}%", "direction": "up" if twitch_pct > 2 else "down" if twitch_pct < -2 else "flat"})
+            if steam_pct is not None:
+                evidence.append({"label": "Steam", "value": f"{steam_pct:+.1f}%", "direction": "up" if steam_pct > 2 else "down" if steam_pct < -2 else "flat"})
+            evidence.append({"label": "PULSE", "value": f"{pulse_delta:+.1f}", "direction": "up" if pulse_delta > .4 else "down" if pulse_delta < -.4 else "flat"})
+            if recent_release:
+                release_text = "今天上市" if release_age == 0 else f"上市 {release_age} 天" if release_age > 0 else f"{abs(release_age)} 天後上市"
+                evidence.append({"label": "Release", "value": release_text, "direction": "context"})
+
+            data_sources = 1 + int(twitch_pct is not None) + int(steam_pct is not None)
+            confidence = 42 + min(16, span_hours / 2.0) + (data_sources - 1) * 8
+            if code not in {"STEADY", "MOMENTUM"}:
+                confidence += 10
+            if (twitch_up and steam_up) or (twitch_down and steam_down):
+                confidence += 8
+            confidence = int(max(35, min(96, round(confidence))))
+
+            why_strength = abs(pulse_delta) * 2.2
+            why_strength += _why_strength(twitch_pct, twitch_abs, 28, 1500)
+            why_strength += _why_strength(steam_pct, steam_abs, 24, 800)
+            if recent_release and code == "NEW_RELEASE":
+                why_strength += 14
+            if code == "FULL_BREAKOUT":
+                why_strength += 12
+            elif code in {"WATCH_ONLY", "STREAM_DRIVEN", "PLAYER_RETURN", "COOLING"}:
+                why_strength += 8
+            if code == "STEADY":
+                why_strength *= 0.45
+
+            items.append({
+                "game_key": game["game_key"],
+                "title": game["title"],
+                "slug": game.get("slug") or "",
+                "cover_url": game.get("cover_url") or "",
+                "pulse_score": round(pulse_now, 1),
+                "pulse_delta": pulse_delta,
+                "twitch_viewers": twitch_now,
+                "twitch_growth_percent": twitch_pct,
+                "steam_players": steam_now,
+                "steam_growth_percent": steam_pct,
+                "release_date": game.get("release_date"),
+                "release_age_days": release_age,
+                "why_code": code,
+                "type_zh": type_zh,
+                "icon": icon,
+                "headline": headline,
+                "explanation": explanation,
+                "evidence": evidence,
+                "confidence": confidence,
+                "why_strength": round(why_strength, 1),
+                "window_hours": round(span_hours, 1),
+                "samples": len(rows),
+            })
+
+    # Prefer interpretable movement over merely high PULSE scores.
+    items.sort(key=lambda x: (x["why_strength"], abs(x["pulse_delta"])), reverse=True)
+    return {
+        "window_hours": window_hours,
+        "items": items[:limit],
+        "pending_games": pending,
+        "method": "signal_interpretation_v1",
+        "disclaimer": "PULSE WHY 依 GAME PULSE 的歷史訊號解讀『最可能的熱度型態』，屬資料推論，不等同已證實的事件因果。",
+    }
+
 def get_release_calendar(month, platform="all"):
     try:
         year, mon = [int(x) for x in month.split("-", 1)]

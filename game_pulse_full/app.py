@@ -24,6 +24,7 @@ from db import (
     get_game_history,
     get_games,
     get_pulse_radar,
+    get_pulse_why,
     get_release_calendar,
     get_source_status,
     get_watch_subscription,
@@ -200,6 +201,21 @@ def api_radar():
     except ValueError:
         window = 12
     payload = get_pulse_radar(limit=limit, window_hours=window)
+    payload["mode"] = effective_mode()
+    return jsonify(payload)
+
+
+@app.get("/api/why")
+def api_why():
+    try:
+        limit = max(1, min(12, int(request.args.get("limit", "6"))))
+    except ValueError:
+        limit = 6
+    try:
+        window = max(3, min(72, int(request.args.get("window", "24"))))
+    except ValueError:
+        window = 24
+    payload = get_pulse_why(limit=limit, window_hours=window)
     payload["mode"] = effective_mode()
     return jsonify(payload)
 
