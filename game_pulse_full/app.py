@@ -23,6 +23,7 @@ from db import (
     get_game_by_identifier,
     get_game_history,
     get_games,
+    get_pulse_radar,
     get_release_calendar,
     get_source_status,
     get_watch_subscription,
@@ -186,6 +187,21 @@ def api_games():
     except ValueError:
         limit = 50
     return jsonify({"section": section, "mode": effective_mode(), "games": get_games(section, limit)})
+
+
+@app.get("/api/radar")
+def api_radar():
+    try:
+        limit = max(1, min(12, int(request.args.get("limit", "6"))))
+    except ValueError:
+        limit = 6
+    try:
+        window = max(3, min(24, int(request.args.get("window", "12"))))
+    except ValueError:
+        window = 12
+    payload = get_pulse_radar(limit=limit, window_hours=window)
+    payload["mode"] = effective_mode()
+    return jsonify(payload)
 
 
 @app.get("/api/game/<path:identifier>/history")

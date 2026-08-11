@@ -159,6 +159,61 @@ async function loadSection(section){
   }
 }
 
+
+function radarGrowth(value, suffix="%"){
+  if(value === null || value === undefined || !Number.isFinite(Number(value))){
+    return `<span class="radar-metric muted">資料建立中</span>`;
+  }
+  const n = Number(value);
+  const arrow = n > 0 ? "↑" : n < 0 ? "↓" : "→";
+  const sign = n > 0 ? "+" : "";
+  return `<span class="radar-metric ${n > 0 ? "up" : n < 0 ? "down" : "flat"}">${arrow} ${sign}${n.toFixed(1)}${suffix}</span>`;
+}
+
+function radarCard(item, index){
+  const image = item.cover_url
+    ? `<img src="${escapeHtml(item.cover_url)}" alt="${escapeHtml(item.title)}" loading="lazy" onerror="this.style.display='none'">`
+    : `<div class="radar-cover-fallback">${escapeHtml(item.title)}</div>`;
+  const detailUrl = `/game/${encodeURIComponent(item.slug || item.game_key)}`;
+  const pulseDelta = Number(item.pulse_delta || 0);
+  const pulseSign = pulseDelta > 0 ? "+" : "";
+  return `<article class="radar-card ${escapeHtml((item.level || "watch").toLowerCase())}">
+    <a class="radar-cover" href="${detailUrl}">${image}<span class="radar-order">#${index + 1}</span></a>
+    <div class="radar-body">
+      <div class="radar-topline"><span class="radar-level">${escapeHtml(item.level_zh || item.level || "WATCH")}</span><strong>RADAR ${Number(item.radar_score || 0).toFixed(0)}</strong></div>
+      <h3><a href="${detailUrl}">${escapeHtml(item.title)}</a></h3>
+      <p>${escapeHtml(item.reason || "近期訊號正在升溫")}</p>
+      <div class="radar-pulse-row"><span>PULSE ${Number(item.pulse_score || 0).toFixed(0)}</span><b>${pulseDelta > 0 ? "↑" : pulseDelta < 0 ? "↓" : "→"} ${pulseSign}${pulseDelta.toFixed(1)}</b><small>${Number(item.window_hours || 0).toFixed(1)}h</small></div>
+      <div class="radar-signals">
+        <div><span>Twitch</span>${radarGrowth(item.twitch_growth_percent)}</div>
+        <div><span>Steam</span>${radarGrowth(item.steam_growth_percent)}</div>
+      </div>
+    </div>
+  </article>`;
+}
+
+async function loadRadar(){
+  const grid = $("#radarGrid");
+  const note = $("#radarNote");
+  if(!grid || !note) return;
+  try{
+    const r = await fetch("/api/radar?limit=6&window=12");
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    const items = data.items || [];
+    if(items.length){
+      grid.innerHTML = items.map(radarCard).join("");
+      note.textContent = data.disclaimer || "RADAR 依近期多來源成長訊號計算。";
+    }else{
+      grid.innerHTML = `<div class="radar-empty">📡 PULSE RADAR 正在累積歷史快照。至少需要兩次、間隔約 1 小時以上的更新資料後，才會開始判斷升溫訊號。</div>`;
+      note.textContent = data.pending_games ? `目前有 ${data.pending_games} 款遊戲等待更多歷史資料。` : "目前沒有明顯的早期升溫訊號。";
+    }
+  }catch(e){
+    grid.innerHTML = `<div class="radar-empty">RADAR 暫時無法讀取，熱門榜仍可正常使用。</div>`;
+    note.textContent = "";
+  }
+}
+
 async function loadStatus(){
   try{
     const r = await fetch("/api/status");
@@ -211,4 +266,5 @@ $("[data-go-hot]").addEventListener("click",()=>{ loadSection("hot"); $("#games"
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeModal(); });
 
 loadStatus();
+loadRadar();
 loadSection("hot");

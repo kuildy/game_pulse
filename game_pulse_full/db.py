@@ -1,4 +1,5 @@
 import json
+import math
 import sqlite3
 from datetime import datetime, timedelta, timezone
 
@@ -318,6 +319,159 @@ def get_game_history(identifier, range_key="24h"):
         for row in rows
     ]
     return {"game": {"game_key": game["game_key"], "title": game["title"]}, "range": range_key, "points": points}
+
+
+
+def _radar_growth_component(previous, current, weight):
+    """Log-scaled positive growth so small categories do not dominate the radar."""
+    if previous is None or current is None:
+        return 0.0
+    previous = max(0.0, float(previous))
+    current = max(0.0, float(current))
+    if current <= previous:
+        return 0.0
+    # +1000 keeps very small categories from exploding to a 100-point signal.
+    ratio = (current + 1000.0) / (previous + 1000.0)
+    return max(0.0, min(float(weight), math.log2(ratio) * (float(weight) / 2.0)))
+
+
+def _radar_percent(previous, current):
+    if previous is None or current is None:
+        return None
+    previous = float(previous)
+    current = float(current)
+    if previous <= 0:
+        return None
+    return round((current - previous) / previous * 100.0, 1)
+
+
+def get_pulse_radar(limit=6, window_hours=12):
+    """Rank early-rising games using recent PULSE, Twitch and Steam history.
+
+    This is a heuristic early-signal score, not a probability forecast. It intentionally
+    favors accelerating games that still have headroom rather than games already sitting
+    at the very top of the chart.
+    """
+    limit = max(1, min(int(limit), 12))
+    window_hours = max(3, min(int(window_hours), 24))
+    since = (datetime.now(timezone.utc) - timedelta(hours=window_hours)).isoformat()
+
+    current_games = get_games("hot", 100)
+    ranked = []
+    pending = 0
+
+    with connect() as conn:
+        for game in current_games:
+            rows = conn.execute(
+                """
+                SELECT pulse_score,twitch_viewers,steam_players,recorded_at
+                FROM game_history
+                WHERE game_key=? AND recorded_at >= ?
+                ORDER BY recorded_at ASC
+                LIMIT 96
+                """,
+                (game["game_key"], since),
+            ).fetchall()
+
+            if len(rows) < 2:
+                pending += 1
+                continue
+
+            first = rows[0]
+            last = rows[-1]
+            try:
+                first_dt = datetime.fromisoformat(first["recorded_at"].replace("Z", "+00:00"))
+                last_dt = datetime.fromisoformat(last["recorded_at"].replace("Z", "+00:00"))
+                span_hours = max(0.0, (last_dt - first_dt).total_seconds() / 3600.0)
+            except Exception:
+                span_hours = 0.0
+
+            # Avoid calling two snapshots seconds apart a trend.
+            if span_hours < 1.0:
+                pending += 1
+                continue
+
+            pulse_before = float(first["pulse_score"] or 0)
+            pulse_now = float(game.get("pulse_score") or last["pulse_score"] or 0)
+            pulse_delta = round(pulse_now - pulse_before, 1)
+
+            twitch_before = first["twitch_viewers"]
+            twitch_now = game.get("twitch_viewers")
+            steam_before = first["steam_players"]
+            steam_now = game.get("steam_players")
+
+            pulse_component = max(0.0, min(35.0, pulse_delta * 2.6))
+            twitch_component = _radar_growth_component(twitch_before, twitch_now, 30.0)
+            steam_component = _radar_growth_component(steam_before, steam_now, 25.0)
+
+            # A game at PULSE 55 with fast acceleration is more interesting to RADAR than
+            # a game already parked at PULSE 98. This is the "early discovery" headroom.
+            headroom_component = max(0.0, min(10.0, (86.0 - pulse_now) / 3.2))
+            multi_signal_bonus = 5.0 if twitch_component >= 6 and steam_component >= 5 else 0.0
+
+            radar_score = pulse_component + twitch_component + steam_component + headroom_component + multi_signal_bonus
+            if pulse_now >= 92:
+                radar_score *= 0.55
+            elif pulse_now >= 84:
+                radar_score *= 0.78
+            radar_score = round(max(0.0, min(100.0, radar_score)), 1)
+
+            if radar_score < 12:
+                continue
+
+            twitch_pct = _radar_percent(twitch_before, twitch_now)
+            steam_pct = _radar_percent(steam_before, steam_now)
+
+            if radar_score >= 75:
+                level = "BREAKOUT"
+                level_zh = "突破預警"
+            elif radar_score >= 55:
+                level = "HEATING_UP"
+                level_zh = "快速升溫"
+            elif radar_score >= 35:
+                level = "RISING"
+                level_zh = "持續上升"
+            else:
+                level = "WATCH"
+                level_zh = "值得觀察"
+
+            signal_scores = [
+                (twitch_component, "Twitch 觀看正在加速"),
+                (steam_component, "Steam 玩家正在增加"),
+                (pulse_component, "PULSE 熱度快速上升"),
+            ]
+            signal_scores.sort(reverse=True, key=lambda x: x[0])
+            reason = signal_scores[0][1] if signal_scores and signal_scores[0][0] > 0 else "多來源訊號開始升溫"
+            if twitch_component >= 6 and steam_component >= 5:
+                reason = "Twitch 與 Steam 同步升溫"
+
+            ranked.append({
+                "game_key": game["game_key"],
+                "title": game["title"],
+                "slug": game.get("slug") or "",
+                "cover_url": game.get("cover_url") or "",
+                "pulse_score": round(pulse_now, 1),
+                "radar_score": radar_score,
+                "level": level,
+                "level_zh": level_zh,
+                "reason": reason,
+                "window_hours": round(span_hours, 1),
+                "pulse_delta": pulse_delta,
+                "twitch_viewers": twitch_now,
+                "twitch_growth_percent": twitch_pct,
+                "steam_players": steam_now,
+                "steam_growth_percent": steam_pct,
+                "samples": len(rows),
+            })
+
+    ranked.sort(key=lambda x: (x["radar_score"], x["pulse_delta"]), reverse=True)
+    return {
+        "window_hours": window_hours,
+        "items": ranked[:limit],
+        "pending_games": pending,
+        "method": "early_momentum_v1",
+        "disclaimer": "RADAR 是依近期多來源成長訊號計算的早期預警分數，不代表未來熱門機率。",
+    }
 
 
 def get_release_calendar(month, platform="all"):
