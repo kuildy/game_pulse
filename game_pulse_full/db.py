@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS games (
     trend_label TEXT,
     twitch_rank INTEGER,
     twitch_game_id TEXT,
+    twitch_viewers INTEGER,
+    twitch_channels INTEGER,
     steam_appid TEXT,
     steam_players INTEGER,
     igdb_id INTEGER,
@@ -47,6 +49,14 @@ def init_db():
     with connect() as conn:
         conn.executescript(SCHEMA)
 
+        # 舊版 SQLite 已存在時，CREATE TABLE IF NOT EXISTS 不會補新欄位。
+        # 這裡做輕量 migration，Render/NAS 不需要手動刪資料庫。
+        columns = {row["name"] for row in conn.execute("PRAGMA table_info(games)").fetchall()}
+        if "twitch_viewers" not in columns:
+            conn.execute("ALTER TABLE games ADD COLUMN twitch_viewers INTEGER")
+        if "twitch_channels" not in columns:
+            conn.execute("ALTER TABLE games ADD COLUMN twitch_channels INTEGER")
+
 def replace_section(section, games):
     now = datetime.now(timezone.utc).isoformat()
     with connect() as conn:
@@ -57,9 +67,9 @@ def replace_section(section, games):
                 INSERT INTO games (
                     game_key, section, title, slug, summary, cover_url, release_date,
                     platforms_json, genres_json, stores_json, sources_json, pulse_score,
-                    trend_label, twitch_rank, twitch_game_id, steam_appid, steam_players,
-                    igdb_id, rating, updated_at
-                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                    trend_label, twitch_rank, twitch_game_id, twitch_viewers, twitch_channels,
+                    steam_appid, steam_players, igdb_id, rating, updated_at
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 """,
                 (
                     g["game_key"], section, g["title"], g.get("slug"), g.get("summary"),
@@ -70,6 +80,7 @@ def replace_section(section, games):
                     json.dumps(g.get("sources", []), ensure_ascii=False),
                     float(g.get("pulse_score", 0)), g.get("trend_label"),
                     g.get("twitch_rank"), g.get("twitch_game_id"),
+                    g.get("twitch_viewers"), g.get("twitch_channels"),
                     g.get("steam_appid"), g.get("steam_players"),
                     g.get("igdb_id"), g.get("rating"), now
                 )

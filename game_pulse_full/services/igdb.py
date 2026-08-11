@@ -86,14 +86,14 @@ class IGDBClient:
         primitive 數值尺度不同，因此每種 primitive 先各自 max-normalize。
         """
         type_map = self.popularity_type_map()
+        # PULSE 會另外加入 Twitch 即時觀看與 Steam CCU。
+        # 因此 IGDB baseline 刻意排除 Twitch Hours Watched、24hr Peak Players
+        # 與 Global Top Sellers，避免同一類訊號被重複加權。
         preferred = {
-            "Visits": 0.16,
-            "Want to Play": 0.08,
-            "Playing": 0.12,
-            "24hr Peak Players": 0.18,
-            "Global Top Sellers": 0.14,
-            "Twitch Hours Watched": 0.22,
-            "Total Reviews": 0.10,
+            "Visits": 0.40,
+            "Want to Play": 0.20,
+            "Playing": 0.25,
+            "Total Reviews": 0.15,
         }
 
         collected = {}

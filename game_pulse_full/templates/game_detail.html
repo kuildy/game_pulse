@@ -47,6 +47,13 @@
             <strong>{{ game.pulse_score|round|int }}</strong>
           </div>
 
+          {% if game.twitch_viewers is not none %}
+          <div class="signal-box">
+            <small>TWITCH VIEWERS</small>
+            <strong>{{ "{:,}".format(game.twitch_viewers) }}</strong>
+          </div>
+          {% endif %}
+
           {% if game.steam_players is not none %}
           <div class="signal-box">
             <small>STEAM ONLINE</small>
@@ -123,10 +130,13 @@
         <h2>GAME PULSE 訊號</h2>
         <div class="signal-list">
           <div><span>Pulse Score</span><b>{{ game.pulse_score|round(1) }}</b></div>
-          <div><span>Twitch</span><b>{{ ('#' ~ game.twitch_rank) if game.twitch_rank else '—' }}</b></div>
+          <div><span>Twitch Viewers*</span><b>{{ "{:,}".format(game.twitch_viewers) if game.twitch_viewers is not none else '—' }}</b></div>
+          <div><span>Twitch Channels</span><b>{{ game.twitch_channels if game.twitch_channels is not none else '—' }}</b></div>
+          <div><span>Twitch Rank</span><b>{{ ('#' ~ game.twitch_rank) if game.twitch_rank else '—' }}</b></div>
           <div><span>Steam CCU</span><b>{{ "{:,}".format(game.steam_players) if game.steam_players is not none else '—' }}</b></div>
           <div><span>IGDB Rating</span><b>{{ game.rating|round(1) if game.rating else '—' }}</b></div>
         </div>
+        <p class="signal-footnote">* Twitch Viewers 為該遊戲目前觀看人數最高的前 100 個直播頻道合計。</p>
       </aside>
     </section>
 

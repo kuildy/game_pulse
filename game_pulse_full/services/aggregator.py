@@ -1,3 +1,4 @@
+import math
 import re
 import unicodedata
 from difflib import SequenceMatcher
@@ -14,7 +15,7 @@ from config import (
 from db import replace_section, set_source_status
 from services.igdb import IGDBClient
 from services.twitch import TwitchClient
-from services.steam import current_players
+from services.steam import current_players_many
 
 def norm_title(value):
     value = unicodedata.normalize("NFKD", value or "")
@@ -140,6 +141,8 @@ def finish_record(game, section, score=0, sources=None):
         "trend_label": game.get("trend_label"),
         "twitch_rank": game.get("twitch_rank"),
         "twitch_game_id": twitch_id,
+        "twitch_viewers": game.get("twitch_viewers"),
+        "twitch_channels": game.get("twitch_channels"),
         "steam_appid": game.get("steam_appid"),
         "steam_players": game.get("steam_players"),
         "igdb_id": igdb_id,
@@ -199,8 +202,32 @@ def refresh_live():
                 "ok",
                 "已排除非遊戲分類：" + "、".join(filtered_categories)
             )
+
+        # 以每款遊戲前 100 個直播頻道的 viewer_count 合計，
+        # 作為比 Top Games 排名更直接的即時觀看訊號。
+        twitch_game_ids = [g.get("twitch_game_id") for g in twitch_hot if g.get("twitch_game_id")]
+        live_stats = twitch.live_stats_for_games(twitch_game_ids, max_workers=6, stream_limit=100)
+        live_ok = 0
+        live_failed = 0
+        for tg in twitch_hot:
+            stat = live_stats.get(str(tg.get("twitch_game_id") or ""))
+            if stat and stat.get("viewers") is not None:
+                tg["twitch_viewers"] = int(stat.get("viewers") or 0)
+                tg["twitch_channels"] = int(stat.get("channels") or 0)
+                live_ok += 1
+            else:
+                tg["twitch_viewers"] = None
+                tg["twitch_channels"] = None
+                live_failed += 1
+
+        set_source_status(
+            "Twitch Live",
+            "ok" if live_failed == 0 else "partial",
+            f"即時觀看訊號 {live_ok}/{len(twitch_hot)} 款成功；每款以前 100 個直播頻道合計"
+        )
     except Exception as e:
         set_source_status("Twitch", "error", str(e)[:240])
+        set_source_status("Twitch Live", "error", str(e)[:240])
 
     # 優先使用 Twitch 直接提供的 igdb_id；只有 ID 不可用時才做名稱配對/搜尋。
     merged = {}
@@ -259,6 +286,8 @@ def refresh_live():
                 base.update({
                     "twitch_game_id": tg.get("twitch_game_id"),
                     "twitch_rank": tg.get("twitch_rank"),
+                    "twitch_viewers": tg.get("twitch_viewers"),
+                    "twitch_channels": tg.get("twitch_channels"),
                     "_twitch_score": tg.get("twitch_score", 0),
                     "_igdb_enriched": True,
                 })
@@ -274,6 +303,8 @@ def refresh_live():
                 base.update({
                     "twitch_game_id": tg.get("twitch_game_id"),
                     "twitch_rank": tg.get("twitch_rank"),
+                    "twitch_viewers": tg.get("twitch_viewers"),
+                    "twitch_channels": tg.get("twitch_channels"),
                     "_twitch_score": tg.get("twitch_score", 0),
                     "_igdb_score": None,
                     "_igdb_enriched": True,
@@ -289,6 +320,8 @@ def refresh_live():
             merged[key].update({
                 "twitch_game_id": tg.get("twitch_game_id"),
                 "twitch_rank": tg.get("twitch_rank"),
+                "twitch_viewers": tg.get("twitch_viewers"),
+                "twitch_channels": tg.get("twitch_channels"),
             })
             if not merged[key].get("cover_url"):
                 merged[key]["cover_url"] = tg.get("cover_url")
@@ -319,6 +352,8 @@ def refresh_live():
             base.update({
                 "twitch_game_id": tg.get("twitch_game_id"),
                 "twitch_rank": tg.get("twitch_rank"),
+                "twitch_viewers": tg.get("twitch_viewers"),
+                "twitch_channels": tg.get("twitch_channels"),
                 "_twitch_score": tg.get("twitch_score", 0),
                 "_igdb_enriched": True,
             })
@@ -391,28 +426,85 @@ def refresh_live():
             "全部 Twitch 熱門遊戲皆已取得可靠的 IGDB 對應資料"
         )
 
+    # Steam CCU 先整批抓完，再與 Twitch Live 一起做當次候選集的 log-normalize。
+    steam_appids = [
+        g.get("steam_appid")
+        for g in merged.values()
+        if str(g.get("steam_appid") or "").strip().isdigit()
+    ]
+    steam_counts = current_players_many(steam_appids, max_workers=8)
+    steam_ok = 0
+    for g in merged.values():
+        appid = str(g.get("steam_appid") or "").strip()
+        if appid and appid in steam_counts and steam_counts[appid] is not None:
+            g["steam_players"] = int(steam_counts[appid])
+            steam_ok += 1
+
+    if steam_appids:
+        set_source_status(
+            "Steam CCU",
+            "ok" if steam_ok == len(set(map(str, steam_appids))) else "partial",
+            f"取得 {steam_ok}/{len(set(map(str, steam_appids)))} 款可辨識 Steam AppID 的即時玩家數"
+        )
+    else:
+        set_source_status("Steam CCU", "optional", "本次熱門候選沒有可辨識的 Steam AppID")
+
+    twitch_values = [
+        int(g.get("twitch_viewers") or 0)
+        for g in merged.values()
+        if g.get("twitch_viewers") is not None
+    ]
+    steam_values = [
+        int(g.get("steam_players") or 0)
+        for g in merged.values()
+        if g.get("steam_players") is not None
+    ]
+    max_twitch = max(twitch_values, default=0)
+    max_steam = max(steam_values, default=0)
+
+    def log_score(value, maximum):
+        if value is None or maximum <= 0:
+            return None
+        return math.log1p(max(0, int(value))) / math.log1p(maximum)
+
     hot_records = []
     for g in merged.values():
         components = []
         sources = []
+
+        # 45% IGDB baseline：偏跨平台的搜尋/想玩/遊玩/評論訊號。
         if g.get("_igdb_score") is not None:
-            components.append((float(g["_igdb_score"]), 0.65))
-            sources.append("IGDB PopScore")
-        if g.get("_twitch_score") is not None:
+            components.append((float(g["_igdb_score"]), 0.45))
+            sources.append("IGDB Interest")
+
+        # 35% Twitch：優先使用即時觀看人數；API 暫時失敗才退回 Top Games rank。
+        twitch_live_score = log_score(g.get("twitch_viewers"), max_twitch)
+        if twitch_live_score is not None:
+            components.append((twitch_live_score, 0.35))
+            sources.append("Twitch Live Viewers")
+        elif g.get("_twitch_score") is not None:
             components.append((float(g["_twitch_score"]), 0.35))
-            sources.append("Twitch Top Games")
-        if g.get("_igdb_enriched") and "IGDB PopScore" not in sources:
+            sources.append("Twitch Top Games (fallback)")
+
+        # 20% Steam CCU：只有能辨識 Steam AppID 的遊戲才加入。
+        steam_live_score = log_score(g.get("steam_players"), max_steam)
+        if steam_live_score is not None:
+            components.append((steam_live_score, 0.20))
+            sources.append("Steam CCU")
+
+        if g.get("_igdb_enriched") and "IGDB Interest" not in sources:
             sources.append("IGDB Metadata")
+
+        # 缺來源時重新正規化權重，因此沒有 Steam 版本的主機遊戲不會直接被扣 20 分。
         denom = sum(w for _, w in components) or 1
         score = 100 * sum(v * w for v, w in components) / denom
-
-        if g.get("steam_appid"):
-            players = current_players(g["steam_appid"])
-            if players is not None:
-                g["steam_players"] = players
-                sources.append("Steam CCU")
-
         hot_records.append(finish_record(g, "hot", score, sources))
+
+    set_source_status(
+        "PULSE Formula",
+        "ok",
+        "45% IGDB Interest + 35% Twitch Live Viewers + 20% Steam CCU；缺來源時重新正規化"
+    )
 
     hot_records.sort(key=lambda x: x["pulse_score"], reverse=True)
     replace_section("hot", hot_records[:HOT_LIMIT])

@@ -46,8 +46,16 @@ function card(game, index){
     ? (game.twitch_rank ? `Twitch #${game.twitch_rank}` : "跨平台")
     : dateText(game.release_date);
 
+  const twitchViewers = game.twitch_viewers !== null && game.twitch_viewers !== undefined
+    ? `<div class="player-count twitch"><span class="player-dot"></span><span>Twitch</span><strong>${Number(game.twitch_viewers).toLocaleString("zh-TW")}</strong><span>人觀看</span>${game.twitch_channels != null ? `<em>${Number(game.twitch_channels).toLocaleString("zh-TW")} 頻道</em>` : ""}</div>`
+    : "";
+
   const steamPlayers = game.steam_players !== null && game.steam_players !== undefined
-    ? `<div class="player-count"><span class="player-dot"></span><span>Steam</span><strong>${Number(game.steam_players).toLocaleString("zh-TW")}</strong><span>人在線</span></div>`
+    ? `<div class="player-count steam"><span class="player-dot"></span><span>Steam</span><strong>${Number(game.steam_players).toLocaleString("zh-TW")}</strong><span>人在線</span></div>`
+    : "";
+
+  const liveSignals = twitchViewers || steamPlayers
+    ? `<div class="live-signal-stack">${twitchViewers}${steamPlayers}</div>`
     : "";
 
   const detailUrl = `/game/${encodeURIComponent(game.slug || game.game_key)}`;
@@ -60,7 +68,7 @@ function card(game, index){
     <div class="card-body">
       <div class="meta"><span>${escapeHtml((game.platforms||[])[0] || "Multi-platform")}</span><span>${escapeHtml(metaRight)}</span></div>
       <h3>${escapeHtml(game.title)}</h3>
-      ${steamPlayers}
+      ${liveSignals}
       <div class="summary">${escapeHtml(game.summary || "暫無介紹。")}</div>
       <div class="chips">${genreChips}${platformChips}${sourceChips}</div>
       <div class="store-row">${stores || "<span class='chip'>商店資料整理中</span>"}</div>
