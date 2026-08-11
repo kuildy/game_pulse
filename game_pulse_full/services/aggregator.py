@@ -12,10 +12,11 @@ from config import (
     STEAM_WEB_API_KEY,
     effective_mode
 )
-from db import replace_section, set_source_status
+from db import list_twitch_overrides, replace_section, set_source_status
 from services.igdb import IGDBClient
 from services.twitch import TwitchClient
 from services.steam import current_players_many
+from services.notifications import evaluate_notifications
 
 def norm_title(value):
     value = unicodedata.normalize("NFKD", value or "")
@@ -42,20 +43,27 @@ NON_GAME_TWITCH_CATEGORIES = {
 
 # Twitch 類別名稱/IGDB 對應偶爾不是我們網站想呈現的「目前主力遊戲」。
 # 這裡只放已確認過的少數人工覆寫，避免一般名稱模糊比對誤傷其他作品。
-TWITCH_GAME_OVERRIDES = {
-    # Twitch category: Counter-Strike (id 32399)
-    # GAME PULSE 將它視為目前主力的 Counter-Strike 2。
-    "32399": {
-        "igdb_id": "242408",
-        "steam_appid": "730",
-        "canonical_title": "Counter-Strike 2",
-    },
-}
+TWITCH_GAME_OVERRIDES = {}
 
 
-def apply_twitch_game_override(game):
+
+def load_twitch_game_overrides():
+    overrides = dict(TWITCH_GAME_OVERRIDES)
+    try:
+        for row in list_twitch_overrides():
+            overrides[str(row.get("twitch_game_id") or "")] = {
+                "igdb_id": str(row.get("igdb_id") or ""),
+                "steam_appid": str(row.get("steam_appid") or ""),
+                "canonical_title": row.get("canonical_title") or "",
+            }
+    except Exception:
+        pass
+    return overrides
+
+
+def apply_twitch_game_override(game, overrides=None):
     twitch_game_id = str(game.get("twitch_game_id") or "").strip()
-    override = TWITCH_GAME_OVERRIDES.get(twitch_game_id)
+    override = (overrides or TWITCH_GAME_OVERRIDES).get(twitch_game_id)
     if not override:
         return game
 
@@ -211,8 +219,9 @@ def refresh_live():
             if is_non_game_twitch_category(g.get("title", ""))
         ]
 
+        twitch_overrides = load_twitch_game_overrides()
         twitch_hot = [
-            apply_twitch_game_override(g)
+            apply_twitch_game_override(g, twitch_overrides)
             for g in raw_twitch_hot
             if not is_non_game_twitch_category(g.get("title", ""))
         ][:HOT_LIMIT]
@@ -592,6 +601,17 @@ def refresh_live():
         set_source_status("IGDB Upcoming", "ok", f"取得 {len(upcoming_records)} 筆即將推出")
     except Exception as e:
         set_source_status("IGDB Upcoming", "error", str(e)[:240])
+
+    # 4) 每次資料刷新後評估追蹤通知。
+    try:
+        notice_result = evaluate_notifications()
+        set_source_status(
+            "Notifications",
+            "ok",
+            f"檢查 {notice_result['subscriptions']} 個追蹤規則，本次新增 {notice_result['created']} 則通知"
+        )
+    except Exception as e:
+        set_source_status("Notifications", "error", str(e)[:240])
 
 def refresh_demo():
     # Demo 資料刻意標示為示範，避免被誤認為即時榜單。

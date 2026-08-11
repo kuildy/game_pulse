@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="GAME PULSE 通知中心">
+  <title>通知中心｜GAME PULSE</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
+</head>
+<body class="subpage">
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+  <header class="nav">
+    <a class="logo" href="{{ url_for('index') }}">
+      <span class="logo-mark">GP</span>
+      <span class="logo-copy"><b>GAME PULSE</b><small>全平台遊戲播報</small></span>
+    </a>
+    <nav class="nav-links">
+      <a class="nav-page-link" href="{{ url_for('index') }}#games">熱門榜</a>
+      <a class="nav-page-link" href="{{ url_for('release_calendar_page') }}">發售日曆</a>
+      <a class="nav-page-link active" href="{{ url_for('notifications_page') }}">通知 <span id="notificationBadge" class="notification-badge">0</span></a>
+    </nav>
+    <div class="mode-badge {{ 'live' if mode == 'live' else 'demo' }}">{{ '● LIVE DATA' if mode == 'live' else '● DEMO MODE' }}</div>
+  </header>
+
+  <main class="notify-shell">
+    <section class="notify-hero">
+      <div><span class="micro">WATCH CENTER</span><h1>通知中心</h1><p>追蹤上市、24H PULSE、Steam 玩家暴增與 Steam 新聞更新。</p></div>
+      <div class="notify-actions">
+        <button id="enableBrowserNotifications" class="primary" type="button">允許瀏覽器通知</button>
+        <button id="markAllRead" class="secondary" type="button">全部標示已讀</button>
+      </div>
+    </section>
+
+    <section class="notify-layout">
+      <article class="notify-panel">
+        <div class="detail-section-head"><div><span class="micro">INBOX</span><h2>最新通知</h2></div><span id="unreadCount">0 未讀</span></div>
+        <div id="notificationList" class="notification-list"><div class="notify-empty">正在讀取通知…</div></div>
+      </article>
+      <aside class="notify-panel">
+        <div class="detail-section-head"><div><span class="micro">WATCHLIST</span><h2>追蹤遊戲</h2></div><span id="watchCount">0 款</span></div>
+        <div id="watchList" class="watch-list"><div class="notify-empty">尚未追蹤遊戲。</div></div>
+      </aside>
+    </section>
+
+    <section class="notify-explain">
+      <b>目前通知規則</b>
+      <p>上市前 7 天 / 上市日、24H PULSE +10 分以上、Steam 24H 同時增加 50% 且至少 5,000 人，以及新的 Steam News。通知會保存於本站；瀏覽器通知需頁面開啟且使用者授權。</p>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/notifications_page.js') }}"></script>
+</body>
+</html>

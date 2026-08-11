@@ -44,3 +44,10 @@ footer{width:min(1240px,92vw);margin:auto;padding:28px 0 42px;border-top:1px sol
 .trend-box.up strong{color:var(--green)}.trend-box.down strong{color:#ff708f}.trend-box.flat strong{color:var(--cyan)}.trend-box.pending strong{color:var(--muted)}
 .trend-sparkline{width:112px;height:28px;flex:0 0 112px;overflow:visible}.trend-sparkline polyline{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.trend-box.up .trend-sparkline{color:var(--green)}.trend-box.down .trend-sparkline{color:#ff708f}.trend-box.flat .trend-sparkline,.trend-box.pending .trend-sparkline{color:var(--cyan)}
 @media(max-width:620px){.trend-sparkline{width:88px;flex-basis:88px}}
+
+/* Navigation pages + notification badge */
+.nav-page-link{display:inline-flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none;padding:9px 12px;border-radius:8px;font-size:12px;font-weight:700}
+.nav-page-link:hover,.nav-page-link.active{background:#1c2130;color:white}
+.notification-badge{display:none;min-width:18px;height:18px;padding:0 5px;border-radius:999px;align-items:center;justify-content:center;background:var(--red);color:white;font-size:9px;font-weight:900}
+.notification-badge.show{display:inline-flex}
+@media(max-width:930px){.subpage .nav-links{display:flex;max-width:56vw;overflow:auto;white-space:nowrap}.subpage .nav-page-link{padding:7px 9px;font-size:10px}}

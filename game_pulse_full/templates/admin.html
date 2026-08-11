@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>管理後台｜GAME PULSE</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="admin-page">
+  <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+  <header class="nav">
+    <a class="logo" href="{{ url_for('index') }}"><span class="logo-mark">GP</span><span class="logo-copy"><b>GAME PULSE</b><small>ADMIN</small></span></a>
+    {% if authenticated %}<form method="post" action="{{ url_for('admin_logout') }}"><button class="secondary admin-logout">登出</button></form>{% endif %}
+  </header>
+
+  <main class="admin-shell">
+    {% if not configured %}
+      <section class="admin-login-card"><span class="micro">ADMIN SETUP</span><h1>尚未設定管理密碼</h1><p>請在 Render Environment 新增 <code>ADMIN_TOKEN</code>，建議同時新增 <code>FLASK_SECRET_KEY</code>，重新部署後再回到 /admin。</p></section>
+    {% elif not authenticated %}
+      <section class="admin-login-card"><span class="micro">ADMIN LOGIN</span><h1>管理後台</h1><p>輸入 Render Environment 中設定的 ADMIN_TOKEN。</p>{% if login_error %}<div class="admin-error">{{ login_error }}</div>{% endif %}<form method="post" action="{{ url_for('admin_login') }}"><input type="password" name="token" autocomplete="current-password" placeholder="ADMIN_TOKEN" required><button class="primary">登入</button></form></section>
+    {% else %}
+      <section class="admin-heading"><div><span class="micro">CONTROL ROOM</span><h1>GAME PULSE 後台</h1><p>查看資料來源、歷史資料、通知與 Twitch → IGDB 配對覆寫。</p></div><form method="post" action="{{ url_for('admin_refresh') }}"><button class="primary">立即重新抓取資料</button></form></section>
+
+      <section class="admin-stat-grid">
+        <div><small>HOT</small><b>{{ stats.sections.get('hot', {}).get('count', 0) }}</b></div>
+        <div><small>NEW</small><b>{{ stats.sections.get('new', {}).get('count', 0) }}</b></div>
+        <div><small>UPCOMING</small><b>{{ stats.sections.get('upcoming', {}).get('count', 0) }}</b></div>
+        <div><small>HISTORY</small><b>{{ stats.history.get('count', 0) }}</b></div>
+        <div><small>WATCH RULES</small><b>{{ stats.watch_count }}</b></div>
+        <div><small>NOTIFICATIONS</small><b>{{ stats.notification_count }}</b></div>
+        <div><small>SOURCE ISSUES</small><b>{{ stats.source_problem_count }}</b></div>
+      </section>
+
+      <section class="admin-panel"><div class="detail-section-head"><div><span class="micro">SOURCES</span><h2>資料來源狀態</h2></div><span>{{ mode|upper }}</span></div><div class="admin-source-list">{% for s in sources %}<div class="admin-source-row"><span class="status-dot {{ s.status }}"></span><b>{{ s.source }}</b><span>{{ s.message }}</span><time>{{ s.updated_at }}</time></div>{% endfor %}</div></section>
+
+      <section class="admin-panel"><div class="detail-section-head"><div><span class="micro">MATCH OVERRIDES</span><h2>Twitch 配對校正</h2></div></div>
+        <form class="override-form" method="post" action="{{ url_for('admin_override_save') }}"><input name="twitch_game_id" placeholder="Twitch Game ID" required><input name="igdb_id" placeholder="IGDB ID" required><input name="steam_appid" placeholder="Steam AppID（可空）"><input name="canonical_title" placeholder="Canonical Title" required><button class="primary">儲存校正</button></form>
+        <div class="override-list">{% for row in overrides %}<div class="override-row"><div><b>{{ row.canonical_title }}</b><span>Twitch {{ row.twitch_game_id }} → IGDB {{ row.igdb_id }}{% if row.steam_appid %} → Steam {{ row.steam_appid }}{% endif %}</span></div><form method="post" action="{{ url_for('admin_override_delete', twitch_game_id=row.twitch_game_id) }}" onsubmit="return confirm('確定刪除這筆校正？')"><button class="secondary">刪除</button></form></div>{% endfor %}</div>
+      </section>
+    {% endif %}
+  </main>
+</body>
+</html>

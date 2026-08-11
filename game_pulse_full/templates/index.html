@@ -21,6 +21,8 @@
       <button data-section="hot" class="nav-tab active">熱門</button>
       <button data-section="new" class="nav-tab">新上市</button>
       <button data-section="upcoming" class="nav-tab">即將推出</button>
+      <a class="nav-page-link" href="{{ url_for('release_calendar_page') }}">發售日曆</a>
+      <a class="nav-page-link notify-link" href="{{ url_for('notifications_page') }}">通知 <span id="notificationBadge" class="notification-badge">0</span></a>
     </nav>
 
     <div id="modeBadge" class="mode-badge">讀取中</div>
@@ -139,6 +141,7 @@
     </article>
   </div>
 
+  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

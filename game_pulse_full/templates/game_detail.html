@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/game_detail.css') }}">
 </head>
-<body class="detail-page">
+<body class="detail-page" data-game-identifier="{{ game.slug or game.game_key }}">
   <div class="ambient ambient-a"></div>
   <div class="ambient ambient-b"></div>
 
@@ -17,7 +17,11 @@
       <span class="logo-mark">GP</span>
       <span class="logo-copy"><b>GAME PULSE</b><small>全平台遊戲播報</small></span>
     </a>
-    <a class="detail-back" href="{{ url_for('index') }}#games">← 回到遊戲榜單</a>
+    <div class="detail-nav-links">
+      <a class="detail-back" href="{{ url_for('index') }}#games">← 回到遊戲榜單</a>
+      <a class="detail-back" href="{{ url_for('release_calendar_page') }}">發售日曆</a>
+      <a class="detail-back notify-link" href="{{ url_for('notifications_page') }}">通知 <span id="notificationBadge" class="notification-badge">0</span></a>
+    </div>
     <div class="mode-badge {{ 'live' if mode == 'live' else 'demo' }}">
       {{ '● LIVE DATA' if mode == 'live' else '● DEMO MODE' }}
     </div>
@@ -90,6 +94,20 @@
             </a>
           {% endfor %}
         </div>
+
+        <div class="watch-panel" id="watchPanel">
+          <div class="watch-panel-head">
+            <div><small>WATCH & NOTIFY</small><b>追蹤這款遊戲</b></div>
+            <div class="watch-actions"><button id="watchToggle" class="watch-primary" type="button">追蹤通知</button><button id="watchRemove" class="watch-remove" type="button" hidden>取消追蹤</button></div>
+          </div>
+          <div class="watch-options" id="watchOptions">
+            <label><input id="notifyRelease" type="checkbox" checked> 上市前 7 天 / 上市日</label>
+            <label><input id="notifyPulse" type="checkbox" checked> 24H PULSE 大幅上升</label>
+            <label><input id="notifySteam" type="checkbox" checked> Steam 玩家明顯暴增</label>
+            <label><input id="notifyNews" type="checkbox" checked> Steam 新聞 / 更新</label>
+          </div>
+          <p>不需要登入；此瀏覽器會以匿名裝置 ID 保存追蹤清單。</p>
+        </div>
       </div>
     </section>
 
@@ -140,6 +158,40 @@
       </aside>
     </section>
 
+
+    <section class="media-section trend-section">
+      <div class="detail-section-head trend-head">
+        <div><span class="micro">HISTORY</span><h2>熱度趨勢</h2></div>
+        <div class="trend-controls">
+          <div class="trend-switch" id="trendMetric">
+            <button class="active" data-metric="pulse_score">PULSE</button>
+            <button data-metric="twitch_viewers">Twitch</button>
+            <button data-metric="steam_players">Steam</button>
+          </div>
+          <div class="trend-switch" id="trendRange">
+            <button class="active" data-range="24h">24H</button>
+            <button data-range="7d">7D</button>
+            <button data-range="30d">30D</button>
+          </div>
+        </div>
+      </div>
+      <div class="history-chart-card">
+        <div class="history-chart-meta"><b id="trendCurrent">--</b><span id="trendSummary">歷史資料累積中</span></div>
+        <svg id="historyChart" class="history-chart" viewBox="0 0 900 280" role="img" aria-label="GAME PULSE 歷史趨勢圖">
+          <line x1="48" y1="242" x2="876" y2="242" class="axis-line"></line>
+          <polyline id="historyLine" points="" class="history-line"></polyline>
+        </svg>
+        <div class="history-empty" id="historyEmpty">需要至少兩個更新快照才能畫出趨勢。</div>
+      </div>
+    </section>
+
+    <section class="media-section news-section">
+      <div class="detail-section-head">
+        <div><span class="micro">NEWS & UPDATES</span><h2>最新消息 / 更新</h2></div>
+        <span id="newsSource">Steam News</span>
+      </div>
+      <div id="newsList" class="news-list"><div class="detail-notice">正在讀取最新消息…</div></div>
+    </section>
     {% if game.screenshots %}
     <section class="media-section">
       <div class="detail-section-head">
@@ -179,5 +231,7 @@
     <div><b>GAME PULSE</b><p>近日熱門・新上市・跨平台遊戲播報</p></div>
     <p>資料與商標屬各自權利人所有。GAME PULSE 分數為本站自訂指標。</p>
   </footer>
+  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/game_detail.js') }}"></script>
 </body>
 </html>
