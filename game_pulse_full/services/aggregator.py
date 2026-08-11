@@ -26,16 +26,15 @@ def norm_title(value):
 NON_GAME_TWITCH_CATEGORIES = {
     "irl",
     "slots",
-    "sports",
     "just chatting",
     "music",
     "asmr",
     "talk shows & podcasts",
     "pools, hot tubs, and beaches",
-    "art",
     "food & drink",
     "travel & outdoors",
     "special events",
+    "Chess",
 }
 
 
