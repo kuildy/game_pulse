@@ -34,6 +34,7 @@ NON_GAME_TWITCH_CATEGORIES = {
     "food & drink",
     "travel & outdoors",
     "special events",
+    "asmr",
 }
 
 
