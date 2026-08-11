@@ -268,12 +268,42 @@ async function loadStatus(){
     $("#modeBadge").textContent = live ? "● LIVE DATA" : "● DEMO MODE";
     $("#modeBadge").className = `mode-badge ${live?"live":"demo"}`;
     const rows = data.sources || [];
-    $("#sourceStatus").innerHTML = rows.length ? rows.map(s=>`
+
+    // 首頁只顯示一般使用者需要知道的三個主要來源。
+    // IGDB Match / Twitch Filter / Steam CCU 等完整技術狀態仍保留在 Admin。
+    const sourceDefs = [
+      { key:"IGDB", label:"IGDB", description:"遊戲資訊・發售日期・平台資料" },
+      { key:"Twitch", label:"Twitch", description:"即時觀看・熱門趨勢" },
+      { key:"Steam", label:"Steam", description:"即時玩家・遊戲消息" },
+    ];
+
+    const statusText = status => ({
+      ok: "正常",
+      partial: "部分可用",
+      error: "暫時異常",
+      demo: "示範資料",
+      optional: "部分功能未啟用",
+    }[status] || "待確認");
+
+    const mainSources = sourceDefs.map(def => {
+      const source = rows.find(s => s.source === def.key)
+        || rows.find(s => String(s.source || "").startsWith(def.key));
+      return {
+        ...def,
+        status: source?.status || "unknown",
+      };
+    });
+
+    $("#sourceStatus").innerHTML = mainSources.map(s=>`
       <div class="source-card">
-        <div class="head"><b>${escapeHtml(s.source)}</b><i class="status-dot ${escapeHtml(s.status)}"></i></div>
-        <p>${escapeHtml(s.message || s.status)}</p>
-      </div>`).join("") : `<div class="source-card"><b>尚無更新紀錄</b><p>執行一次更新程式後會顯示來源狀態。</p></div>`;
-    $("#lastStatus").textContent = live ? "LIVE SOURCES" : "DEMO DATA";
+        <div class="head">
+          <b>${escapeHtml(s.label)}</b>
+          <i class="status-dot ${escapeHtml(s.status)}"></i>
+        </div>
+        <p>${escapeHtml(s.description)} · ${escapeHtml(statusText(s.status))}</p>
+      </div>`).join("");
+
+    $("#lastStatus").textContent = live ? "3 MAIN SOURCES" : "DEMO DATA";
   }catch(e){}
 }
 
