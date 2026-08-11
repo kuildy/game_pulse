@@ -35,6 +35,8 @@ NON_GAME_TWITCH_CATEGORIES = {
     "travel & outdoors",
     "special events",
     "Chess",
+    "art",
+    "Sports"
 }
 
 
