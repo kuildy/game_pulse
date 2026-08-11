@@ -201,7 +201,7 @@ def refresh_live():
     except Exception as e:
         set_source_status("Twitch", "error", str(e)[:240])
 
-    # 先做精確標準化名稱合併；配不到的 Twitch 項目再主動搜尋 IGDB。
+    # 優先使用 Twitch 直接提供的 igdb_id；只有 ID 不可用時才做名稱配對/搜尋。
     merged = {}
     for g in igdb_hot:
         key = norm_title(g["title"])
@@ -209,6 +209,30 @@ def refresh_live():
         merged[key]["_igdb_score"] = float(g.get("igdb_pop_score", 0))
         merged[key]["_twitch_score"] = None
 
+    # Twitch Get Top Games 可能直接附帶 IGDB ID。
+    # 一次批次抓回這些遊戲，避免逐款用名稱搜尋。
+    twitch_igdb_ids = []
+    for tg in twitch_hot:
+        raw_id = str(tg.get("igdb_id") or "").strip()
+        if raw_id.isdigit():
+            twitch_igdb_ids.append(int(raw_id))
+
+    twitch_igdb_ids = list(dict.fromkeys(twitch_igdb_ids))
+    direct_by_id = {}
+    direct_lookup_error = None
+
+    if twitch_igdb_ids:
+        try:
+            direct_rows = igdb.games_by_ids(twitch_igdb_ids)
+            direct_by_id = {
+                str(row.get("id")): igdb.transform_game(row)
+                for row in direct_rows
+                if row.get("id") is not None
+            }
+        except Exception as e:
+            direct_lookup_error = str(e)[:180]
+
+    direct_matches = 0
     search_attempts = 0
     search_matches = 0
     search_misses = 0
@@ -216,7 +240,50 @@ def refresh_live():
 
     for tg in twitch_hot:
         key = norm_title(tg["title"])
+        twitch_igdb_id = str(tg.get("igdb_id") or "").strip()
 
+        # 1) 最優先：用 Twitch 提供的 IGDB ID 找同一款遊戲。
+        if twitch_igdb_id and twitch_igdb_id.isdigit():
+            existing_key = next(
+                (
+                    existing_key
+                    for existing_key, existing_game in merged.items()
+                    if str(existing_game.get("igdb_id") or "") == twitch_igdb_id
+                ),
+                None,
+            )
+
+            if existing_key:
+                base = merged[existing_key]
+                base.update({
+                    "twitch_game_id": tg.get("twitch_game_id"),
+                    "twitch_rank": tg.get("twitch_rank"),
+                    "_twitch_score": tg.get("twitch_score", 0),
+                    "_igdb_enriched": True,
+                })
+                if not base.get("cover_url"):
+                    base["cover_url"] = tg.get("cover_url")
+                direct_matches += 1
+                continue
+
+            matched = direct_by_id.get(twitch_igdb_id)
+            if matched:
+                match_key = norm_title(matched.get("title")) or key
+                base = dict(matched)
+                base.update({
+                    "twitch_game_id": tg.get("twitch_game_id"),
+                    "twitch_rank": tg.get("twitch_rank"),
+                    "_twitch_score": tg.get("twitch_score", 0),
+                    "_igdb_score": None,
+                    "_igdb_enriched": True,
+                })
+                if not base.get("cover_url"):
+                    base["cover_url"] = tg.get("cover_url")
+                merged[match_key] = base
+                direct_matches += 1
+                continue
+
+        # 2) Twitch 沒有可用 IGDB ID 時，再用標準化名稱精確配對。
         if key in merged:
             merged[key].update({
                 "twitch_game_id": tg.get("twitch_game_id"),
@@ -227,7 +294,7 @@ def refresh_live():
             merged[key]["_twitch_score"] = tg.get("twitch_score", 0)
             continue
 
-        # Twitch 有、IGDB Hot 沒有：主動用名稱搜尋 IGDB。
+        # 3) 最後才使用名稱搜尋 IGDB。
         search_attempts += 1
         matched = None
         try:
@@ -237,8 +304,6 @@ def refresh_live():
             matched = None
 
         if matched:
-            # 若搜尋到的 IGDB 遊戲其實已存在於 hot 集合（只是名稱不同），
-            # 就直接合併到既有項目，避免首頁出現重複遊戲。
             existing_key = next(
                 (
                     existing_key
@@ -257,8 +322,6 @@ def refresh_live():
                 "_igdb_enriched": True,
             })
             if "_igdb_score" not in base:
-                # 這款不是 IGDB Hot primitive 排名中的項目，
-                # 因此只用 Twitch 分數排名，但使用 IGDB 中繼資料補齊卡片。
                 base["_igdb_score"] = None
             if not base.get("cover_url"):
                 base["cover_url"] = tg.get("cover_url")
@@ -278,29 +341,54 @@ def refresh_live():
             search_misses += 1
             unmatched_titles.append(tg.get("title") or "未知遊戲")
 
+    if twitch_igdb_ids:
+        if direct_lookup_error:
+            set_source_status(
+                "IGDB Direct",
+                "partial",
+                f"Twitch 提供 {len(twitch_igdb_ids)} 筆 igdb_id，但批次查詢失敗：{direct_lookup_error}"
+            )
+        else:
+            set_source_status(
+                "IGDB Direct",
+                "ok",
+                f"Twitch 提供 {len(twitch_igdb_ids)} 筆 igdb_id：直接配對 {direct_matches} 筆"
+            )
+    else:
+        set_source_status(
+            "IGDB Direct",
+            "optional",
+            "本次 Twitch 熱門資料未提供可用的 igdb_id，已改用名稱配對"
+        )
+
     if search_attempts:
         set_source_status(
             "IGDB Match",
             "ok" if search_misses == 0 else "partial",
-            f"Twitch 額外查詢 {search_attempts} 筆：IGDB 補齊 {search_matches} 筆，仍缺 {search_misses} 筆"
+            f"名稱補查 {search_attempts} 筆：IGDB 補齊 {search_matches} 筆，仍缺 {search_misses} 筆"
+        )
+    else:
+        set_source_status(
+            "IGDB Match",
+            "ok",
+            "本次不需要額外名稱搜尋"
         )
 
-        if unmatched_titles:
-            # 額外保留未配對名稱，方便直接從 /api/status 診斷。
-            missing_text = "、".join(unmatched_titles[:10])
-            if len(unmatched_titles) > 10:
-                missing_text += f"（另有 {len(unmatched_titles) - 10} 款）"
-            set_source_status(
-                "IGDB Missing",
-                "partial",
-                f"未配對：{missing_text}"
-            )
-        else:
-            set_source_status(
-                "IGDB Missing",
-                "ok",
-                "全部 Twitch 熱門遊戲皆已取得可靠的 IGDB 對應資料"
-            )
+    if unmatched_titles:
+        missing_text = "、".join(unmatched_titles[:10])
+        if len(unmatched_titles) > 10:
+            missing_text += f"（另有 {len(unmatched_titles) - 10} 款）"
+        set_source_status(
+            "IGDB Missing",
+            "partial",
+            f"未配對：{missing_text}"
+        )
+    else:
+        set_source_status(
+            "IGDB Missing",
+            "ok",
+            "全部 Twitch 熱門遊戲皆已取得可靠的 IGDB 對應資料"
+        )
 
     hot_records = []
     for g in merged.values():

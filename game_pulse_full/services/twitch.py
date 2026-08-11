@@ -54,6 +54,7 @@ class TwitchClient:
             box = (g.get("box_art_url") or "").replace("{width}", "600").replace("{height}", "800")
             result.append({
                 "twitch_game_id": g.get("id"),
+                "igdb_id": (g.get("igdb_id") or "").strip() or None,
                 "title": g.get("name") or "未命名遊戲",
                 "cover_url": box,
                 "twitch_rank": idx,
