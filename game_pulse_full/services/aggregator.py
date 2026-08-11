@@ -21,7 +21,8 @@ def norm_title(value):
     value = "".join(ch for ch in value if ch.isalnum() or ch.isspace())
     return re.sub(r"\s+", " ", value).strip().lower()
 
-    NON_GAME_TWITCH_CATEGORIES = {
+
+NON_GAME_TWITCH_CATEGORIES = {
     "irl",
     "slots",
     "sports",
@@ -173,22 +174,30 @@ def refresh_live():
     try:
         raw_twitch_hot = twitch.top_games(max(HOT_LIMIT + 20, 50))
 
-filtered_categories = [
-    g["title"]
-    for g in raw_twitch_hot
-    if is_non_game_twitch_category(g.get("title", ""))
-]
+        filtered_categories = [
+            g["title"]
+            for g in raw_twitch_hot
+            if is_non_game_twitch_category(g.get("title", ""))
+        ]
 
-twitch_hot = [
-    g
-    for g in raw_twitch_hot
-    if not is_non_game_twitch_category(g.get("title", ""))
-][:HOT_LIMIT]
-       set_source_status(
-    "Twitch",
-    "ok",
-    f"取得 {len(twitch_hot)} 筆遊戲熱門資料"
-)
+        twitch_hot = [
+            g
+            for g in raw_twitch_hot
+            if not is_non_game_twitch_category(g.get("title", ""))
+        ][:HOT_LIMIT]
+
+        set_source_status(
+            "Twitch",
+            "ok",
+            f"取得 {len(twitch_hot)} 筆遊戲熱門資料"
+        )
+
+        if filtered_categories:
+            set_source_status(
+                "Twitch Filter",
+                "ok",
+                "已排除非遊戲分類：" + "、".join(filtered_categories)
+            )
     except Exception as e:
         set_source_status("Twitch", "error", str(e)[:240])
 
@@ -275,19 +284,6 @@ twitch_hot = [
             "ok" if search_misses == 0 else "partial",
             f"Twitch 額外查詢 {search_attempts} 筆：IGDB 補齊 {search_matches} 筆，仍缺 {search_misses} 筆"
         )
-
-        if missing_titles:
-    set_source_status(
-        "IGDB Missing",
-        "partial",
-        "未配對：" + "、".join(missing_titles)
-            )
-       else:
-        set_source_status(
-            "IGDB Missing",
-            "ok",
-            "全部 Twitch 熱門遊戲皆已取得可靠的 IGDB 對應資料"
-            )
 
         if unmatched_titles:
             # 額外保留未配對名稱，方便直接從 /api/status 診斷。
