@@ -13,13 +13,15 @@ init_db()
 _DETAIL_CACHE = {}
 _DETAIL_CACHE_TTL = 1800
 
-# 第一次啟動若資料庫為空，自動建立 Demo / Live 資料
-if not get_games("hot", 1):
-    try:
+# Render 啟動時：
+# Live 模式一律重新抓 API，避免沿用舊 Demo SQLite 資料
+try:
+    if effective_mode() == "live":
         refresh_all()
-    except Exception:
-        # 即使網路/API 暫時失敗，網站仍可啟動；使用者可稍後執行更新程式
-        pass
+    elif not get_games("hot", 1):
+        refresh_all()
+except Exception as e:
+    print("GAME PULSE update failed:", e)
 
 
 @app.get("/")
