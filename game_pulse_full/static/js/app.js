@@ -4,9 +4,9 @@ const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 
 const copy = {
-  hot: ["TRENDING NOW","近日熱門","跨來源訊號計算出的 GAME PULSE 熱門榜。"],
-  new: ["NEW RELEASES","近日新上市","過去 30 天內推出的跨平台遊戲。"],
-  upcoming: ["COMING SOON","即將推出","未來 90 天預計推出的遊戲。"]
+  hot: ["03 · TRENDING NOW","近日熱門","跨來源訊號計算出的 GAME PULSE 熱門榜。"],
+  new: ["03 · NEW RELEASES","近日新上市","過去 30 天內推出的跨平台遊戲。"],
+  upcoming: ["03 · COMING SOON","即將推出","未來 90 天預計推出的遊戲。"]
 };
 
 function escapeHtml(str=""){
@@ -308,7 +308,25 @@ $$("[data-section]").forEach(b=>b.addEventListener("click",()=>loadSection(b.dat
 $("#searchInput").addEventListener("input",render);
 $("#platformFilter").addEventListener("change",render);
 $$("[data-close-modal]").forEach(x=>x.addEventListener("click",closeModal));
-$("[data-go-hot]").addEventListener("click",()=>{ loadSection("hot"); $("#games").scrollIntoView({behavior:"smooth"}); });
+
+function scrollToSection(selector){
+  const target = $(selector);
+  if(target) target.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+const hotButton = $("[data-go-hot]");
+if(hotButton){
+  hotButton.addEventListener("click",()=>{
+    loadSection("hot");
+    scrollToSection("#games");
+  });
+}
+
+const radarButton = $("[data-go-radar]");
+if(radarButton){
+  radarButton.addEventListener("click",()=>scrollToSection("#radar"));
+}
+
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeModal(); });
 
 loadStatus();

@@ -73,3 +73,105 @@ footer{width:min(1240px,92vw);margin:auto;padding:28px 0 42px;border-top:1px sol
 .why-note{margin:13px 0 0;color:var(--muted);font-size:9px;line-height:1.6}.why-empty{grid-column:1/-1;padding:28px;border:1px dashed var(--line);border-radius:14px;text-align:center;color:var(--muted);font-size:12px;line-height:1.7}.why-skeleton{height:188px;border-radius:16px;background:linear-gradient(90deg,#11151e,#1a1f2a,#11151e);background-size:200% 100%;animation:shimmer 1.2s infinite}
 @media(max-width:980px){.why-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:620px){.why-section{padding:20px}.why-heading{align-items:flex-start;flex-direction:column}.why-types{justify-content:flex-start}.why-grid{grid-template-columns:1fr}.why-card{grid-template-columns:88px 1fr}}
+
+/* ========================================
+   GAME PULSE v1.0 — homepage hierarchy polish
+   ======================================== */
+
+/* Core identity and navigation */
+.mobile-quick-nav{display:none}
+.hero{padding-top:58px;padding-bottom:38px;min-height:560px}
+.hero-copy{position:relative}
+.hero-copy:before{content:"";position:absolute;left:-22px;top:5px;width:2px;height:86px;border-radius:999px;background:linear-gradient(var(--cyan),var(--violet));opacity:.6}
+.hero-copy p{max-width:720px}
+.hero-pill-row{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 0}
+.hero-pill-row span{font-size:10px;font-weight:800;letter-spacing:.04em;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.028);color:#dce4f3}
+.hero-actions .secondary{background:rgba(255,255,255,.035)}
+.hero-actions button:focus-visible,.hero-actions a:focus-visible,.pulse-map-card:focus-visible,.game-card a:focus-visible,.nav a:focus-visible,.nav button:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+
+/* A compact product map makes the homepage read as a product, not a feed. */
+.pulse-map{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 34px;padding:10px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.018)}
+.pulse-map-card{position:relative;min-width:0;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:11px;padding:14px;border-radius:13px;color:inherit;text-decoration:none;border:1px solid transparent;transition:.2s;background:rgba(8,10,15,.35)}
+.pulse-map-card:hover{transform:translateY(-2px);background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.08)}
+.pulse-map-card>i{align-self:start;font-style:normal;font-size:9px;color:rgba(255,255,255,.28);font-weight:900}
+.pulse-map-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(255,255,255,.045);border:1px solid var(--line)}
+.pulse-map-card small,.pulse-map-card b,.pulse-map-card p{display:block}
+.pulse-map-card small{font-size:7px;letter-spacing:.12em;color:var(--muted);font-weight:900;margin-bottom:3px}
+.pulse-map-card b{font-size:12px;letter-spacing:.01em}
+.pulse-map-card p{margin:3px 0 0;font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.radar-map .pulse-map-icon{background:rgba(83,216,255,.07);border-color:rgba(83,216,255,.15)}
+.why-map .pulse-map-icon{background:rgba(255,184,107,.07);border-color:rgba(255,184,107,.15)}
+.hot-map .pulse-map-icon{background:rgba(139,108,255,.08);border-color:rgba(139,108,255,.17)}
+.calendar-map .pulse-map-icon{background:rgba(85,230,165,.07);border-color:rgba(85,230,165,.15)}
+
+/* Stronger homepage sequence */
+.feature-section,.hot-control{scroll-margin-top:96px}
+.feature-section{position:relative}
+.feature-section:before{content:"";position:absolute;left:28px;right:28px;top:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.13),transparent)}
+.radar-section{margin-bottom:18px}
+.why-section{margin-bottom:40px}
+.hot-control{box-shadow:0 18px 55px rgba(0,0,0,.16)}
+.tab-strip{position:sticky;top:76px;z-index:20;margin:0 -4px;padding:14px 4px;background:linear-gradient(180deg,rgba(8,10,15,.96) 68%,rgba(8,10,15,0));backdrop-filter:blur(8px)}
+
+/* Hot cards: the top three should immediately feel more important. */
+.game-grid .game-card:nth-child(-n+3){border-color:rgba(139,108,255,.22);background:linear-gradient(180deg,rgba(139,108,255,.06),rgba(255,255,255,.024))}
+.game-grid .game-card:nth-child(1){box-shadow:0 22px 60px rgba(139,108,255,.09)}
+.game-grid .game-card:nth-child(-n+3) .rank{background:linear-gradient(135deg,rgba(139,108,255,.9),rgba(83,216,255,.72));border-color:transparent}
+.summary{height:auto;min-height:40px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.more-btn.detail-link{display:flex;align-items:center;justify-content:center;text-decoration:none;transition:.18s}
+.more-btn.detail-link:hover{color:white;background:rgba(255,255,255,.04);border-color:rgba(83,216,255,.22)}
+
+/* Empty/error states stay intentional instead of looking broken. */
+.empty,.radar-empty,.why-empty{background:linear-gradient(135deg,rgba(255,255,255,.018),rgba(83,216,255,.018));border-style:dashed}
+.radar-note,.why-note{padding-left:2px}
+
+/* Status cards can grow beyond three sources without becoming unwieldy. */
+.source-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.source-card{min-height:94px}
+
+/* Responsive hierarchy */
+@media(max-width:1080px){
+  .pulse-map{grid-template-columns:repeat(2,1fr)}
+}
+
+@media(max-width:930px){
+  .mobile-quick-nav{position:sticky;top:76px;z-index:29;display:flex;gap:7px;overflow-x:auto;padding:8px 4vw;border-bottom:1px solid var(--line);background:rgba(8,10,15,.92);backdrop-filter:blur(14px);scrollbar-width:none}
+  .mobile-quick-nav::-webkit-scrollbar{display:none}
+  .mobile-quick-nav a{white-space:nowrap;color:#dce4f3;text-decoration:none;font-size:10px;font-weight:800;padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.025)}
+  .hero{padding-top:42px}
+  .tab-strip{top:117px}
+  .feature-section,.hot-control{scroll-margin-top:132px}
+}
+
+@media(max-width:620px){
+  main{width:min(94vw,1240px)}
+  .hero{padding-top:34px;padding-bottom:26px}
+  .hero-copy:before{display:none}
+  .hero h1{font-size:clamp(44px,13vw,58px);line-height:.98;letter-spacing:-2.6px}
+  .hero-copy p{font-size:14px;line-height:1.7}
+  .hero-pill-row{gap:6px;margin-top:16px}
+  .hero-pill-row span{font-size:8px;padding:6px 8px}
+  .hero-actions{margin-top:20px}
+  .signal-panel{padding:17px;border-radius:20px}
+  .pulse-map{grid-template-columns:1fr;gap:7px;margin-bottom:20px;padding:7px}
+  .pulse-map-card{padding:11px 12px}
+  .pulse-map-card p{white-space:normal}
+  .radar-section,.why-section{border-radius:19px;margin-left:-1vw;margin-right:-1vw}
+  .radar-heading h2,.why-heading h2,.section-title h2{font-size:26px}
+  .radar-legend,.why-types{max-width:100%}
+  .control-bar{padding:22px}
+  .tab-strip{overflow-x:auto;scrollbar-width:none;gap:6px}
+  .tab-strip::-webkit-scrollbar{display:none}
+  .section-tab{white-space:nowrap}
+  .game-card:hover,.radar-card:hover,.why-card:hover{transform:none}
+  .game-cover{aspect-ratio:16/9}
+  .card-body{padding:15px}
+  .game-card h3{font-size:19px}
+  .source-grid{grid-template-columns:1fr}
+  .method{margin-bottom:48px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}

@@ -3,8 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="GAME PULSE — 跨平台熱門、新上市與即將推出遊戲播報">
-  <title>GAME PULSE｜全平台遊戲播報</title>
+  <meta name="description" content="GAME PULSE — 遊戲熱度偵測與解讀平台。用 PULSE RADAR 發現正在起飛的遊戲，用 PULSE WHY 看懂熱度從哪裡來。">
+  <meta name="theme-color" content="#080a0f">
+  <meta property="og:title" content="GAME PULSE｜看見熱門，也看懂熱門">
+  <meta property="og:description" content="跨平台整合 IGDB、Twitch、Steam 訊號，偵測正在升溫的遊戲並解讀熱度來源。">
+  <meta property="og:type" content="website">
+  <title>GAME PULSE｜看見熱門，也看懂熱門</title>
+  <link rel="preconnect" href="https://images.igdb.com" crossorigin>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -14,7 +19,7 @@
   <header class="nav">
     <a class="logo" href="#">
       <span class="logo-mark">GP</span>
-      <span class="logo-copy"><b>GAME PULSE</b><small>全平台遊戲播報</small></span>
+      <span class="logo-copy"><b>GAME PULSE</b><small>遊戲熱度偵測與解讀</small></span>
     </a>
 
     <nav class="nav-links">
@@ -28,18 +33,28 @@
     <div id="modeBadge" class="mode-badge">讀取中</div>
   </header>
 
+  <div class="mobile-quick-nav" aria-label="手機快速導覽">
+    <a href="#radar">📡 Radar</a>
+    <a href="#why">🔥 Why</a>
+    <a href="#games">🏆 熱門</a>
+    <a href="{{ url_for('release_calendar_page') }}">📅 日曆</a>
+  </div>
+
   <main>
     <section class="hero">
       <div class="hero-copy">
-        <div class="eyebrow"><span class="live-dot"></span> CROSS-PLATFORM GAME SIGNAL</div>
-        <h1>今天大家<br><em>都在玩什麼？</em></h1>
+        <div class="eyebrow"><span class="live-dot"></span> GAME HEAT INTELLIGENCE</div>
+        <h1>看見熱門，<br><em>也看懂熱門。</em></h1>
         <p>
-          整合 IGDB、Twitch 與 Steam 等訊號，不被單一商店綁住。
-          熱門、新上市、即將推出，一個頁面快速掌握。
+          GAME PULSE 不只整理排行榜。PULSE RADAR 找出正在起飛的遊戲，
+          PULSE WHY 解讀這波熱度是直播帶動、玩家回流，還是全面爆發。
         </p>
+        <div class="hero-pill-row" aria-label="GAME PULSE 核心功能">
+          <span>📡 RADAR 預警</span><span>🔥 WHY 解讀</span><span>◷ 24H 趨勢</span>
+        </div>
         <div class="hero-actions">
-          <button class="primary" data-go-hot>查看今日熱門</button>
-          <a class="secondary" href="#method">熱門怎麼算？</a>
+          <button class="primary" data-go-radar>探索 PULSE RADAR</button>
+          <button class="secondary" data-go-hot>查看熱門榜</button>
         </div>
       </div>
 
@@ -62,10 +77,33 @@
       </div>
     </section>
 
-    <section class="radar-section" id="radar">
+    <section class="pulse-map" aria-label="GAME PULSE 快速導覽">
+      <a href="#radar" class="pulse-map-card radar-map">
+        <span class="pulse-map-icon">📡</span>
+        <div><small>WHAT'S NEXT</small><b>PULSE RADAR</b><p>找下一個正在升溫的黑馬</p></div>
+        <i>01</i>
+      </a>
+      <a href="#why" class="pulse-map-card why-map">
+        <span class="pulse-map-icon">🔥</span>
+        <div><small>WHY NOW</small><b>PULSE WHY</b><p>看懂這波熱度從哪裡來</p></div>
+        <i>02</i>
+      </a>
+      <a href="#games" class="pulse-map-card hot-map">
+        <span class="pulse-map-icon">🏆</span>
+        <div><small>HOT NOW</small><b>熱門排行</b><p>跨來源即時熱度榜</p></div>
+        <i>03</i>
+      </a>
+      <a href="{{ url_for('release_calendar_page') }}" class="pulse-map-card calendar-map">
+        <span class="pulse-map-icon">📅</span>
+        <div><small>COMING NEXT</small><b>發售日曆</b><p>掌握近期上市與倒數</p></div>
+        <i>04</i>
+      </a>
+    </section>
+
+    <section class="radar-section feature-section" id="radar">
       <div class="radar-heading">
         <div>
-          <span class="micro">EARLY SIGNAL</span>
+          <span class="micro">01 · EARLY SIGNAL</span>
           <h2>📡 PULSE RADAR</h2>
           <p>不是找現在最紅，而是找正在加速、可能成為下一波熱門的遊戲。</p>
         </div>
@@ -81,10 +119,10 @@
       <p id="radarNote" class="radar-note">正在讀取近期熱度變化…</p>
     </section>
 
-    <section class="why-section" id="why">
+    <section class="why-section feature-section" id="why">
       <div class="why-heading">
         <div>
-          <span class="micro">SIGNAL INTERPRETATION</span>
+          <span class="micro">02 · SIGNAL INTERPRETATION</span>
           <h2>🔥 PULSE WHY</h2>
           <p>不只告訴你什麼遊戲在紅，也解讀這波熱度比較像「大家在看」還是「大家真的回去玩」。</p>
         </div>
@@ -100,9 +138,9 @@
       <p id="whyNote" class="why-note">正在解讀最近 24 小時的多來源熱度變化…</p>
     </section>
 
-    <section class="control-bar" id="games">
+    <section class="control-bar hot-control" id="games">
       <div class="section-title">
-        <span id="sectionEyebrow">TRENDING NOW</span>
+        <span id="sectionEyebrow">03 · TRENDING NOW</span>
         <h2 id="sectionTitle">近日熱門</h2>
         <p id="sectionDescription">跨來源訊號計算出的 GAME PULSE 熱門榜。</p>
       </div>
@@ -166,7 +204,7 @@
   <footer>
     <div>
       <b>GAME PULSE</b>
-      <p>近日熱門・新上市・跨平台遊戲播報</p>
+      <p>遊戲熱度偵測・趨勢分析・跨平台情報</p>
     </div>
     <p>資料與商標屬各自權利人所有。排名為本站自訂指標，不代表官方排行。</p>
   </footer>
@@ -179,7 +217,7 @@
     </article>
   </div>
 
-  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
