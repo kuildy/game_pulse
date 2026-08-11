@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="{{ game.title }}｜GAME PULSE 遊戲詳細資訊">
+  <title>{{ game.title }}｜GAME PULSE</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/game_detail.css') }}">
+</head>
+<body class="detail-page">
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+
+  <header class="nav detail-nav">
+    <a class="logo" href="{{ url_for('index') }}">
+      <span class="logo-mark">GP</span>
+      <span class="logo-copy"><b>GAME PULSE</b><small>全平台遊戲播報</small></span>
+    </a>
+    <a class="detail-back" href="{{ url_for('index') }}#games">← 回到遊戲榜單</a>
+    <div class="mode-badge {{ 'live' if mode == 'live' else 'demo' }}">
+      {{ '● LIVE DATA' if mode == 'live' else '● DEMO MODE' }}
+    </div>
+  </header>
+
+  <main class="detail-shell">
+    <section class="detail-hero">
+      <div class="detail-cover-wrap">
+        {% if game.cover_url %}
+          <img class="detail-cover" src="{{ game.cover_url }}" alt="{{ game.title }} 封面">
+        {% else %}
+          <div class="detail-cover detail-cover-fallback">{{ game.title }}</div>
+        {% endif %}
+      </div>
+
+      <div class="detail-copy">
+        <div class="detail-kicker">
+          <span>GAME DETAILS</span>
+          {% if game.section %}<span class="section-pill">{{ game.section|upper }}</span>{% endif %}
+        </div>
+
+        <h1>{{ game.title }}</h1>
+
+        <div class="detail-signals">
+          <div class="signal-box pulse-box">
+            <small>GAME PULSE</small>
+            <strong>{{ game.pulse_score|round|int }}</strong>
+          </div>
+
+          {% if game.steam_players is not none %}
+          <div class="signal-box">
+            <small>STEAM ONLINE</small>
+            <strong>{{ "{:,}".format(game.steam_players) }}</strong>
+          </div>
+          {% endif %}
+
+          {% if game.twitch_rank %}
+          <div class="signal-box">
+            <small>TWITCH RANK</small>
+            <strong>#{{ game.twitch_rank }}</strong>
+          </div>
+          {% endif %}
+
+          {% if game.rating %}
+          <div class="signal-box">
+            <small>IGDB RATING</small>
+            <strong>{{ game.rating|round(1) }}</strong>
+          </div>
+          {% endif %}
+        </div>
+
+        <p class="detail-summary">{{ game.summary or '目前暫無遊戲介紹。' }}</p>
+
+        <div class="detail-tags">
+          {% for genre in game.genres or [] %}<span>{{ genre }}</span>{% endfor %}
+          {% for theme in game.themes or [] %}<span>{{ theme }}</span>{% endfor %}
+        </div>
+
+        <div class="detail-store-row">
+          {% for store in game.stores or [] %}
+            <a href="{{ store.url }}" target="_blank" rel="noopener noreferrer" class="{{ 'direct' if store.direct else '' }}">
+              {{ store.name }} ↗
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    {% if detail_error %}
+      <div class="detail-notice">IGDB 詳細資料暫時無法更新；以下仍顯示 GAME PULSE 已儲存的資料。</div>
+    {% endif %}
+
+    <section class="detail-layout">
+      <article class="detail-panel main-info-panel">
+        <span class="micro">OVERVIEW</span>
+        <h2>遊戲資訊</h2>
+
+        <div class="info-grid">
+          <div><small>發售日期</small><b>{{ game.release_date or '尚未公布' }}</b></div>
+          <div><small>開發商</small><b>{{ (game.developers or [])|join('、') or '資料整理中' }}</b></div>
+          <div><small>發行商</small><b>{{ (game.publishers or [])|join('、') or '資料整理中' }}</b></div>
+          <div><small>資料來源</small><b>{{ (game.sources or [])|join(' + ') or 'GAME PULSE' }}</b></div>
+        </div>
+
+        <div class="info-group">
+          <small>平台</small>
+          <div class="detail-tags">
+            {% for platform in game.platforms or [] %}<span>{{ platform }}</span>{% endfor %}
+            {% if not game.platforms %}<span>平台資料整理中</span>{% endif %}
+          </div>
+        </div>
+
+        {% if game.storyline %}
+        <div class="story-block">
+          <small>STORYLINE</small>
+          <p>{{ game.storyline }}</p>
+        </div>
+        {% endif %}
+      </article>
+
+      <aside class="detail-panel side-panel">
+        <span class="micro">SIGNAL</span>
+        <h2>GAME PULSE 訊號</h2>
+        <div class="signal-list">
+          <div><span>Pulse Score</span><b>{{ game.pulse_score|round(1) }}</b></div>
+          <div><span>Twitch</span><b>{{ ('#' ~ game.twitch_rank) if game.twitch_rank else '—' }}</b></div>
+          <div><span>Steam CCU</span><b>{{ "{:,}".format(game.steam_players) if game.steam_players is not none else '—' }}</b></div>
+          <div><span>IGDB Rating</span><b>{{ game.rating|round(1) if game.rating else '—' }}</b></div>
+        </div>
+      </aside>
+    </section>
+
+    {% if game.screenshots %}
+    <section class="media-section">
+      <div class="detail-section-head">
+        <div><span class="micro">SCREENSHOTS</span><h2>遊戲畫面</h2></div>
+        <span>{{ game.screenshots|length }} 張</span>
+      </div>
+      <div class="screenshot-grid">
+        {% for image in game.screenshots %}
+          <a href="{{ image }}" target="_blank" rel="noopener noreferrer">
+            <img src="{{ image }}" alt="{{ game.title }} 遊戲截圖" loading="lazy">
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    {% if game.videos %}
+    <section class="media-section">
+      <div class="detail-section-head">
+        <div><span class="micro">VIDEOS</span><h2>Trailer / Video</h2></div>
+      </div>
+      <div class="video-grid">
+        {% for video in game.videos[:2] %}
+          <article class="video-card">
+            <div class="video-frame">
+              <iframe src="{{ video.embed_url }}" title="{{ video.name }}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            </div>
+            <div class="video-title">{{ video.name }}</div>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+  </main>
+
+  <footer>
+    <div><b>GAME PULSE</b><p>近日熱門・新上市・跨平台遊戲播報</p></div>
+    <p>資料與商標屬各自權利人所有。GAME PULSE 分數為本站自訂指標。</p>
+  </footer>
+</body>
+</html>

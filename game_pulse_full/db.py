@@ -93,6 +93,36 @@ def get_games(section, limit=50):
         result.append(item)
     return result
 
+def get_game_by_identifier(identifier):
+    """可用 game_key 或 IGDB slug 取得遊戲；同款跨 section 時優先熱門榜。"""
+    with connect() as conn:
+        row = conn.execute(
+            """
+            SELECT * FROM games
+            WHERE game_key = ? OR slug = ?
+            ORDER BY
+              CASE WHEN game_key = ? THEN 0 ELSE 1 END,
+              CASE section
+                WHEN 'hot' THEN 0
+                WHEN 'new' THEN 1
+                WHEN 'upcoming' THEN 2
+                ELSE 3
+              END,
+              updated_at DESC
+            LIMIT 1
+            """,
+            (identifier, identifier, identifier),
+        ).fetchone()
+
+    if not row:
+        return None
+
+    item = dict(row)
+    for field in ("platforms_json", "genres_json", "stores_json", "sources_json"):
+        item[field.replace("_json", "")] = json.loads(item.pop(field) or "[]")
+    return item
+
+
 def set_source_status(source, status, message=""):
     now = datetime.now(timezone.utc).isoformat()
     with connect() as conn:

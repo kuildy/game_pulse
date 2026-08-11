@@ -29,136 +29,44 @@ function dateText(d){
   return new Intl.DateTimeFormat("zh-TW",{year:"numeric",month:"2-digit",day:"2-digit"}).format(dt);
 }
 
-function card(game, index) {
+function card(game, index){
   const image = game.cover_url
-    ? `
-      <img
-        src="${escapeHtml(game.cover_url)}"
-        alt="${escapeHtml(game.title)}"
-        loading="lazy"
-        onerror="this.style.display='none'"
-      >
-    `
+    ? `<img src="${escapeHtml(game.cover_url)}" alt="${escapeHtml(game.title)}" loading="lazy" onerror="this.style.display='none'">`
     : `<div class="cover-fallback">${escapeHtml(game.title)}</div>`;
 
-  const genreChips = (game.genres || [])
-    .slice(0, 3)
-    .map(x => `<span class="chip">${escapeHtml(x)}</span>`)
-    .join("");
+  const genreChips = (game.genres||[]).slice(0,3).map(x=>`<span class="chip">${escapeHtml(x)}</span>`).join("");
+  const platformChips = (game.platforms||[]).slice(0,2).map(x=>`<span class="chip">${escapeHtml(x)}</span>`).join("");
+  const sourceChips = (game.sources||[]).slice(0,2).map(x=>`<span class="chip source-chip">${escapeHtml(x)}</span>`).join("");
 
-  const platformChips = (game.platforms || [])
-    .slice(0, 2)
-    .map(x => `<span class="chip">${escapeHtml(x)}</span>`)
-    .join("");
+  const stores = (game.stores||[]).slice(0,4).map(s =>
+    `<a class="${s.direct?'direct':''}" href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(s.name)} ↗</a>`
+  ).join("");
 
-  const sourceChips = (game.sources || [])
-    .slice(0, 2)
-    .map(x => `<span class="chip source-chip">${escapeHtml(x)}</span>`)
-    .join("");
+  const metaRight = state.section === "hot"
+    ? (game.twitch_rank ? `Twitch #${game.twitch_rank}` : "跨平台")
+    : dateText(game.release_date);
 
-  const stores = (game.stores || [])
-    .slice(0, 4)
-    .map(s => `
-      <a
-        class="${s.direct ? "direct" : ""}"
-        href="${escapeHtml(s.url)}"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        ${escapeHtml(s.name)} ↗
-      </a>
-    `)
-    .join("");
+  const steamPlayers = game.steam_players !== null && game.steam_players !== undefined
+    ? `<div class="player-count"><span class="player-dot"></span><span>Steam</span><strong>${Number(game.steam_players).toLocaleString("zh-TW")}</strong><span>人在線</span></div>`
+    : "";
 
-  const metaRight =
-    state.section === "hot"
-      ? (game.twitch_rank
-          ? `Twitch #${game.twitch_rank}`
-          : "跨平台")
-      : dateText(game.release_date);
+  const detailUrl = `/game/${encodeURIComponent(game.slug || game.game_key)}`;
 
-  // Steam 即時玩家
-  const steamPlayers =
-    game.steam_players !== null &&
-    game.steam_players !== undefined
-      ? `
-        <div class="player-count">
-          <span class="player-dot"></span>
-          <span>Steam</span>
-          <strong>
-            ${Number(game.steam_players).toLocaleString("zh-TW")}
-          </strong>
-          <span>人在線</span>
-        </div>
-      `
-      : "";
-
-  return `
-    <article
-      class="game-card"
-      data-index="${index}"
-      data-platform="${platformClass(game.platforms).join(" ")}"
-    >
-
-      <div class="game-cover">
-
-        ${image}
-
-        <span class="rank">
-          #${String(index + 1).padStart(2, "0")}
-        </span>
-
-        <span class="score">
-          PULSE
-          <b>${Math.round(game.pulse_score || 0)}</b>
-        </span>
-
-      </div>
-
-      <div class="card-body">
-
-        <div class="meta">
-          <span>
-            ${escapeHtml(
-              (game.platforms || [])[0] || "Multi-platform"
-            )}
-          </span>
-
-          <span>${escapeHtml(metaRight)}</span>
-        </div>
-
-        <h3>${escapeHtml(game.title)}</h3>
-
-        ${steamPlayers}
-
-        <div class="summary">
-          ${escapeHtml(game.summary || "暫無介紹。")}
-        </div>
-
-        <div class="chips">
-          ${genreChips}
-          ${platformChips}
-          ${sourceChips}
-        </div>
-
-        <div class="store-row">
-          ${
-            stores ||
-            "<span class='chip'>商店資料整理中</span>"
-          }
-        </div>
-
-        <button
-          class="more-btn"
-          data-open="${index}"
-        >
-          查看完整資訊
-        </button>
-
-      </div>
-
-    </article>
-  `;
+  return `<article class="game-card" data-index="${index}" data-platform="${platformClass(game.platforms).join(" ")}">
+    <div class="game-cover">${image}
+      <span class="rank">#${String(index+1).padStart(2,"0")}</span>
+      <span class="score">PULSE <b>${Math.round(game.pulse_score||0)}</b></span>
+    </div>
+    <div class="card-body">
+      <div class="meta"><span>${escapeHtml((game.platforms||[])[0] || "Multi-platform")}</span><span>${escapeHtml(metaRight)}</span></div>
+      <h3>${escapeHtml(game.title)}</h3>
+      ${steamPlayers}
+      <div class="summary">${escapeHtml(game.summary || "暫無介紹。")}</div>
+      <div class="chips">${genreChips}${platformChips}${sourceChips}</div>
+      <div class="store-row">${stores || "<span class='chip'>商店資料整理中</span>"}</div>
+      <a class="more-btn detail-link" href="${detailUrl}">查看完整資訊</a>
+    </div>
+  </article>`;
 }
 
 function filteredGames(){
@@ -177,7 +85,6 @@ function render(){
     ? games.map((g,i)=>card(g,i)).join("")
     : `<div class="empty">目前沒有符合搜尋條件的遊戲。</div>`;
   if(state.games[0]) $("#heroScore").textContent = Math.round(state.games[0].pulse_score || 0);
-  bindModalButtons(games);
 }
 
 function setSectionUI(section){

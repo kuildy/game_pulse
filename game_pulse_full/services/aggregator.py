@@ -28,13 +28,13 @@ NON_GAME_TWITCH_CATEGORIES = {
     "sports",
     "just chatting",
     "music",
+    "asmr",
     "talk shows & podcasts",
     "pools, hot tubs, and beaches",
     "art",
     "food & drink",
     "travel & outdoors",
     "special events",
-    "asmr",
 }
 
 

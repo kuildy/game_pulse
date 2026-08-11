@@ -15,6 +15,14 @@ GAME_FIELDS = (
     "external_games.external_game_source.name,external_games.url,external_games.uid"
 )
 
+DETAIL_FIELDS = (
+    GAME_FIELDS +
+    ",storyline,themes.name,screenshots.image_id,"
+    "videos.name,videos.video_id,"
+    "involved_companies.developer,involved_companies.publisher,"
+    "involved_companies.company.name"
+)
+
 class IGDBClient:
     def __init__(self):
         self.client_id = TWITCH_CLIENT_ID
@@ -169,6 +177,16 @@ class IGDBClient:
         )
         return [self.transform_game(g) for g in rows]
 
+    def game_details(self, igdb_id):
+        """取得詳細頁所需的 IGDB metadata。"""
+        rows = self.post(
+            "games",
+            f"fields {DETAIL_FIELDS}; where id = {int(igdb_id)}; limit 1;"
+        )
+        if not rows:
+            return {}
+        return self.transform_detail(rows[0])
+
     def games_by_release_window(self, start_ts, end_ts, limit=30, newest_first=True):
         direction = "desc" if newest_first else "asc"
         return [
@@ -181,6 +199,51 @@ class IGDBClient:
                 f"sort first_release_date {direction}; limit {int(limit)};"
             )
         ]
+
+    @staticmethod
+    def transform_detail(g):
+        base = IGDBClient.transform_game(g)
+
+        screenshots = []
+        for shot in (g.get("screenshots") or [])[:8]:
+            image_id = shot.get("image_id")
+            if image_id:
+                screenshots.append(
+                    f"https://images.igdb.com/igdb/image/upload/t_screenshot_big_2x/{image_id}.jpg"
+                )
+
+        videos = []
+        for video in (g.get("videos") or [])[:4]:
+            video_id = (video.get("video_id") or "").strip()
+            if video_id:
+                videos.append({
+                    "name": video.get("name") or "Trailer",
+                    "video_id": video_id,
+                    "embed_url": f"https://www.youtube.com/embed/{video_id}",
+                    "watch_url": f"https://www.youtube.com/watch?v={video_id}",
+                })
+
+        developers = []
+        publishers = []
+        for item in (g.get("involved_companies") or []):
+            company = item.get("company") or {}
+            name = company.get("name") if isinstance(company, dict) else None
+            if not name:
+                continue
+            if item.get("developer") and name not in developers:
+                developers.append(name)
+            if item.get("publisher") and name not in publishers:
+                publishers.append(name)
+
+        base.update({
+            "storyline": (g.get("storyline") or "").strip(),
+            "themes": [x.get("name") for x in (g.get("themes") or []) if x.get("name")],
+            "screenshots": screenshots,
+            "videos": videos,
+            "developers": developers,
+            "publishers": publishers,
+        })
+        return base
 
     @staticmethod
     def transform_game(g):
