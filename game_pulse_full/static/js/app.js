@@ -29,6 +29,45 @@ function dateText(d){
   return new Intl.DateTimeFormat("zh-TW",{year:"numeric",month:"2-digit",day:"2-digit"}).format(dt);
 }
 
+function trendSparkline(points=[]){
+  const values = (points || [])
+    .map(p => Number(p.pulse_score))
+    .filter(Number.isFinite);
+  if(values.length < 2) return "";
+
+  const width = 112;
+  const height = 28;
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = Math.max(1, max - min);
+  const coords = values.map((value, i) => {
+    const x = values.length === 1 ? 0 : (i / (values.length - 1)) * width;
+    const y = height - ((value - min) / range) * (height - 4) - 2;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+
+  return `<svg class="trend-sparkline" viewBox="0 0 ${width} ${height}" aria-hidden="true"><polyline points="${coords}"></polyline></svg>`;
+}
+
+function trend24h(game){
+  if(state.section !== "hot") return "";
+
+  if(!game.trend_ready){
+    const samples = (game.trend_points || []).length;
+    return `<div class="trend-box pending"><div><span>24H PULSE</span><strong>建立中</strong></div>${samples > 1 ? trendSparkline(game.trend_points) : `<small>累積更多更新快照後顯示</small>`}</div>`;
+  }
+
+  const delta = Number(game.trend_24h_delta || 0);
+  const direction = game.trend_24h_direction || "flat";
+  const arrow = direction === "up" ? "↑" : direction === "down" ? "↓" : "→";
+  const sign = delta > 0 ? "+" : "";
+  const pct = game.trend_24h_percent != null
+    ? `<small>${Number(game.trend_24h_percent) > 0 ? "+" : ""}${Number(game.trend_24h_percent).toFixed(1)}%</small>`
+    : "";
+
+  return `<div class="trend-box ${direction}"><div><span>24H PULSE</span><strong>${arrow} ${sign}${delta.toFixed(1)}</strong>${pct}</div>${trendSparkline(game.trend_points)}</div>`;
+}
+
 function card(game, index){
   const image = game.cover_url
     ? `<img src="${escapeHtml(game.cover_url)}" alt="${escapeHtml(game.title)}" loading="lazy" onerror="this.style.display='none'">`
@@ -58,6 +97,7 @@ function card(game, index){
     ? `<div class="live-signal-stack">${twitchViewers}${steamPlayers}</div>`
     : "";
 
+  const trendSignal = trend24h(game);
   const detailUrl = `/game/${encodeURIComponent(game.slug || game.game_key)}`;
 
   return `<article class="game-card" data-index="${index}" data-platform="${platformClass(game.platforms).join(" ")}">
@@ -69,6 +109,7 @@ function card(game, index){
       <div class="meta"><span>${escapeHtml((game.platforms||[])[0] || "Multi-platform")}</span><span>${escapeHtml(metaRight)}</span></div>
       <h3>${escapeHtml(game.title)}</h3>
       ${liveSignals}
+      ${trendSignal}
       <div class="summary">${escapeHtml(game.summary || "暫無介紹。")}</div>
       <div class="chips">${genreChips}${platformChips}${sourceChips}</div>
       <div class="store-row">${stores || "<span class='chip'>商店資料整理中</span>"}</div>

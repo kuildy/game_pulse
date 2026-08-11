@@ -37,3 +37,10 @@ footer{width:min(1240px,92vw);margin:auto;padding:28px 0 42px;border-top:1px sol
 .player-count.twitch strong{color:var(--cyan)}
 .player-count.twitch .player-dot{background:var(--cyan);box-shadow:0 0 10px rgba(83,216,255,.7)}
 .signal-footnote{margin:12px 0 0;color:var(--muted);font-size:10px;line-height:1.6}
+
+/* 24H PULSE trend */
+.trend-box{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 12px;padding:9px 11px;border:1px solid rgba(255,255,255,.08);border-radius:9px;background:rgba(255,255,255,.025)}
+.trend-box>div{display:flex;align-items:baseline;gap:7px;min-width:0}.trend-box span{font-size:9px;letter-spacing:.09em;color:var(--muted)}.trend-box strong{font-size:13px;white-space:nowrap}.trend-box small{font-size:9px;color:var(--muted);white-space:nowrap}
+.trend-box.up strong{color:var(--green)}.trend-box.down strong{color:#ff708f}.trend-box.flat strong{color:var(--cyan)}.trend-box.pending strong{color:var(--muted)}
+.trend-sparkline{width:112px;height:28px;flex:0 0 112px;overflow:visible}.trend-sparkline polyline{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.trend-box.up .trend-sparkline{color:var(--green)}.trend-box.down .trend-sparkline{color:#ff708f}.trend-box.flat .trend-sparkline,.trend-box.pending .trend-sparkline{color:var(--cyan)}
+@media(max-width:620px){.trend-sparkline{width:88px;flex-basis:88px}}

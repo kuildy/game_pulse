@@ -1,6 +1,6 @@
 import json
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from config import DATABASE_PATH
 
 SCHEMA = """
@@ -30,6 +30,19 @@ CREATE TABLE IF NOT EXISTS games (
     updated_at TEXT NOT NULL,
     UNIQUE(game_key, section)
 );
+
+CREATE TABLE IF NOT EXISTS game_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    game_key TEXT NOT NULL,
+    title TEXT NOT NULL,
+    pulse_score REAL NOT NULL,
+    twitch_viewers INTEGER,
+    steam_players INTEGER,
+    recorded_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_game_history_key_time
+ON game_history(game_key, recorded_at);
 
 CREATE TABLE IF NOT EXISTS source_status (
     source TEXT PRIMARY KEY,
@@ -86,6 +99,96 @@ def replace_section(section, games):
                 )
             )
 
+            if section == "hot":
+                conn.execute(
+                    """
+                    INSERT INTO game_history(
+                        game_key, title, pulse_score, twitch_viewers, steam_players, recorded_at
+                    ) VALUES(?,?,?,?,?,?)
+                    """,
+                    (
+                        g["game_key"],
+                        g["title"],
+                        float(g.get("pulse_score", 0)),
+                        g.get("twitch_viewers"),
+                        g.get("steam_players"),
+                        now,
+                    ),
+                )
+
+        if section == "hot":
+            # 24H 趨勢只需要短期歷史；保留 8 天方便之後擴成 7D 趨勢。
+            history_cutoff = (datetime.now(timezone.utc) - timedelta(days=8)).isoformat()
+            conn.execute("DELETE FROM game_history WHERE recorded_at < ?", (history_cutoff,))
+
+def _attach_24h_trend(conn, item):
+    """把 24H PULSE 變化與 sparkline 點附加到 API 回傳資料。
+
+    只有真的存在 24 小時以前的快照才會宣稱 24H delta；
+    剛啟用 history 時會回傳 trend_ready=False，避免把 2 小時變化誤標成 24H。
+    """
+    if item.get("section") != "hot":
+        return item
+
+    now = datetime.now(timezone.utc)
+    cutoff = (now - timedelta(hours=24)).isoformat()
+
+    baseline = conn.execute(
+        """
+        SELECT pulse_score, twitch_viewers, steam_players, recorded_at
+        FROM game_history
+        WHERE game_key = ? AND recorded_at <= ?
+        ORDER BY recorded_at DESC
+        LIMIT 1
+        """,
+        (item.get("game_key"), cutoff),
+    ).fetchone()
+
+    points = conn.execute(
+        """
+        SELECT pulse_score, twitch_viewers, steam_players, recorded_at
+        FROM game_history
+        WHERE game_key = ? AND recorded_at >= ?
+        ORDER BY recorded_at ASC
+        LIMIT 48
+        """,
+        (item.get("game_key"), cutoff),
+    ).fetchall()
+
+    trend_rows = list(points)
+    # 把 24 小時基準點也放進 sparkline，讓折線從真正的 24H 參考值開始。
+    if baseline and (not trend_rows or trend_rows[0]["recorded_at"] != baseline["recorded_at"]):
+        trend_rows.insert(0, baseline)
+
+    item["trend_points"] = [
+        {
+            "time": row["recorded_at"],
+            "pulse_score": round(float(row["pulse_score"] or 0), 1),
+            "twitch_viewers": row["twitch_viewers"],
+            "steam_players": row["steam_players"],
+        }
+        for row in trend_rows
+    ]
+
+    if not baseline:
+        item["trend_ready"] = False
+        item["trend_24h_delta"] = None
+        item["trend_24h_percent"] = None
+        item["trend_24h_direction"] = None
+        return item
+
+    current = float(item.get("pulse_score") or 0)
+    previous = float(baseline["pulse_score"] or 0)
+    delta = current - previous
+    pct = (delta / previous * 100) if previous else None
+
+    item["trend_ready"] = True
+    item["trend_24h_delta"] = round(delta, 1)
+    item["trend_24h_percent"] = round(pct, 1) if pct is not None else None
+    item["trend_24h_direction"] = "up" if delta > 0.4 else "down" if delta < -0.4 else "flat"
+    return item
+
+
 def get_games(section, limit=50):
     order = "pulse_score DESC, id ASC" if section == "hot" else "release_date ASC, id ASC"
     if section == "new":
@@ -96,12 +199,14 @@ def get_games(section, limit=50):
             (section, limit)
         ).fetchall()
 
-    result = []
-    for row in rows:
-        item = dict(row)
-        for field in ("platforms_json", "genres_json", "stores_json", "sources_json"):
-            item[field.replace("_json", "")] = json.loads(item.pop(field) or "[]")
-        result.append(item)
+        result = []
+        for row in rows:
+            item = dict(row)
+            for field in ("platforms_json", "genres_json", "stores_json", "sources_json"):
+                item[field.replace("_json", "")] = json.loads(item.pop(field) or "[]")
+            if section == "hot":
+                item = _attach_24h_trend(conn, item)
+            result.append(item)
     return result
 
 def get_game_by_identifier(identifier):
@@ -131,6 +236,9 @@ def get_game_by_identifier(identifier):
     item = dict(row)
     for field in ("platforms_json", "genres_json", "stores_json", "sources_json"):
         item[field.replace("_json", "")] = json.loads(item.pop(field) or "[]")
+    if item.get("section") == "hot":
+        with connect() as conn:
+            item = _attach_24h_trend(conn, item)
     return item
 
 

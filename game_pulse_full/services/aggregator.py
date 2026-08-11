@@ -26,18 +26,44 @@ def norm_title(value):
 NON_GAME_TWITCH_CATEGORIES = {
     "irl",
     "slots",
+    "sports",
     "just chatting",
     "music",
     "asmr",
+    "chess",
     "talk shows & podcasts",
     "pools, hot tubs, and beaches",
+    "art",
     "food & drink",
     "travel & outdoors",
     "special events",
-    "Chess",
-    "art",
-    "Sports"
 }
+
+
+# Twitch 類別名稱/IGDB 對應偶爾不是我們網站想呈現的「目前主力遊戲」。
+# 這裡只放已確認過的少數人工覆寫，避免一般名稱模糊比對誤傷其他作品。
+TWITCH_GAME_OVERRIDES = {
+    # Twitch category: Counter-Strike (id 32399)
+    # GAME PULSE 將它視為目前主力的 Counter-Strike 2。
+    "32399": {
+        "igdb_id": "242408",
+        "steam_appid": "730",
+        "canonical_title": "Counter-Strike 2",
+    },
+}
+
+
+def apply_twitch_game_override(game):
+    twitch_game_id = str(game.get("twitch_game_id") or "").strip()
+    override = TWITCH_GAME_OVERRIDES.get(twitch_game_id)
+    if not override:
+        return game
+
+    game = dict(game)
+    game["igdb_id"] = override.get("igdb_id") or game.get("igdb_id")
+    game["_override_steam_appid"] = override.get("steam_appid")
+    game["_canonical_title"] = override.get("canonical_title")
+    return game
 
 
 def is_non_game_twitch_category(title):
@@ -186,10 +212,16 @@ def refresh_live():
         ]
 
         twitch_hot = [
-            g
+            apply_twitch_game_override(g)
             for g in raw_twitch_hot
             if not is_non_game_twitch_category(g.get("title", ""))
         ][:HOT_LIMIT]
+
+        override_names = [
+            f"{g.get('title')} → {g.get('_canonical_title')}"
+            for g in twitch_hot
+            if g.get("_canonical_title")
+        ]
 
         set_source_status(
             "Twitch",
@@ -202,6 +234,13 @@ def refresh_live():
                 "Twitch Filter",
                 "ok",
                 "已排除非遊戲分類：" + "、".join(filtered_categories)
+            )
+
+        if override_names:
+            set_source_status(
+                "Twitch Override",
+                "ok",
+                "已套用分類校正：" + "、".join(override_names)
             )
 
         # 以每款遊戲前 100 個直播頻道的 viewer_count 合計，
@@ -271,6 +310,13 @@ def refresh_live():
         key = norm_title(tg["title"])
         twitch_igdb_id = str(tg.get("igdb_id") or "").strip()
 
+        # 若人工覆寫把 Twitch 類別導向另一款 canonical game，
+        # 移除同名但錯誤的 IGDB Hot 候選，避免首頁同時出現舊 Counter-Strike 與 CS2。
+        if tg.get("_canonical_title") and key in merged:
+            candidate_id = str(merged[key].get("igdb_id") or "")
+            if candidate_id and candidate_id != twitch_igdb_id and not merged[key].get("twitch_game_id"):
+                merged.pop(key, None)
+
         # 1) 最優先：用 Twitch 提供的 IGDB ID 找同一款遊戲。
         if twitch_igdb_id and twitch_igdb_id.isdigit():
             existing_key = next(
@@ -292,6 +338,8 @@ def refresh_live():
                     "_twitch_score": tg.get("twitch_score", 0),
                     "_igdb_enriched": True,
                 })
+                if tg.get("_override_steam_appid"):
+                    base["steam_appid"] = tg.get("_override_steam_appid")
                 if not base.get("cover_url"):
                     base["cover_url"] = tg.get("cover_url")
                 direct_matches += 1
