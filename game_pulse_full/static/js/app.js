@@ -163,19 +163,13 @@ function card(game, index, rankNumber){
     : `<div class="cover-fallback">${escapeHtml(game.title)}</div>`;
 
   const genreChips = (game.genres||[]).slice(0,3).map(x=>`<span class="chip">${escapeHtml(x)}</span>`).join("");
-  const platformChips = (game.platforms||[]).slice(0,2).map(x=>`<span class="chip">${escapeHtml(x)}</span>`).join("");
-  const sourceChips = (game.sources||[]).slice(0,2).map(x=>`<span class="chip source-chip">${escapeHtml(x)}</span>`).join("");
-
-  const stores = (game.stores||[]).slice(0,4).map(s =>
-    `<a class="${s.direct?'direct':''}" href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(s.name)} ↗</a>`
-  ).join("");
 
   const metaRight = state.section === "hot"
     ? (game.twitch_rank ? `Twitch #${game.twitch_rank}` : "跨平台")
     : dateText(game.release_date);
 
   const twitchViewers = game.twitch_viewers !== null && game.twitch_viewers !== undefined
-    ? `<div class="player-count twitch"><span class="player-dot"></span><span>Twitch</span><strong>${Number(game.twitch_viewers).toLocaleString("zh-TW")}</strong><span>人觀看</span>${game.twitch_channels != null ? `<em>${Number(game.twitch_channels).toLocaleString("zh-TW")} 頻道</em>` : ""}</div>`
+    ? `<div class="player-count twitch"><span class="player-dot"></span><span>Twitch</span><strong>${Number(game.twitch_viewers).toLocaleString("zh-TW")}</strong><span>人觀看</span></div>`
     : "";
 
   const steamPlayers = game.steam_players !== null && game.steam_players !== undefined
@@ -205,9 +199,8 @@ function card(game, index, rankNumber){
       <h3>${escapeHtml(game.title)}</h3>
       ${liveSignals}
       ${trendSignal}
-      <div class="chips">${genreChips}${platformChips}${sourceChips}</div>
-      <div class="store-row">${stores || "<span class='chip'>商店資料整理中</span>"}</div>
-      <a class="more-btn detail-link" href="${gameDetailUrl}">查看完整資訊</a>
+      ${genreChips ? `<div class="chips">${genreChips}</div>` : ""}
+      <a class="more-btn detail-link" href="${gameDetailUrl}">查看遊戲詳情</a>
     </div>
   </article>`;
 }
