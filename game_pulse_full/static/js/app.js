@@ -5,7 +5,7 @@ const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 
 const copy = {
-  hot: ["03 · TRENDING NOW","近日熱門","跨來源訊號計算出的 GAME PULSE 熱門榜。"],
+  hot: ["03 · TRENDING NOW","近日熱門","跨來源訊號計算出的 WAVESIG 熱門榜。"],
   new: ["03 · NEW RELEASES","近日新上市","過去 30 天內推出的跨平台遊戲。"],
   upcoming: ["03 · COMING SOON","即將推出","未來 90 天預計推出的遊戲。"]
 };
@@ -307,7 +307,7 @@ async function loadTodaySummary(){
       summaryItem({
         eyebrow:"HOT NOW", icon:"🔥", title:hottest.title,
         value:`PULSE ${Math.round(hottest.pulse_score || 0)}`,
-        note:"目前 GAME PULSE 熱度最高", game:hottest
+        note:"目前 WAVESIG 熱度最高", game:hottest
       }),
       radarTop ? summaryItem({
         eyebrow:"RADAR PICK", icon:"📡", title:radarTop.title,
@@ -412,7 +412,7 @@ function whyCard(item){
       <div class="why-topline"><span class="why-type">${escapeHtml(item.type_zh || "熱度解讀")}</span><strong>可信度 ${Number(item.confidence || 0).toFixed(0)}%</strong></div>
       <h3><a href="${detailUrl}">${escapeHtml(item.title)}</a></h3>
       <h4>${escapeHtml(item.headline || "近期熱度出現變化")}</h4>
-      <p>${escapeHtml(item.explanation || "GAME PULSE 正在分析多來源訊號。")}</p>
+      <p>${escapeHtml(item.explanation || "WAVESIG 正在分析多來源訊號。")}</p>
       <div class="why-evidence">${evidence}</div>
     </div>
   </article>`;
@@ -509,7 +509,7 @@ function bindModalButtons(games){
         ${(g.genres||[]).map(x=>`<span class="chip">${escapeHtml(x)}</span>`).join("")}
       </div>
       <p class="modal-summary">${escapeHtml(g.summary || "暫無詳細介紹。")}</p>
-      <div class="formula-row"><b>${Math.round(g.pulse_score||0)}</b><span>GAME PULSE SCORE</span></div>
+      <div class="formula-row"><b>${Math.round(g.pulse_score||0)}</b><span>PULSE SCORE</span></div>
       ${g.release_date?`<div class="formula-row"><b>◷</b><span>發售日 ${dateText(g.release_date)}</span></div>`:""}
       ${g.steam_players!=null?`<div class="formula-row"><b>PC</b><span>Steam 目前玩家 ${Number(g.steam_players).toLocaleString()}</span></div>`:""}
       <div class="modal-stores">${stores}</div>`;

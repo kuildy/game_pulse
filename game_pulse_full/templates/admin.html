@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>管理後台｜GAME PULSE</title>
+  <title>管理後台｜WAVESIG</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 </head>
 <body class="admin-page">
   <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
   <header class="nav">
-    <a class="logo" href="{{ url_for('index') }}"><span class="logo-mark">GP</span><span class="logo-copy"><b>GAME PULSE</b><small>ADMIN</small></span></a>
+    <a class="logo" href="{{ url_for('index') }}"><span class="logo-mark">WS</span><span class="logo-copy"><b>WAVESIG</b><small>ADMIN</small></span></a>
     {% if authenticated %}<form method="post" action="{{ url_for('admin_logout') }}"><button class="secondary admin-logout">登出</button></form>{% endif %}
   </header>
 
@@ -20,7 +20,7 @@
     {% elif not authenticated %}
       <section class="admin-login-card"><span class="micro">ADMIN LOGIN</span><h1>管理後台</h1><p>輸入 Render Environment 中設定的 ADMIN_TOKEN。</p>{% if login_error %}<div class="admin-error">{{ login_error }}</div>{% endif %}<form method="post" action="{{ url_for('admin_login') }}"><input type="password" name="token" autocomplete="current-password" placeholder="ADMIN_TOKEN" required><button class="primary">登入</button></form></section>
     {% else %}
-      <section class="admin-heading"><div><span class="micro">CONTROL ROOM</span><h1>GAME PULSE 後台</h1><p>查看資料來源、歷史資料、通知與 Twitch → IGDB 配對覆寫。</p></div><form method="post" action="{{ url_for('admin_refresh') }}"><button class="primary">立即重新抓取資料</button></form></section>
+      <section class="admin-heading"><div><span class="micro">CONTROL ROOM</span><h1>WAVESIG 後台</h1><p>查看資料來源、歷史資料、通知與 Twitch → IGDB 配對覆寫。</p></div><form method="post" action="{{ url_for('admin_refresh') }}"><button class="primary">立即重新抓取資料</button></form></section>
 
       <section class="admin-stat-grid">
         <div><small>HOT</small><b>{{ stats.sections.get('hot', {}).get('count', 0) }}</b></div>

@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="{{ game.title }}｜GAME PULSE 遊戲詳細資訊">
-  <title>{{ game.title }}｜GAME PULSE</title>
+  <meta name="description" content="{{ game.title }}｜WAVESIG 遊戲詳細資訊">
+  <title>{{ game.title }}｜WAVESIG</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/game_detail.css') }}">
 </head>
@@ -14,8 +14,8 @@
 
   <header class="nav detail-nav">
     <a class="logo" href="{{ url_for('index') }}">
-      <span class="logo-mark">GP</span>
-      <span class="logo-copy"><b>GAME PULSE</b><small>全平台遊戲播報</small></span>
+      <span class="logo-mark">WS</span>
+      <span class="logo-copy"><b>WAVESIG</b><small>遊戲熱度偵測與解讀</small></span>
     </a>
     <div class="detail-nav-links">
       <a class="detail-back" href="{{ url_for('index') }}#games">← 回到遊戲榜單</a>
@@ -52,7 +52,7 @@
 
         <div class="detail-signals">
           <div class="signal-box pulse-box">
-            <small>GAME PULSE</small>
+            <small>PULSE SCORE</small>
             <strong>{{ game.pulse_score|round|int }}</strong>
           </div>
 
@@ -117,7 +117,7 @@
     </section>
 
     {% if detail_error %}
-      <div class="detail-notice">IGDB 詳細資料暫時無法更新；以下仍顯示 GAME PULSE 已儲存的資料。</div>
+      <div class="detail-notice">IGDB 詳細資料暫時無法更新；以下仍顯示 WAVESIG 已儲存的資料。</div>
     {% endif %}
 
     <section class="detail-layout">
@@ -129,7 +129,7 @@
           <div><small>發售日期</small><b>{{ game.release_date or '尚未公布' }}</b></div>
           <div><small>開發商</small><b>{{ (game.developers or [])|join('、') or '資料整理中' }}</b></div>
           <div><small>發行商</small><b class="company-links">{% if game.publisher_details %}{% for company in game.publisher_details %}{% if company.website %}<a href="{{ company.website }}" target="_blank" rel="noopener noreferrer">{{ company.name }} ↗</a>{% else %}<span>{{ company.name }}</span>{% endif %}{% if not loop.last %}<em>、</em>{% endif %}{% endfor %}{% else %}{{ (game.publishers or [])|join('、') or '資料整理中' }}{% endif %}</b></div>
-          <div><small>資料來源</small><b>{{ (game.sources or [])|join(' + ') or 'GAME PULSE' }}</b></div>
+          <div><small>資料來源</small><b>{{ (game.sources or [])|join(' + ') or 'WAVESIG' }}</b></div>
         </div>
 
         <div class="info-group">
@@ -150,7 +150,7 @@
 
       <aside class="detail-panel side-panel">
         <span class="micro">SIGNAL</span>
-        <h2>GAME PULSE 訊號</h2>
+        <h2>PULSE 訊號</h2>
         <div class="signal-list">
           <div><span>Pulse Score</span><b>{{ game.pulse_score|round(1) }}</b></div>
           <div><span>Twitch Viewers*</span><b>{{ "{:,}".format(game.twitch_viewers) if game.twitch_viewers is not none else '—' }}</b></div>
@@ -182,7 +182,7 @@
       </div>
       <div class="history-chart-card">
         <div class="history-chart-meta"><b id="trendCurrent">--</b><span id="trendSummary">歷史資料累積中</span></div>
-        <svg id="historyChart" class="history-chart" viewBox="0 0 900 280" role="img" aria-label="GAME PULSE 歷史趨勢圖">
+        <svg id="historyChart" class="history-chart" viewBox="0 0 900 280" role="img" aria-label="PULSE 歷史趨勢圖">
           <line x1="48" y1="242" x2="876" y2="242" class="axis-line"></line>
           <polyline id="historyLine" points="" class="history-line"></polyline>
         </svg>
@@ -233,8 +233,8 @@
   </main>
 
   <footer>
-    <div><b>GAME PULSE</b><p>近日熱門・新上市・跨平台遊戲播報</p></div>
-    <p>資料與商標屬各自權利人所有。GAME PULSE 分數為本站自訂指標。</p>
+    <div><b>WAVESIG</b><p>近日熱門・新上市・跨平台遊戲播報</p></div>
+    <p>資料與商標屬各自權利人所有。PULSE Score 為 WAVESIG 自訂指標。</p>
   </footer>
   <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
   <script src="{{ url_for('static', filename='js/game_detail.js') }}"></script>
