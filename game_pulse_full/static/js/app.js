@@ -1,4 +1,5 @@
-const state = { section:"hot", games:[], mode:"demo" };
+const FAVORITES_KEY = "gamePulse:favorites:v1";
+const state = { section:"hot", games:[], mode:"demo", favorites:new Set(), favoritesOnly:false };
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -11,6 +12,66 @@ const copy = {
 
 function escapeHtml(str=""){
   return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function loadFavorites(){
+  try{
+    const raw = JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]");
+    state.favorites = new Set(Array.isArray(raw) ? raw : []);
+  }catch(e){
+    state.favorites = new Set();
+  }
+  updateFavoriteUI();
+}
+
+function saveFavorites(){
+  try{
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify([...state.favorites]));
+  }catch(e){}
+  updateFavoriteUI();
+}
+
+function favoriteKey(game){
+  if(game?.game_key) return String(game.game_key);
+  if(game?.igdb_id) return `igdb:${game.igdb_id}`;
+  if(game?.slug) return `slug:${game.slug}`;
+  return `title:${String(game?.title || "").trim().toLowerCase()}`;
+}
+
+function isFavorite(game){
+  return state.favorites.has(favoriteKey(game));
+}
+
+function updateFavoriteUI(){
+  $$(".favorite-count").forEach(el => el.textContent = String(state.favorites.size));
+  const filter = $("#favoriteFilter");
+  if(filter){
+    filter.classList.toggle("active", state.favoritesOnly);
+    filter.setAttribute("aria-pressed", state.favoritesOnly ? "true" : "false");
+  }
+}
+
+let favoriteToastTimer = null;
+function showFavoriteToast(message){
+  const toast = $("#favoriteToast");
+  if(!toast) return;
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(favoriteToastTimer);
+  favoriteToastTimer = setTimeout(()=>toast.classList.remove("show"), 1800);
+}
+
+function toggleFavorite(game){
+  const key = favoriteKey(game);
+  if(state.favorites.has(key)){
+    state.favorites.delete(key);
+    showFavoriteToast(`已取消收藏：${game.title}`);
+  }else{
+    state.favorites.add(key);
+    showFavoriteToast(`已收藏：${game.title}`);
+  }
+  saveFavorites();
+  render();
 }
 
 function platformClass(platforms=[]){
@@ -27,6 +88,16 @@ function dateText(d){
   if(!d) return "日期未定";
   const dt = new Date(`${d}T00:00:00`);
   return new Intl.DateTimeFormat("zh-TW",{year:"numeric",month:"2-digit",day:"2-digit"}).format(dt);
+}
+
+function compactNumber(value){
+  const n = Number(value);
+  if(!Number.isFinite(n)) return "—";
+  return new Intl.NumberFormat("zh-TW", { notation:"compact", maximumFractionDigits:1 }).format(n);
+}
+
+function detailUrl(game){
+  return `/game/${encodeURIComponent(game?.slug || game?.game_key || "")}`;
 }
 
 function trendSparkline(points=[]){
@@ -68,7 +139,7 @@ function trend24h(game){
   return `<div class="trend-box ${direction}"><div><span>24H PULSE</span><strong>${arrow} ${sign}${delta.toFixed(1)}</strong>${pct}</div>${trendSparkline(game.trend_points)}</div>`;
 }
 
-function card(game, index){
+function card(game, index, rankNumber){
   const image = game.cover_url
     ? `<img src="${escapeHtml(game.cover_url)}" alt="${escapeHtml(game.title)}" loading="lazy" onerror="this.style.display='none'">`
     : `<div class="cover-fallback">${escapeHtml(game.title)}</div>`;
@@ -98,11 +169,13 @@ function card(game, index){
     : "";
 
   const trendSignal = trend24h(game);
-  const detailUrl = `/game/${encodeURIComponent(game.slug || game.game_key)}`;
+  const gameDetailUrl = detailUrl(game);
+  const favorite = isFavorite(game);
 
   return `<article class="game-card" data-index="${index}" data-platform="${platformClass(game.platforms).join(" ")}">
     <div class="game-cover">${image}
-      <span class="rank">#${String(index+1).padStart(2,"0")}</span>
+      <span class="rank">#${String(rankNumber || index+1).padStart(2,"0")}</span>
+      <button class="favorite-button ${favorite ? "active" : ""}" type="button" data-favorite-key="${escapeHtml(favoriteKey(game))}" aria-label="${favorite ? "取消收藏" : "收藏"}${escapeHtml(game.title)}" title="${favorite ? "取消收藏" : "加入收藏"}">${favorite ? "♥" : "♡"}</button>
       <span class="score">PULSE <b>${Math.round(game.pulse_score||0)}</b></span>
     </div>
     <div class="card-body">
@@ -113,28 +186,49 @@ function card(game, index){
       <div class="summary">${escapeHtml(game.summary || "暫無介紹。")}</div>
       <div class="chips">${genreChips}${platformChips}${sourceChips}</div>
       <div class="store-row">${stores || "<span class='chip'>商店資料整理中</span>"}</div>
-      <a class="more-btn detail-link" href="${detailUrl}">查看完整資訊</a>
+      <a class="more-btn detail-link" href="${gameDetailUrl}">查看完整資訊</a>
     </div>
   </article>`;
+}
+
+function populateGenreFilter(){
+  const select = $("#genreFilter");
+  if(!select) return;
+  const current = select.value || "all";
+  const genres = [...new Set(state.games.flatMap(g => g.genres || []).filter(Boolean))]
+    .sort((a,b)=>String(a).localeCompare(String(b), "zh-Hant"));
+  select.innerHTML = `<option value="all">全部類型</option>` + genres.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join("");
+  select.value = genres.includes(current) ? current : "all";
 }
 
 function filteredGames(){
   const q = $("#searchInput").value.trim().toLowerCase();
   const platform = $("#platformFilter").value;
+  const genre = $("#genreFilter")?.value || "all";
   return state.games.filter(g => {
     const hay = [g.title,...(g.genres||[]),...(g.platforms||[])].join(" ").toLowerCase();
     const p = platformClass(g.platforms);
-    return (!q || hay.includes(q)) && (platform==="all" || p.includes(platform));
+    const genreMatch = genre === "all" || (g.genres || []).includes(genre);
+    const favoriteMatch = !state.favoritesOnly || isFavorite(g);
+    return (!q || hay.includes(q)) && (platform === "all" || p.includes(platform)) && genreMatch && favoriteMatch;
   });
 }
 
 function render(){
   const games = filteredGames();
   $("#gameGrid").innerHTML = games.length
-    ? games.map((g,i)=>card(g,i)).join("")
-    : `<div class="empty">目前沒有符合搜尋條件的遊戲。</div>`;
+    ? games.map(g => {
+        const originalIndex = state.games.indexOf(g);
+        return card(g, originalIndex, originalIndex + 1);
+      }).join("")
+    : `<div class="empty">${state.favoritesOnly && state.favorites.size === 0 ? "你還沒有收藏任何遊戲。點卡片上的 ♡ 就能加入收藏。" : "目前沒有符合搜尋條件的遊戲。"}</div>`;
+
+  const count = $("#resultCount");
+  if(count) count.textContent = `顯示 ${games.length} / ${state.games.length} 款`;
   if(state.games[0]) $("#heroScore").textContent = Math.round(state.games[0].pulse_score || 0);
+  updateFavoriteUI();
 }
+
 
 function setSectionUI(section){
   const [eye,title,desc] = copy[section];
@@ -153,9 +247,81 @@ async function loadSection(section){
     const data = await r.json();
     state.games = data.games || [];
     state.mode = data.mode || "demo";
+    populateGenreFilter();
     render();
   }catch(e){
     $("#gameGrid").innerHTML = `<div class="empty">資料讀取失敗，請確認 Flask 是否正在執行。</div>`;
+  }
+}
+
+
+function summaryItem({eyebrow, icon, title, value, note, game}){
+  const href = game ? detailUrl(game) : "#games";
+  return `<a class="today-summary-card" href="${href}">
+    <div class="today-summary-top"><span>${escapeHtml(icon)}</span><small>${escapeHtml(eyebrow)}</small></div>
+    <h3>${escapeHtml(title)}</h3>
+    <strong>${escapeHtml(value)}</strong>
+    <p>${escapeHtml(note)}</p>
+  </a>`;
+}
+
+async function loadTodaySummary(){
+  const grid = $("#todaySummaryGrid");
+  const meta = $("#todaySummaryMeta");
+  if(!grid || !meta) return;
+  try{
+    const [hotResponse, radarResponse] = await Promise.all([
+      fetch("/api/games?section=hot&limit=50"),
+      fetch("/api/radar?limit=1&window=12")
+    ]);
+    if(!hotResponse.ok) throw new Error(`HTTP ${hotResponse.status}`);
+    const hotData = await hotResponse.json();
+    const radarData = radarResponse.ok ? await radarResponse.json() : {items:[]};
+    const games = hotData.games || [];
+    if(!games.length) throw new Error("No games");
+
+    const hottest = games[0];
+    const twitchTop = games.filter(g => Number.isFinite(Number(g.twitch_viewers)))
+      .sort((a,b)=>Number(b.twitch_viewers)-Number(a.twitch_viewers))[0];
+    const steamTop = games.filter(g => Number.isFinite(Number(g.steam_players)) && Number(g.steam_players) > 0)
+      .sort((a,b)=>Number(b.steam_players)-Number(a.steam_players))[0];
+    const radarTop = (radarData.items || [])[0];
+
+    const items = [
+      summaryItem({
+        eyebrow:"HOT NOW", icon:"🔥", title:hottest.title,
+        value:`PULSE ${Math.round(hottest.pulse_score || 0)}`,
+        note:"目前 GAME PULSE 熱度最高", game:hottest
+      }),
+      radarTop ? summaryItem({
+        eyebrow:"RADAR PICK", icon:"📡", title:radarTop.title,
+        value:`RADAR ${Math.round(radarTop.radar_score || 0)}`,
+        note:radarTop.reason || "近期訊號正在加速", game:radarTop
+      }) : summaryItem({
+        eyebrow:"RADAR PICK", icon:"📡", title:"RADAR 資料累積中",
+        value:"觀察中", note:"累積更多歷史快照後顯示黑馬"
+      }),
+      twitchTop ? summaryItem({
+        eyebrow:"TWITCH WATCH", icon:"👀", title:twitchTop.title,
+        value:`${compactNumber(twitchTop.twitch_viewers)} viewers`,
+        note:twitchTop.twitch_channels != null ? `${compactNumber(twitchTop.twitch_channels)} 個直播頻道` : "目前 Twitch 關注最高", game:twitchTop
+      }) : summaryItem({eyebrow:"TWITCH WATCH",icon:"👀",title:"Twitch 資料整理中",value:"—",note:"即時觀看資料暫缺"}),
+      steamTop ? summaryItem({
+        eyebrow:"STEAM ACTIVE", icon:"🎮", title:steamTop.title,
+        value:`${compactNumber(steamTop.steam_players)} players`,
+        note:"目前 Steam 在線最高", game:steamTop
+      }) : summaryItem({eyebrow:"STEAM ACTIVE",icon:"🎮",title:"Steam 資料整理中",value:"—",note:"即時玩家資料暫缺"})
+    ];
+
+    grid.innerHTML = items.join("");
+    const updatedTimes = games.map(g => Date.parse(g.updated_at || "")).filter(Number.isFinite);
+    const updated = updatedTimes.length ? new Date(Math.max(...updatedTimes)) : new Date();
+    const day = new Intl.DateTimeFormat("zh-TW", {month:"long", day:"numeric", weekday:"short"}).format(new Date());
+    const time = new Intl.DateTimeFormat("zh-TW", {hour:"2-digit", minute:"2-digit", hour12:false}).format(updated);
+    meta.textContent = `${day} · 資料 ${time} 更新`;
+  }catch(e){
+    grid.innerHTML = `<div class="today-summary-empty">今日摘要暫時無法整理，熱門榜與其他功能仍可正常使用。</div>`;
+    meta.textContent = "稍後再試";
   }
 }
 
@@ -337,6 +503,26 @@ function closeModal(){
 $$("[data-section]").forEach(b=>b.addEventListener("click",()=>loadSection(b.dataset.section)));
 $("#searchInput").addEventListener("input",render);
 $("#platformFilter").addEventListener("change",render);
+$("#genreFilter")?.addEventListener("change",render);
+$("#favoriteFilter")?.addEventListener("click",()=>{
+  state.favoritesOnly = !state.favoritesOnly;
+  render();
+});
+$("#clearFilters")?.addEventListener("click",()=>{
+  $("#searchInput").value = "";
+  $("#platformFilter").value = "all";
+  if($("#genreFilter")) $("#genreFilter").value = "all";
+  state.favoritesOnly = false;
+  render();
+});
+$("#gameGrid")?.addEventListener("click", e => {
+  const button = e.target.closest("[data-favorite-key]");
+  if(!button) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const game = state.games.find(g => favoriteKey(g) === button.dataset.favoriteKey);
+  if(game) toggleFavorite(game);
+});
 $$("[data-close-modal]").forEach(x=>x.addEventListener("click",closeModal));
 
 function scrollToSection(selector){
@@ -357,9 +543,21 @@ if(radarButton){
   radarButton.addEventListener("click",()=>scrollToSection("#radar"));
 }
 
+function openFavorites(){
+  state.favoritesOnly = true;
+  updateFavoriteUI();
+  scrollToSection("#games");
+  render();
+}
+
+$("#favoriteNavButton")?.addEventListener("click", openFavorites);
+$$("[data-favorites-nav]").forEach(button => button.addEventListener("click", openFavorites));
+
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeModal(); });
 
+loadFavorites();
 loadStatus();
+loadTodaySummary();
 loadRadar();
 loadWhy();
 loadSection("hot");
