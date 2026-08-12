@@ -525,6 +525,52 @@ $("#gameGrid")?.addEventListener("click", e => {
 });
 $$("[data-close-modal]").forEach(x=>x.addEventListener("click",closeModal));
 
+
+// Collapsible PULSE RADAR / PULSE WHY
+const FEATURE_COLLAPSE_KEY = "gamePulseFeatureCollapseV1";
+
+function readFeatureCollapseState(){
+  try{
+    return JSON.parse(localStorage.getItem(FEATURE_COLLAPSE_KEY) || "{}");
+  }catch(_){
+    return {};
+  }
+}
+
+function saveFeatureCollapseState(state){
+  try{ localStorage.setItem(FEATURE_COLLAPSE_KEY, JSON.stringify(state)); }catch(_){}
+}
+
+function setFeatureExpanded(name, expanded, persist=true){
+  const section = document.querySelector(`[data-collapsible="${name}"]`);
+  const button = document.querySelector(`[data-toggle-feature="${name}"]`);
+  if(!section || !button) return;
+  section.classList.toggle("is-collapsed", !expanded);
+  button.setAttribute("aria-expanded", expanded ? "true" : "false");
+  if(persist){
+    const state = readFeatureCollapseState();
+    state[name] = expanded;
+    saveFeatureCollapseState(state);
+  }
+}
+
+function initFeatureCollapsibles(){
+  const saved = readFeatureCollapseState();
+  ["radar", "why"].forEach(name => {
+    const expanded = saved[name] !== false;
+    setFeatureExpanded(name, expanded, false);
+    document.querySelector(`[data-toggle-feature="${name}"]`)?.addEventListener("click", () => {
+      const button = document.querySelector(`[data-toggle-feature="${name}"]`);
+      const next = button?.getAttribute("aria-expanded") !== "true";
+      setFeatureExpanded(name, next, true);
+    });
+  });
+}
+
+function expandFeatureForNavigation(name){
+  setFeatureExpanded(name, true, true);
+}
+
 function scrollToSection(selector){
   const target = $(selector);
   if(target) target.scrollIntoView({behavior:"smooth", block:"start"});
@@ -540,7 +586,10 @@ if(hotButton){
 
 const radarButton = $("[data-go-radar]");
 if(radarButton){
-  radarButton.addEventListener("click",()=>scrollToSection("#radar"));
+  radarButton.addEventListener("click",()=>{
+    expandFeatureForNavigation("radar");
+    scrollToSection("#radar");
+  });
 }
 
 function openFavorites(){
@@ -554,6 +603,12 @@ $("#favoriteNavButton")?.addEventListener("click", openFavorites);
 $$("[data-favorites-nav]").forEach(button => button.addEventListener("click", openFavorites));
 
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeModal(); });
+
+
+$$('a[href="#radar"]').forEach(link => link.addEventListener("click",()=>expandFeatureForNavigation("radar")));
+$$('a[href="#why"]').forEach(link => link.addEventListener("click",()=>expandFeatureForNavigation("why")));
+
+initFeatureCollapsibles();
 
 loadFavorites();
 loadStatus();

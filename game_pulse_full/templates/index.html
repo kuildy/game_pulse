@@ -120,42 +120,56 @@
       </div>
     </section>
 
-    <section class="radar-section feature-section" id="radar">
-      <div class="radar-heading">
-        <div>
-          <span class="micro">01 · EARLY SIGNAL</span>
-          <h2>📡 PULSE RADAR</h2>
-          <p>不是找現在最紅，而是找正在加速、可能成為下一波熱門的遊戲。</p>
+    <section class="radar-section feature-section collapsible-feature" id="radar" data-collapsible="radar">
+      <button class="feature-toggle" type="button" aria-expanded="true" aria-controls="radarContent" data-toggle-feature="radar">
+        <div class="radar-heading feature-toggle-heading">
+          <div>
+            <span class="micro">01 · EARLY SIGNAL</span>
+            <h2>📡 PULSE RADAR</h2>
+            <p>不是找現在最紅，而是找正在加速、可能成為下一波熱門的遊戲。</p>
+          </div>
+          <div class="feature-toggle-side">
+            <div class="radar-legend">
+              <span>WATCH</span><span>RISING</span><span>HEATING UP</span><span>BREAKOUT</span>
+            </div>
+            <span class="feature-chevron" aria-hidden="true">⌄</span>
+          </div>
         </div>
-        <div class="radar-legend">
-          <span>WATCH</span><span>RISING</span><span>HEATING UP</span><span>BREAKOUT</span>
+      </button>
+      <div id="radarContent" class="feature-collapse-content">
+        <div id="radarGrid" class="radar-grid">
+          <div class="radar-skeleton"></div>
+          <div class="radar-skeleton"></div>
+          <div class="radar-skeleton"></div>
         </div>
+        <p id="radarNote" class="radar-note">正在讀取近期熱度變化…</p>
       </div>
-      <div id="radarGrid" class="radar-grid">
-        <div class="radar-skeleton"></div>
-        <div class="radar-skeleton"></div>
-        <div class="radar-skeleton"></div>
-      </div>
-      <p id="radarNote" class="radar-note">正在讀取近期熱度變化…</p>
     </section>
 
-    <section class="why-section feature-section" id="why">
-      <div class="why-heading">
-        <div>
-          <span class="micro">02 · SIGNAL INTERPRETATION</span>
-          <h2>🔥 PULSE WHY</h2>
-          <p>不只告訴你什麼遊戲在紅，也解讀這波熱度比較像「大家在看」還是「大家真的回去玩」。</p>
+    <section class="why-section feature-section collapsible-feature" id="why" data-collapsible="why">
+      <button class="feature-toggle" type="button" aria-expanded="true" aria-controls="whyContent" data-toggle-feature="why">
+        <div class="why-heading feature-toggle-heading">
+          <div>
+            <span class="micro">02 · SIGNAL INTERPRETATION</span>
+            <h2>🔥 PULSE WHY</h2>
+            <p>不只告訴你什麼遊戲在紅，也解讀這波熱度比較像「大家在看」還是「大家真的回去玩」。</p>
+          </div>
+          <div class="feature-toggle-side">
+            <div class="why-types">
+              <span>📺 直播帶動</span><span>🎮 玩家回流</span><span>🔥 全面爆發</span><span>👀 只看不玩</span>
+            </div>
+            <span class="feature-chevron" aria-hidden="true">⌄</span>
+          </div>
         </div>
-        <div class="why-types">
-          <span>📺 直播帶動</span><span>🎮 玩家回流</span><span>🔥 全面爆發</span><span>👀 只看不玩</span>
+      </button>
+      <div id="whyContent" class="feature-collapse-content">
+        <div id="whyGrid" class="why-grid">
+          <div class="why-skeleton"></div>
+          <div class="why-skeleton"></div>
+          <div class="why-skeleton"></div>
         </div>
+        <p id="whyNote" class="why-note">正在解讀最近 24 小時的多來源熱度變化…</p>
       </div>
-      <div id="whyGrid" class="why-grid">
-        <div class="why-skeleton"></div>
-        <div class="why-skeleton"></div>
-        <div class="why-skeleton"></div>
-      </div>
-      <p id="whyNote" class="why-note">正在解讀最近 24 小時的多來源熱度變化…</p>
     </section>
 
     <section class="control-bar hot-control" id="games">

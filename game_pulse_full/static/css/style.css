@@ -210,3 +210,25 @@ footer{width:min(1240px,92vw);margin:auto;padding:28px 0 42px;border-top:1px sol
   .filters select{flex-basis:100%}.filter-button{flex:1 1 calc(50% - 5px)}
   .favorite-button{right:12px;bottom:12px;width:34px;height:34px}
 }
+
+
+/* Collapsible PULSE RADAR / PULSE WHY */
+.collapsible-feature{overflow:hidden}
+.feature-toggle{display:block;width:100%;padding:0;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer;font:inherit}
+.feature-toggle-heading{margin-bottom:0!important}
+.feature-toggle-side{display:flex;align-items:center;justify-content:flex-end;gap:14px;min-width:0}
+.feature-chevron{flex:0 0 auto;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;border:1px solid var(--line);background:rgba(255,255,255,.035);font-size:22px;line-height:1;color:#dce4f3;transition:transform .22s ease,border-color .18s ease,background .18s ease}
+.feature-toggle:hover .feature-chevron{border-color:rgba(83,216,255,.28);background:rgba(83,216,255,.055)}
+.feature-toggle[aria-expanded="true"] .feature-chevron{transform:rotate(180deg)}
+.feature-toggle:focus-visible{outline:2px solid rgba(83,216,255,.55);outline-offset:4px;border-radius:16px}
+.feature-collapse-content{display:grid;grid-template-rows:1fr;opacity:1;transition:grid-template-rows .28s ease,opacity .2s ease,margin .28s ease;padding .28s ease}
+.feature-collapse-content>*{min-height:0}
+.collapsible-feature.is-collapsed .feature-collapse-content{display:none}
+.collapsible-feature.is-collapsed{padding-bottom:0}
+.collapsible-feature.is-collapsed .feature-toggle-heading{padding-bottom:0}
+.collapsible-feature.is-collapsed .radar-heading,.collapsible-feature.is-collapsed .why-heading{margin-bottom:0}
+@media(max-width:760px){
+  .feature-toggle-side{gap:8px}
+  .feature-toggle-side .radar-legend,.feature-toggle-side .why-types{display:none}
+  .feature-chevron{width:32px;height:32px;font-size:20px}
+}
