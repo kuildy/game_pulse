@@ -14,6 +14,7 @@
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='branding/wavesig-icon-512.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/logo-branding.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/wavesig-tech-editorial.css') }}">
 </head>
 <body>
   <div class="ambient ambient-a"></div>
@@ -38,12 +39,12 @@
   </header>
 
   <div class="mobile-quick-nav" aria-label="手機快速導覽">
-    <a href="#today">☀ 今日</a>
-    <a href="#radar">📡 Radar</a>
-    <a href="#why">🔥 Why</a>
-    <a href="#games">🏆 熱門</a>
+    <a href="#today">今日</a>
+    <a href="#radar">RADAR</a>
+    <a href="#why">WHY</a>
+    <a href="#games">熱門</a>
     <button type="button" data-favorites-nav>♡ 收藏 <span class="favorite-count">0</span></button>
-    <a href="{{ url_for('release_calendar_page') }}">📅 日曆</a>
+    <a href="{{ url_for('release_calendar_page') }}">日曆</a>
   </div>
 
   <main>
@@ -56,7 +57,7 @@
           PULSE WHY 解讀這波熱度是直播帶動、玩家回流，還是全面爆發。
         </p>
         <div class="hero-pill-row" aria-label="WAVESIG 核心功能">
-          <span>📡 RADAR 預警</span><span>🔥 WHY 解讀</span><span>◷ 24H 趨勢</span>
+          <span>RADAR / EARLY SIGNAL</span><span>WHY / SIGNAL ANALYSIS</span><span>24H / TREND</span>
         </div>
         <div class="hero-actions">
           <button class="primary" data-go-radar>探索 PULSE RADAR</button>
@@ -66,7 +67,7 @@
 
       <div class="signal-panel">
         <div class="signal-top">
-          <span>WAVESIG SIGNAL</span>
+          <span>WS / LIVE SIGNAL</span>
           <span id="lastStatus">資料載入中</span>
         </div>
         <div class="signal-ring">
@@ -85,23 +86,23 @@
 
     <section class="pulse-map" aria-label="WAVESIG 快速導覽">
       <a href="#radar" class="pulse-map-card radar-map">
-        <span class="pulse-map-icon">📡</span>
-        <div><small>WHAT'S NEXT</small><b>PULSE RADAR</b><p>找下一個正在升溫的黑馬</p></div>
+        <span class="pulse-map-icon">RDR</span>
+        <div><small>01 / SIGNAL</small><b>PULSE RADAR</b><p>找下一個正在升溫的黑馬</p></div>
         <i>01</i>
       </a>
       <a href="#why" class="pulse-map-card why-map">
-        <span class="pulse-map-icon">🔥</span>
-        <div><small>WHY NOW</small><b>PULSE WHY</b><p>看懂這波熱度從哪裡來</p></div>
+        <span class="pulse-map-icon">WHY</span>
+        <div><small>02 / ANALYSIS</small><b>PULSE WHY</b><p>看懂這波熱度從哪裡來</p></div>
         <i>02</i>
       </a>
       <a href="#games" class="pulse-map-card hot-map">
-        <span class="pulse-map-icon">🏆</span>
-        <div><small>HOT NOW</small><b>熱門排行</b><p>跨來源即時熱度榜</p></div>
+        <span class="pulse-map-icon">HOT</span>
+        <div><small>03 / LIVE RANK</small><b>熱門排行</b><p>跨來源即時熱度榜</p></div>
         <i>03</i>
       </a>
       <a href="{{ url_for('release_calendar_page') }}" class="pulse-map-card calendar-map">
-        <span class="pulse-map-icon">📅</span>
-        <div><small>COMING NEXT</small><b>發售日曆</b><p>掌握近期上市與倒數</p></div>
+        <span class="pulse-map-icon">CAL</span>
+        <div><small>04 / RELEASE</small><b>發售日曆</b><p>掌握近期上市與倒數</p></div>
         <i>04</i>
       </a>
     </section>
@@ -128,7 +129,7 @@
         <div class="radar-heading feature-toggle-heading">
           <div>
             <span class="micro">01 · EARLY SIGNAL</span>
-            <h2>📡 PULSE RADAR</h2>
+            <h2>PULSE RADAR</h2>
             <p>不是找現在最紅，而是找正在加速、可能成為下一波熱門的遊戲。</p>
           </div>
           <div class="feature-toggle-side">
@@ -154,12 +155,12 @@
         <div class="why-heading feature-toggle-heading">
           <div>
             <span class="micro">02 · SIGNAL INTERPRETATION</span>
-            <h2>🔥 PULSE WHY</h2>
+            <h2>PULSE WHY</h2>
             <p>不只告訴你什麼遊戲在紅，也解讀這波熱度比較像「大家在看」還是「大家真的回去玩」。</p>
           </div>
           <div class="feature-toggle-side">
             <div class="why-types">
-              <span>📺 直播帶動</span><span>🎮 玩家回流</span><span>🔥 全面爆發</span><span>👀 只看不玩</span>
+              <span>直播帶動</span><span>玩家回流</span><span>全面爆發</span><span>只看不玩</span>
             </div>
             <span class="feature-chevron" aria-hidden="true">⌄</span>
           </div>
@@ -207,9 +208,9 @@
 
     <section>
       <div class="tab-strip">
-        <button class="section-tab active" data-section="hot"><span>🔥</span>近日熱門</button>
-        <button class="section-tab" data-section="new"><span>✦</span>新上市</button>
-        <button class="section-tab" data-section="upcoming"><span>◷</span>即將推出</button>
+        <button class="section-tab active" data-section="hot"><span>01</span>近日熱門</button>
+        <button class="section-tab" data-section="new"><span>02</span>新上市</button>
+        <button class="section-tab" data-section="upcoming"><span>03</span>即將推出</button>
       </div>
 
       <div id="gameGrid" class="game-grid">
@@ -223,7 +224,7 @@
       <div class="recent-reviews-heading">
         <div>
           <span class="micro">04 · RECENT REVIEWS</span>
-          <h2>💬 近期遊戲評論</h2>
+          <h2>近期遊戲評論</h2>
           <p>從 Steam 最近玩家評論中挑出熱門遊戲的最新聲音，快速看看玩家最近在說什麼。</p>
         </div>
         <span class="review-source-pill">STEAM USER REVIEWS</span>

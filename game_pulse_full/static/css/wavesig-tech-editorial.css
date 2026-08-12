@@ -1,0 +1,313 @@
+/* WAVESIG Tech Gaming Editorial
+   Mature gaming media + data terminal. No API or JS behavior changes. */
+
+:root{
+  --ws-bg:#080a0e;
+  --ws-surface:#0d1117;
+  --ws-surface-2:#11161e;
+  --ws-line:#222a35;
+  --ws-line-soft:rgba(255,255,255,.075);
+  --ws-text:#f4f7fa;
+  --ws-muted:#8893a3;
+  --ws-cyan:#46d7ff;
+  --ws-violet:#8d74ff;
+  --ws-green:#55dfa1;
+  --ws-red:#ff667d;
+  --ws-radius:10px;
+  --ws-radius-lg:14px;
+  --ws-mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+}
+
+html{background:var(--ws-bg)}
+body{background:var(--ws-bg);color:var(--ws-text)}
+body:before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:-2;
+  opacity:.22;
+  background-image:
+    linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);
+  background-size:48px 48px;
+  mask-image:linear-gradient(to bottom,black,transparent 58%);
+}
+
+/* Kill the template-y neon blobs; keep only a trace of atmosphere. */
+.ambient{opacity:.36;filter:blur(120px)}
+.ambient-a{background:rgba(141,116,255,.11)}
+.ambient-b{background:rgba(70,215,255,.055)}
+
+/* Header: product navigation rather than floating SaaS pills. */
+.nav{
+  height:70px;
+  border-bottom:1px solid var(--ws-line);
+  background:rgba(8,10,14,.94);
+  backdrop-filter:blur(14px);
+}
+.logo-image{filter:none!important}
+.logo-copy b{font-size:15px;letter-spacing:.16em}
+.nav-links{padding:0;background:transparent;border:0;border-radius:0;gap:18px}
+.nav-tab,.nav-page-link{
+  position:relative;
+  padding:8px 0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:var(--ws-muted)!important;
+  text-decoration:none;
+  font-size:12px;
+  letter-spacing:.04em;
+}
+.nav-tab.active,.nav-page-link.active{color:var(--ws-text)!important}
+.nav-tab.active:after,.nav-page-link.active:after{
+  content:"";position:absolute;left:0;right:0;bottom:-17px;height:2px;background:var(--ws-cyan)
+}
+.mode-badge{font-family:var(--ws-mono);border-radius:5px;letter-spacing:.06em;background:transparent!important}
+.notification-badge,.favorite-count{font-family:var(--ws-mono)}
+
+/* Hero: editorial headline plus data-terminal instrument. */
+.hero{min-height:570px;padding:70px 0 52px;gap:72px}
+.hero-copy:before{display:none!important}
+.eyebrow,.micro,.section-title>span{
+  font-family:var(--ws-mono);
+  letter-spacing:.14em;
+  color:var(--ws-cyan);
+}
+.hero h1{font-size:clamp(54px,7vw,90px);line-height:.96;letter-spacing:-.055em;max-width:760px}
+.hero h1 em{
+  background:none!important;
+  -webkit-background-clip:initial!important;
+  color:var(--ws-text)!important;
+  position:relative;
+}
+.hero h1 em:after{
+  content:"";display:block;width:120px;height:2px;margin-top:18px;background:linear-gradient(90deg,var(--ws-cyan),var(--ws-violet));
+}
+.hero-copy p{font-size:15px;max-width:650px;line-height:1.85}
+.hero-pill-row{gap:18px;margin-top:24px}
+.hero-pill-row span{
+  padding:0;border:0;background:transparent;border-radius:0;color:#b5bfcc;
+  font-family:var(--ws-mono);font-size:9px;letter-spacing:.08em;
+}
+.hero-pill-row span:before{content:"+ ";color:var(--ws-cyan)}
+.hero-actions button,.hero-actions a{border-radius:7px;min-height:44px;padding:0 18px;font-size:12px;letter-spacing:.03em}
+.hero-actions .primary{background:var(--ws-text);color:#0a0d11;box-shadow:none}
+.hero-actions .secondary{background:transparent;border-color:var(--ws-line)}
+.hero-actions button:hover,.hero-actions a:hover{transform:translateY(-1px)}
+
+.signal-panel{
+  position:relative;overflow:hidden;padding:20px;border:1px solid var(--ws-line);border-radius:var(--ws-radius-lg);
+  background:linear-gradient(180deg,rgba(17,22,30,.96),rgba(10,13,18,.96));box-shadow:none;
+}
+.signal-panel:before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.35;
+  background:repeating-linear-gradient(180deg,transparent 0 7px,rgba(70,215,255,.025) 8px);
+}
+.signal-panel:after{
+  content:"WS-01";position:absolute;right:18px;bottom:14px;color:rgba(255,255,255,.18);
+  font:9px/1 var(--ws-mono);letter-spacing:.16em;
+}
+.signal-top{position:relative;z-index:1;font-family:var(--ws-mono);letter-spacing:.12em}
+.signal-ring{
+  width:228px;height:228px;margin:28px auto;border:1px solid rgba(70,215,255,.22);
+  background:radial-gradient(circle,transparent 0 41%,rgba(70,215,255,.05) 42% 43%,transparent 44%),
+             conic-gradient(from 45deg,rgba(70,215,255,.92) 0 18%,rgba(141,116,255,.7) 18% 35%,rgba(255,255,255,.055) 35% 100%);
+  box-shadow:none;
+}
+.signal-ring:before{inset:8px;background:var(--ws-surface);border:1px solid rgba(255,255,255,.05)}
+.signal-ring:after{content:"";position:absolute;inset:28px;border-radius:50%;border:1px dashed rgba(70,215,255,.14)}
+.ring-inner strong{font-family:var(--ws-mono);font-size:62px;letter-spacing:-.07em}
+.ring-inner small{font-family:var(--ws-mono);letter-spacing:.14em}
+.source-mini{position:relative;z-index:1;gap:0;border-top:1px solid var(--ws-line)}
+.source-mini div{padding:12px 10px;border:0;border-right:1px solid var(--ws-line);border-radius:0;background:transparent}
+.source-mini div:last-child{border-right:0}
+.source-mini b{font-family:var(--ws-mono);font-size:10px;color:#dbe5ef}
+
+/* Product map: compact terminal shortcuts, not four glossy cards. */
+.pulse-map{
+  grid-template-columns:repeat(4,1fr);gap:0;padding:0;margin-bottom:42px;border:1px solid var(--ws-line);
+  border-radius:var(--ws-radius);background:var(--ws-surface);overflow:hidden;
+}
+.pulse-map-card{
+  min-height:92px;padding:14px 16px;border:0;border-right:1px solid var(--ws-line);border-radius:0;background:transparent;
+  grid-template-columns:38px 1fr auto;
+}
+.pulse-map-card:last-child{border-right:0}
+.pulse-map-card:hover{transform:none;background:#111720;border-color:transparent}
+.pulse-map-icon{
+  width:32px;height:32px;border-radius:5px!important;background:transparent!important;border:1px solid var(--ws-line)!important;
+  color:var(--ws-cyan);font:700 9px/1 var(--ws-mono);letter-spacing:.04em;
+}
+.pulse-map-card small{font-family:var(--ws-mono);font-size:7px;letter-spacing:.12em}
+.pulse-map-card b{font-size:12px}
+.pulse-map-card>i{font-family:var(--ws-mono)}
+
+/* Today: editorial summary strip. */
+.today-section{
+  padding:0 0 30px;margin-bottom:46px;border:0;border-bottom:1px solid var(--ws-line);border-radius:0;background:transparent;
+}
+.today-heading{padding-bottom:14px;border-bottom:1px solid var(--ws-line)}
+.today-heading h2{font-size:27px;letter-spacing:-.03em}
+.today-summary-meta{font-family:var(--ws-mono);border:0;background:transparent;padding:0;border-radius:0}
+.today-summary-grid{gap:0;border:1px solid var(--ws-line);border-radius:var(--ws-radius);overflow:hidden}
+.today-summary-card{border:0!important;border-right:1px solid var(--ws-line)!important;border-radius:0!important;background:var(--ws-surface)!important;box-shadow:none!important}
+.today-summary-card:last-child{border-right:0!important}
+
+/* Feature sections: strong section rules and restrained signal accents. */
+.feature-section{border-radius:var(--ws-radius-lg)!important;background:var(--ws-surface)!important;border:1px solid var(--ws-line)!important;box-shadow:none!important}
+.feature-section:before{display:none!important}
+.radar-section,.why-section{padding:0!important;margin-bottom:22px!important}
+.feature-toggle{padding:0!important}
+.feature-toggle-heading{padding:22px 24px;margin:0!important;align-items:center!important}
+.feature-toggle-heading h2{font-size:28px!important;letter-spacing:-.035em;margin:5px 0!important}
+.feature-toggle-heading p{font-size:12px!important}
+.feature-toggle-heading .micro:before{content:"// ";color:var(--ws-violet)}
+.feature-toggle-side{gap:16px}
+.radar-legend,.why-types{gap:0!important;border:1px solid var(--ws-line);border-radius:5px;overflow:hidden}
+.radar-legend span,.why-types span{border:0!important;border-right:1px solid var(--ws-line)!important;border-radius:0!important;background:transparent!important;padding:6px 8px!important;font-family:var(--ws-mono);font-size:7px!important}
+.radar-legend span:last-child,.why-types span:last-child{border-right:0!important}
+.feature-chevron{font-family:var(--ws-mono);font-size:18px;color:var(--ws-cyan)}
+.feature-collapse-content{border-top:1px solid var(--ws-line);padding:18px 20px 20px!important}
+.radar-grid,.why-grid{gap:1px!important;background:var(--ws-line);border:1px solid var(--ws-line);border-radius:8px;overflow:hidden}
+.radar-card,.why-card{
+  border:0!important;border-radius:0!important;background:#0b0f15!important;box-shadow:none!important;transform:none!important;
+}
+.radar-card:hover,.why-card:hover{background:#10161e!important;transform:none!important}
+.radar-body,.why-body{padding:13px!important}
+.radar-topline strong,.radar-level,.why-type,.why-topline strong,.radar-metric,.why-metric strong{font-family:var(--ws-mono)}
+.radar-level,.why-type{border-radius:4px!important}
+.radar-pulse-row{font-family:var(--ws-mono)}
+.radar-signals,.why-evidence{font-family:var(--ws-mono)}
+
+/* Hot list: game art first, subtle HUD data second. */
+.control-bar{
+  padding:22px 0;border:0;border-top:1px solid var(--ws-line);border-bottom:1px solid var(--ws-line);border-radius:0;background:transparent;box-shadow:none!important;
+}
+.section-title h2{font-size:29px;letter-spacing:-.03em}
+.filters{gap:6px}
+.search,.filters select,.filter-button{
+  height:40px!important;border-radius:6px!important;background:var(--ws-surface)!important;border-color:var(--ws-line)!important;box-shadow:none!important;
+}
+.search input{font-size:12px}
+.result-count{font-family:var(--ws-mono)}
+.tab-strip{position:static!important;background:transparent!important;backdrop-filter:none!important;padding:18px 0 16px!important}
+.section-tab{
+  border:0!important;border-radius:0!important;background:transparent!important;padding:8px 16px 8px 0!important;color:var(--ws-muted)!important;
+}
+.section-tab span{font-family:var(--ws-mono);font-size:8px;color:#5f6b79;margin-right:8px}
+.section-tab.active{color:var(--ws-text)!important}
+.section-tab.active:after{content:"";display:block;width:28px;height:1px;background:var(--ws-cyan);margin-top:8px}
+.game-grid{gap:14px}
+.game-card,.game-grid .game-card:nth-child(-n+3){
+  border:1px solid var(--ws-line)!important;border-radius:var(--ws-radius)!important;background:var(--ws-surface)!important;box-shadow:none!important;overflow:hidden;
+}
+.game-card:hover{transform:translateY(-2px)!important;border-color:rgba(70,215,255,.38)!important;box-shadow:none!important}
+.game-cover{aspect-ratio:16/9}
+.game-cover img{transition:transform .28s ease}
+.game-card:hover .game-cover img{transform:scale(1.025)}
+.rank{
+  width:auto;height:auto;min-width:31px;padding:6px 7px;border-radius:4px;background:rgba(8,10,14,.9)!important;
+  border:1px solid rgba(255,255,255,.18)!important;font-family:var(--ws-mono);font-size:10px;
+}
+.game-grid .game-card:nth-child(-n+3) .rank{background:rgba(8,10,14,.9)!important;color:var(--ws-cyan)}
+.score{
+  border-radius:4px;background:rgba(8,10,14,.92);font-family:var(--ws-mono);letter-spacing:.04em;
+}
+.score b{font-family:var(--ws-mono);color:var(--ws-cyan)}
+.card-body{padding:15px 15px 16px}
+.meta{font-family:var(--ws-mono);font-size:9px}
+.game-card h3{font-size:18px;margin:8px 0 6px}
+.chips{margin:11px 0}
+.chip{border-radius:4px;padding:4px 6px;font-family:var(--ws-mono);font-size:8px}
+.store-row a,.more-btn{border-radius:5px!important}
+.sparkline,.trend-chip,.live-signal-row,.signal-stat{font-family:var(--ws-mono)}
+
+/* Reviews: read like player voices, not nested AI cards. */
+.recent-reviews-section{
+  padding:28px 0 36px!important;margin-bottom:52px!important;border:0!important;border-top:1px solid var(--ws-line)!important;border-bottom:1px solid var(--ws-line)!important;
+  border-radius:0!important;background:transparent!important;
+}
+.recent-reviews-heading{margin-bottom:16px!important}
+.recent-reviews-heading h2{font-size:28px!important;letter-spacing:-.03em}
+.review-source-pill{border-radius:4px!important;background:transparent!important;border-color:var(--ws-line)!important;font-family:var(--ws-mono);letter-spacing:.08em}
+.recent-reviews-grid{gap:1px!important;background:var(--ws-line);border:1px solid var(--ws-line);border-radius:8px;overflow:hidden}
+.recent-review-card{border:0!important;border-radius:0!important;background:var(--ws-surface)!important;box-shadow:none!important;transform:none!important}
+.recent-review-card:hover{background:#111720!important;transform:none!important}
+.recent-review-sentiment,.recent-review-meta,.recent-review-source{font-family:var(--ws-mono)}
+.recent-review-sentiment{border-radius:4px!important}
+
+/* Method + sources: more editorial, less dashboard. */
+.method{
+  padding:38px 0;grid-template-columns:1.05fr .95fr;border:0;border-top:1px solid var(--ws-line);border-bottom:1px solid var(--ws-line);
+  border-radius:0;background:transparent;
+}
+.formula{border-radius:8px;background:var(--ws-surface);border-color:var(--ws-line)}
+.formula-row b{font-family:var(--ws-mono);font-size:22px}
+.source-grid{gap:1px;background:var(--ws-line);border:1px solid var(--ws-line);border-radius:8px;overflow:hidden}
+.source-card{border:0!important;border-radius:0!important;background:var(--ws-surface)!important}
+.source-card .head,.source-card .status{font-family:var(--ws-mono)}
+
+/* Detail page: same visual language, especially Steam review pair. */
+.detail-panel,.watch-panel,.media-section,.history-chart-card{
+  border-color:var(--ws-line)!important;border-radius:var(--ws-radius)!important;background:var(--ws-surface)!important;box-shadow:none!important;
+}
+.detail-stat strong,.history-chart-meta b,.signal-metric strong{font-family:var(--ws-mono)}
+.review-filter{gap:14px!important;border-bottom:1px solid var(--ws-line);padding-bottom:10px}
+.review-filter button{
+  border:0!important;border-radius:0!important;background:transparent!important;color:var(--ws-muted)!important;padding:6px 0!important;font-family:var(--ws-mono);font-size:9px!important;
+}
+.review-filter button.active{color:var(--ws-text)!important;background:transparent!important}
+.review-filter button.active:after{content:"";display:block;width:22px;height:1px;background:var(--ws-cyan);margin-top:6px}
+.game-reviews-list{gap:1px!important;background:var(--ws-line);border:1px solid var(--ws-line);border-radius:8px;overflow:hidden}
+.game-review-card,.game-review-card.positive,.game-review-card.negative{
+  border:0!important;border-radius:0!important;background:#0b0f15!important;padding:18px!important;
+}
+.review-sentiment{border-radius:4px!important;background:transparent!important;font-family:var(--ws-mono)}
+.review-primary-meta>span{
+  min-height:auto!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;font-family:var(--ws-mono);font-size:8px!important;
+}
+.review-primary-meta>span+span:before{content:"/";margin-right:8px;color:#46515f}
+.review-playtime strong{font-family:var(--ws-mono);font-size:11px!important}
+.review-expand-toggle,.game-review-source{font-family:var(--ws-mono);letter-spacing:.04em}
+.review-missing-note{border-radius:6px!important;background:transparent!important}
+
+/* Footer */
+footer{border-top:1px solid var(--ws-line);color:var(--ws-muted)}
+footer b{letter-spacing:.14em}
+
+/* Mobile */
+@media(max-width:930px){
+  .mobile-quick-nav{background:rgba(8,10,14,.97)!important;border-bottom-color:var(--ws-line)!important}
+  .mobile-quick-nav a,.mobile-quick-nav button{border-radius:4px!important;font-family:var(--ws-mono);font-size:9px!important}
+  .pulse-map{grid-template-columns:repeat(2,1fr)}
+  .pulse-map-card:nth-child(2){border-right:0}
+  .pulse-map-card:nth-child(-n+2){border-bottom:1px solid var(--ws-line)}
+}
+@media(max-width:760px){
+  .hero{grid-template-columns:1fr;gap:32px;padding-top:44px}
+  .signal-panel{max-width:520px;width:100%;margin:auto}
+  .game-reviews-list{grid-template-columns:1fr!important}
+  .game-review-card+.game-review-card{border-top:1px solid var(--ws-line)!important}
+}
+@media(max-width:620px){
+  .hero h1{font-size:52px;letter-spacing:-.05em}
+  .hero-pill-row{display:grid;grid-template-columns:1fr;gap:6px}
+  .pulse-map{grid-template-columns:1fr}
+  .pulse-map-card{border-right:0!important;border-bottom:1px solid var(--ws-line)!important}
+  .pulse-map-card:last-child{border-bottom:0!important}
+  .today-summary-grid{display:grid;grid-template-columns:1fr 1fr}
+  .today-summary-card:nth-child(2){border-right:0!important}
+  .today-summary-card:nth-child(-n+2){border-bottom:1px solid var(--ws-line)!important}
+  .feature-toggle-heading{padding:18px!important}
+  .feature-collapse-content{padding:14px!important}
+  .radar-legend,.why-types{display:none!important}
+  .control-bar{padding:18px 0}
+  .filters{width:100%}
+  .recent-reviews-section{padding-top:22px!important}
+  .method{padding:30px 0}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .game-cover img,.game-card,.hero-actions button,.hero-actions a{transition:none!important}
+}
