@@ -185,10 +185,12 @@ function card(game, index, rankNumber){
   const favorite = isFavorite(game);
 
   return `<article class="game-card" data-index="${index}" data-platform="${platformClass(game.platforms).join(" ")}">
+    <a class="card-hit-area" href="${gameDetailUrl}" aria-label="查看 ${escapeHtml(game.title)} 的遊戲詳情"></a>
     <div class="game-cover">${image}
       <div class="cover-summary" aria-hidden="true">
         <span class="cover-summary-label">GAME OVERVIEW</span>
         <p>${escapeHtml(game.summary || "目前暫無遊戲介紹。")}</p>
+        <span class="cover-summary-cta">查看完整介紹 ↗</span>
       </div>
       <span class="rank">#${String(rankNumber || index+1).padStart(2,"0")}</span>
       <button class="favorite-button ${favorite ? "active" : ""}" type="button" data-favorite-key="${escapeHtml(favoriteKey(game))}" aria-label="${favorite ? "取消收藏" : "收藏"}${escapeHtml(game.title)}" title="${favorite ? "取消收藏" : "加入收藏"}">${favorite ? "♥" : "♡"}</button>
