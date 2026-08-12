@@ -518,6 +518,69 @@ function bindModalButtons(games){
   }));
 }
 
+
+function reviewTimeText(value){
+  if(!value) return "時間未提供";
+  const dt = new Date(value);
+  const diff = Math.max(0, Date.now() - dt.getTime());
+  const minutes = Math.floor(diff / 60000);
+  if(minutes < 1) return "剛剛";
+  if(minutes < 60) return `${minutes} 分鐘前`;
+  const hours = Math.floor(minutes / 60);
+  if(hours < 24) return `${hours} 小時前`;
+  const days = Math.floor(hours / 24);
+  if(days < 30) return `${days} 天前`;
+  return dt.toLocaleDateString("zh-TW", {year:"numeric", month:"2-digit", day:"2-digit"});
+}
+
+function recentReviewCard(review){
+  const cover = review.cover_url
+    ? `<img src="${escapeHtml(review.cover_url)}" alt="${escapeHtml(review.title || "遊戲")} 封面" loading="lazy">`
+    : `<div class="recent-review-cover-fallback">${escapeHtml(review.title || "GAME")}</div>`;
+  const sentiment = review.voted_up ? "👍 推薦" : "👎 不推薦";
+  const sentimentClass = review.voted_up ? "positive" : "negative";
+  const playtime = Number.isFinite(Number(review.playtime_hours)) && Number(review.playtime_hours) > 0
+    ? `${Number(review.playtime_hours).toLocaleString("zh-TW", {maximumFractionDigits:1})} 小時`
+    : "—";
+  const helpful = Number(review.votes_up || 0);
+  const gameUrl = `/game/${encodeURIComponent(review.slug || review.game_key || "")}`;
+  const sourceUrl = review.source_url || "#";
+
+  return `<article class="recent-review-card">
+    <a class="recent-review-cover" href="${gameUrl}">${cover}</a>
+    <div class="recent-review-body">
+      <div class="recent-review-topline">
+        <span class="review-sentiment ${sentimentClass}">${sentiment}</span>
+        <span class="review-time">${escapeHtml(reviewTimeText(review.created_at))}</span>
+      </div>
+      <h3><a href="${gameUrl}">${escapeHtml(review.title || "Steam 遊戲")}</a></h3>
+      <p>${escapeHtml(review.content || "")}</p>
+      <div class="recent-review-meta"><span>遊玩 ${escapeHtml(playtime)}</span><span>👍 ${helpful.toLocaleString("zh-TW")} 人覺得有幫助</span></div>
+      <div class="recent-review-links"><a href="${gameUrl}">查看遊戲</a><a href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener noreferrer">Steam 評論 ↗</a></div>
+    </div>
+  </article>`;
+}
+
+async function loadRecentReviews(){
+  const grid = $("#recentReviewsGrid");
+  const note = $("#recentReviewsNote");
+  if(!grid) return;
+  try{
+    const data = await fetchJsonCached("/api/reviews/recent?limit=6", 120000);
+    const rows = Array.isArray(data.reviews) ? data.reviews : [];
+    if(!rows.length){
+      grid.innerHTML = `<div class="recent-reviews-empty">目前還沒有可顯示的近期 Steam 玩家評論。</div>`;
+      if(note) note.textContent = "部分遊戲可能沒有 Steam 版本，或近期沒有可用評論。";
+      return;
+    }
+    grid.innerHTML = rows.map(recentReviewCard).join("");
+    if(note) note.textContent = data.disclaimer || "評論內容來自 Steam 使用者；WAVESIG 顯示短摘錄並保留來源標示。";
+  }catch(_){
+    grid.innerHTML = `<div class="recent-reviews-empty">近期評論暫時無法讀取，其他遊戲資料仍可正常瀏覽。</div>`;
+    if(note) note.textContent = "Steam 評論來源暫時無法連線。";
+  }
+}
+
 function closeModal(){
   $("#modal").classList.remove("open");
   $("#modal").setAttribute("aria-hidden","true");
@@ -638,4 +701,5 @@ loadStatus();
 loadTodaySummary();
 loadRadar();
 loadWhy();
+loadRecentReviews();
 loadSection("hot");

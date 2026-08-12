@@ -2,6 +2,7 @@ import os
 import re
 import secrets
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from functools import wraps
 
 from flask import (
@@ -38,7 +39,7 @@ from db import (
 )
 from services.aggregator import refresh_all
 from services.igdb import IGDBClient
-from services.steam import app_news
+from services.steam import app_news, app_reviews
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "").strip() or secrets.token_hex(32)
@@ -53,6 +54,8 @@ _DETAIL_CACHE = {}
 _DETAIL_CACHE_TTL = 1800
 _NEWS_CACHE = {}
 _NEWS_CACHE_TTL = 900
+_REVIEWS_CACHE = {}
+_REVIEWS_CACHE_TTL = 900
 _DEVICE_RE = re.compile(r"^[A-Za-z0-9_-]{8,80}$")
 
 init_db()
@@ -64,7 +67,7 @@ try:
     elif not get_games("hot", 1):
         refresh_all()
 except Exception as exc:
-    print("GAME PULSE startup refresh failed:", exc)
+    print("WAVESIG startup refresh failed:", exc)
 
 
 def _safe_device_id(value):
@@ -100,6 +103,39 @@ def _detail_for_game(game):
     return detail
 
 
+
+
+def _steam_reviews_cached(appid, review_type="all", limit=10):
+    appid = str(appid or "").strip()
+    if not appid.isdigit():
+        return {"reviews": [], "summary": {}, "language": ""}
+
+    review_type = review_type if review_type in {"all", "positive", "negative"} else "all"
+    limit = max(1, min(int(limit), 20))
+    cache_key = f"{appid}:{review_type}:{limit}"
+    cached = _REVIEWS_CACHE.get(cache_key)
+    if cached and time.time() - cached["at"] < _REVIEWS_CACHE_TTL:
+        return cached["data"]
+
+    # Prefer Traditional Chinese, then English, then any language so the section
+    # remains useful even for games with a small Chinese review pool.
+    data = {"reviews": [], "summary": {}, "language": ""}
+    for language in ("tchinese", "english", "all"):
+        data = app_reviews(
+            appid,
+            count=max(limit, 8),
+            language=language,
+            review_type=review_type,
+            max_chars=360,
+        )
+        if data.get("reviews"):
+            break
+
+    data["reviews"] = (data.get("reviews") or [])[:limit]
+    _REVIEWS_CACHE[cache_key] = {"at": time.time(), "data": data}
+    return data
+
+
 def _publisher_fallback(game, detail):
     publisher_details = detail.get("publisher_details") or []
     publishers = detail.get("publishers") or []
@@ -124,7 +160,7 @@ def _publisher_fallback(game, detail):
             links.append({"name": name, "url": "", "kind": "publisher"})
             known_names.add(name.lower())
 
-    # Last-resort official game site from GAME PULSE store metadata.
+    # Last-resort official game site from WAVESIG store metadata.
     official_url = ""
     for store in game.get("stores") or []:
         if isinstance(store, dict) and store.get("kind") == "official" and store.get("url"):
@@ -280,6 +316,111 @@ def api_game_news(identifier):
         "official_game_url": fallback["official_game_url"],
         "steam_error": steam_error,
         "detail_error": detail_error,
+    })
+
+
+@app.get("/api/game/<path:identifier>/reviews")
+def api_game_reviews(identifier):
+    game = get_game_by_identifier(identifier)
+    if not game:
+        abort(404)
+
+    review_type = request.args.get("type", "all")
+    if review_type not in {"all", "positive", "negative"}:
+        review_type = "all"
+    try:
+        limit = max(1, min(20, int(request.args.get("limit", "10"))))
+    except ValueError:
+        limit = 10
+
+    appid = str(game.get("steam_appid") or "").strip()
+    if not appid.isdigit():
+        return jsonify({
+            "game_key": game["game_key"],
+            "title": game["title"],
+            "source": "Steam User Reviews",
+            "available": False,
+            "reviews": [],
+            "summary": {},
+            "message": "這款遊戲目前沒有可用的 Steam AppID。",
+        })
+
+    try:
+        data = _steam_reviews_cached(appid, review_type=review_type, limit=limit)
+        return jsonify({
+            "game_key": game["game_key"],
+            "title": game["title"],
+            "steam_appid": appid,
+            "source": "Steam User Reviews",
+            "available": bool(data.get("reviews")),
+            "language": data.get("language"),
+            "reviews": data.get("reviews") or [],
+            "summary": data.get("summary") or {},
+        })
+    except Exception as exc:
+        return jsonify({
+            "game_key": game["game_key"],
+            "title": game["title"],
+            "source": "Steam User Reviews",
+            "available": False,
+            "reviews": [],
+            "summary": {},
+            "error": str(exc)[:160],
+        }), 502
+
+
+@app.get("/api/reviews/recent")
+def api_recent_reviews():
+    try:
+        limit = max(1, min(9, int(request.args.get("limit", "6"))))
+    except ValueError:
+        limit = 6
+
+    # One recent review per hot Steam game keeps the homepage diverse instead
+    # of letting a single game fill the entire feed.
+    candidates = []
+    for game in get_games("hot", 16):
+        appid = str(game.get("steam_appid") or "").strip()
+        if appid.isdigit():
+            candidates.append(game)
+        if len(candidates) >= max(limit + 2, 8):
+            break
+
+    if not candidates:
+        return jsonify({"source": "Steam User Reviews", "reviews": []})
+
+    rows = []
+    workers = max(1, min(4, len(candidates)))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {
+            pool.submit(_steam_reviews_cached, game.get("steam_appid"), "all", 2): game
+            for game in candidates
+        }
+        for future in as_completed(futures):
+            game = futures[future]
+            try:
+                data = future.result()
+            except Exception:
+                continue
+            reviews = data.get("reviews") or []
+            if not reviews:
+                continue
+            review = dict(reviews[0])
+            review.update({
+                "game_key": game.get("game_key"),
+                "title": game.get("title"),
+                "slug": game.get("slug"),
+                "cover_url": game.get("cover_url"),
+                "pulse_score": game.get("pulse_score"),
+                "steam_appid": game.get("steam_appid"),
+            })
+            rows.append(review)
+
+    rows.sort(key=lambda item: int(item.get("timestamp_created") or 0), reverse=True)
+    return jsonify({
+        "source": "Steam User Reviews",
+        "reviews": rows[:limit],
+        "disclaimer": "評論內容來自 Steam 使用者；WAVESIG 僅顯示短摘錄並標示來源。",
     })
 
 

@@ -31,3 +31,6 @@
     flex-basis:40px;
   }
 }
+
+/* Keep the header brand clean: show only the WAVESIG wordmark beside the icon. */
+.logo-copy small{display:none!important}

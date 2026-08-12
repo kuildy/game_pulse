@@ -8,6 +8,7 @@
   let range = "24h";
   let metric = "pulse_score";
   let watching = false;
+  let reviewType = "all";
 
   function formatValue(value, key=metric){
     if(value == null || !Number.isFinite(Number(value))) return "—";
@@ -112,6 +113,76 @@
     return String(str).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
 
+
+  function reviewTimeText(value){
+    if(!value) return "時間未提供";
+    const dt = new Date(value);
+    const diff = Math.max(0, Date.now() - dt.getTime());
+    const minutes = Math.floor(diff / 60000);
+    if(minutes < 1) return "剛剛";
+    if(minutes < 60) return `${minutes} 分鐘前`;
+    const hours = Math.floor(minutes / 60);
+    if(hours < 24) return `${hours} 小時前`;
+    const days = Math.floor(hours / 24);
+    if(days < 30) return `${days} 天前`;
+    return dt.toLocaleDateString("zh-TW", {year:"numeric",month:"2-digit",day:"2-digit"});
+  }
+
+  function gameReviewCard(review){
+    const positive = !!review.voted_up;
+    const sentiment = positive ? "👍 推薦" : "👎 不推薦";
+    const playtime = Number.isFinite(Number(review.playtime_hours)) && Number(review.playtime_hours) > 0
+      ? `${Number(review.playtime_hours).toLocaleString("zh-TW", {maximumFractionDigits:1})} 小時`
+      : "—";
+    const helpful = Number(review.votes_up || 0);
+    const tags = [
+      review.steam_purchase ? "Steam 購買" : "",
+      review.received_for_free ? "免費取得" : "",
+      review.early_access ? "搶先體驗評論" : ""
+    ].filter(Boolean);
+    return `<article class="game-review-card ${positive ? "positive" : "negative"}">
+      <div class="game-review-head">
+        <span class="review-sentiment ${positive ? "positive" : "negative"}">${sentiment}</span>
+        <time>${escapeHtml(reviewTimeText(review.created_at))}</time>
+      </div>
+      <p class="game-review-content">${escapeHtml(review.content || "")}</p>
+      <div class="game-review-meta">
+        <span>遊玩 ${escapeHtml(playtime)}</span>
+        <span>👍 ${helpful.toLocaleString("zh-TW")} 人覺得有幫助</span>
+        ${tags.map(tag=>`<span>${escapeHtml(tag)}</span>`).join("")}
+      </div>
+      <a class="game-review-source" href="${escapeHtml(review.source_url || "#")}" target="_blank" rel="noopener noreferrer">前往 Steam 查看完整評論 ↗</a>
+    </article>`;
+  }
+
+  async function loadReviews(){
+    const target = $("#gameReviewsList");
+    if(!target) return;
+    target.innerHTML = `<div class="detail-notice">正在讀取 Steam 近期評論…</div>`;
+    try{
+      const r = await fetch(`/api/game/${enc}/reviews?type=${encodeURIComponent(reviewType)}&limit=10`);
+      const data = await r.json();
+      if(!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+      const rows = Array.isArray(data.reviews) ? data.reviews : [];
+      const langMap = {tchinese:"繁體中文", english:"英文", all:"多語言"};
+      const source = $("#reviewsSource");
+      if(source) source.textContent = rows.length ? `STEAM · ${langMap[data.language] || "USER REVIEWS"}` : "STEAM USER REVIEWS";
+      if(!rows.length){
+        target.innerHTML = `<div class="detail-notice">${escapeHtml(data.message || "目前沒有可顯示的近期 Steam 玩家評論。")}</div>`;
+        return;
+      }
+      target.innerHTML = rows.map(gameReviewCard).join("");
+    }catch(_){
+      target.innerHTML = `<div class="detail-notice">Steam 近期評論暫時無法讀取，請稍後再試。</div>`;
+    }
+  }
+
+  document.querySelectorAll("#reviewFilter [data-review-type]").forEach(btn => btn.addEventListener("click",()=>{
+    reviewType = btn.dataset.reviewType || "all";
+    document.querySelectorAll("#reviewFilter button").forEach(x=>x.classList.toggle("active", x === btn));
+    loadReviews();
+  }));
+
   function prefs(){
     return {
       notify_release: $("#notifyRelease")?.checked ?? true,
@@ -168,5 +239,6 @@
 
   loadHistory();
   loadNews();
+  loadReviews();
   loadWatch();
 })();
