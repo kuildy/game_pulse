@@ -132,32 +132,53 @@
     const sentiment = positive ? "👍 推薦" : "👎 不推薦";
     const playtime = Number.isFinite(Number(review.playtime_hours)) && Number(review.playtime_hours) > 0
       ? `${Number(review.playtime_hours).toLocaleString("zh-TW", {maximumFractionDigits:1})} 小時`
-      : "—";
-    const helpful = Number(review.votes_up || 0);
+      : "未提供";
+    const helpful = Math.max(0, Number(review.votes_up || 0));
+    const content = String(review.content || "").trim();
+    const expandable = content.length > 220;
     const tags = [
       review.steam_purchase ? "Steam 購買" : "",
       review.received_for_free ? "免費取得" : "",
       review.early_access ? "搶先體驗評論" : ""
     ].filter(Boolean);
+
     return `<article class="game-review-card ${positive ? "positive" : "negative"}">
       <div class="game-review-head">
         <span class="review-sentiment ${positive ? "positive" : "negative"}">${sentiment}</span>
         <time>${escapeHtml(reviewTimeText(review.created_at))}</time>
       </div>
-      <p class="game-review-content">${escapeHtml(review.content || "")}</p>
-      <div class="game-review-meta">
-        <span>遊玩 ${escapeHtml(playtime)}</span>
-        <span>👍 ${helpful.toLocaleString("zh-TW")} 人覺得有幫助</span>
-        ${tags.map(tag=>`<span>${escapeHtml(tag)}</span>`).join("")}
+
+      <div class="game-review-copy">
+        <p class="game-review-content${expandable ? " is-collapsible" : ""}">${escapeHtml(content)}</p>
+        ${expandable ? `<button class="review-expand-toggle" type="button" data-review-expand aria-expanded="false">展開完整內容 ↓</button>` : ""}
       </div>
+
+      <div class="review-primary-meta">
+        <span class="review-playtime">🎮 遊玩 <strong>${escapeHtml(playtime)}</strong></span>
+        ${helpful > 0 ? `<span class="review-helpful">👍 ${helpful.toLocaleString("zh-TW")} 人覺得有幫助</span>` : ""}
+      </div>
+
+      ${tags.length ? `<div class="game-review-meta">${tags.map(tag=>`<span>${escapeHtml(tag)}</span>`).join("")}</div>` : ""}
       <a class="game-review-source" href="${escapeHtml(review.source_url || "#")}" target="_blank" rel="noopener noreferrer">前往 Steam 查看完整評論 ↗</a>
     </article>`;
   }
+
+  document.addEventListener("click", event => {
+    const button = event.target.closest("[data-review-expand]");
+    if(!button) return;
+    const card = button.closest(".game-review-card");
+    const content = card?.querySelector(".game-review-content");
+    if(!content) return;
+    const expanded = content.classList.toggle("expanded");
+    button.setAttribute("aria-expanded", expanded ? "true" : "false");
+    button.textContent = expanded ? "收合內容 ↑" : "展開完整內容 ↓";
+  });
 
   async function loadReviews(){
     const target = $("#gameReviewsList");
     if(!target) return;
     target.innerHTML = `<div class="detail-notice">正在讀取 Steam 近期評論…</div>`;
+    target.classList.remove("single-review");
     try{
       const r = await fetch(`/api/game/${enc}/reviews?type=all&limit=2`);
       const data = await r.json();
@@ -169,7 +190,19 @@
         target.innerHTML = `<div class="detail-notice">${escapeHtml(data.message || "目前沒有可顯示的近期 Steam 玩家評論。")}</div>`;
         return;
       }
-      target.innerHTML = rows.map(gameReviewCard).join("");
+
+      const hasPositive = rows.some(review => !!review.voted_up);
+      const hasNegative = rows.some(review => !review.voted_up);
+      const missing = [];
+      if(!hasPositive) missing.push("近期尚未找到內容足夠、可供參考的推薦評論。");
+      if(!hasNegative) missing.push("近期尚未找到內容足夠、可供參考的不推薦評論。");
+
+      target.classList.toggle("single-review", rows.length === 1);
+      target.innerHTML = rows.map(gameReviewCard).join("") + (
+        missing.length
+          ? `<div class="review-missing-note"><span>評論資料不足</span><p>${missing.map(escapeHtml).join("<br>")}</p></div>`
+          : ""
+      );
     }catch(_){
       target.innerHTML = `<div class="detail-notice">Steam 近期評論暫時無法讀取，請稍後再試。</div>`;
     }

@@ -35,3 +35,93 @@
 /* WAVESIG — Steam user review excerpts */
 .reviews-section{border-color:rgba(83,216,255,.13)}.reviews-head{align-items:flex-end}.review-filter{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 14px}.review-filter button{border:1px solid var(--line);background:rgba(255,255,255,.025);color:var(--muted);padding:8px 11px;border-radius:999px;cursor:pointer;font-size:10px;font-weight:800}.review-filter button.active{color:#071017;background:linear-gradient(135deg,#8ae8ff,#b6a7ff);border-color:transparent}.game-reviews-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.game-review-card{padding:17px;border:1px solid var(--line);border-radius:15px;background:rgba(8,10,15,.48)}.game-review-card.positive{border-color:rgba(85,230,165,.12)}.game-review-card.negative{border-color:rgba(255,101,127,.14)}.game-review-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.game-review-head time{font-size:9px;color:var(--muted)}.game-review-content{font-size:12px;line-height:1.78;color:#d6dce7;margin:14px 0 13px}.game-review-meta{display:flex;gap:7px;flex-wrap:wrap}.game-review-meta span{font-size:8px;color:var(--muted);padding:5px 7px;border-radius:999px;background:rgba(255,255,255,.028);border:1px solid rgba(255,255,255,.055)}.game-review-source{display:inline-flex;margin-top:13px;color:#aeeeff;text-decoration:none;font-size:9px;font-weight:800}.review-disclaimer{margin:12px 0 0;color:var(--muted);font-size:9px;line-height:1.65}.review-sentiment{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:900;padding:5px 8px;border-radius:999px;border:1px solid var(--line)}.review-sentiment.positive{color:var(--green);background:rgba(85,230,165,.07);border-color:rgba(85,230,165,.22)}.review-sentiment.negative{color:#ff91a4;background:rgba(255,101,127,.07);border-color:rgba(255,101,127,.22)}
 @media(max-width:760px){.game-reviews-list{grid-template-columns:1fr}.reviews-head{align-items:flex-start}.game-review-card{padding:15px}.game-review-content{font-size:11px}}
+
+/* WAVESIG review display polish — representative positive / negative pair */
+.game-review-card,
+.game-review-card.positive,
+.game-review-card.negative{
+  border-color:var(--line);
+  background:rgba(8,10,15,.48);
+}
+
+.game-review-copy{margin:14px 0 13px}
+.game-review-content{margin:0;color:#d6dce7;font-size:12px;line-height:1.78}
+.game-review-content.is-collapsible{
+  display:-webkit-box;
+  -webkit-line-clamp:5;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.game-review-content.is-collapsible.expanded{
+  display:block;
+  overflow:visible;
+}
+.review-expand-toggle{
+  margin-top:8px;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#aeeeff;
+  font-size:9px;
+  font-weight:800;
+  cursor:pointer;
+}
+.review-expand-toggle:hover{text-decoration:underline}
+.review-expand-toggle:focus-visible{outline:2px solid var(--cyan);outline-offset:4px;border-radius:4px}
+
+.review-primary-meta{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:0 0 9px;
+}
+.review-primary-meta>span{
+  display:inline-flex;
+  align-items:center;
+  min-height:32px;
+  padding:7px 10px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.07);
+  background:rgba(255,255,255,.03);
+  font-size:9px;
+  color:var(--muted);
+}
+.review-playtime{color:#dce7f6!important}
+.review-playtime strong{margin-left:4px;color:#fff;font-size:12px}
+.review-helpful{white-space:nowrap}
+
+.game-review-meta{margin-top:0}
+.game-review-meta span{font-size:8px}
+
+.review-missing-note{
+  grid-column:1/-1;
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  padding:10px 12px;
+  border:1px dashed rgba(255,255,255,.09);
+  border-radius:11px;
+  background:rgba(255,255,255,.018);
+  color:var(--muted);
+}
+.review-missing-note span{
+  flex:0 0 auto;
+  padding:4px 6px;
+  border-radius:7px;
+  background:rgba(255,255,255,.035);
+  color:#c7cfdd;
+  font-size:8px;
+  font-weight:900;
+}
+.review-missing-note p{margin:1px 0 0;font-size:9px;line-height:1.65}
+.game-reviews-list.single-review{grid-template-columns:1fr}
+
+@media(max-width:760px){
+  .game-review-content{font-size:11px}
+  .review-primary-meta{gap:6px}
+  .review-primary-meta>span{min-height:30px;padding:6px 9px}
+  .review-playtime strong{font-size:11px}
+  .review-missing-note{display:block}
+  .review-missing-note span{display:inline-flex;margin-bottom:6px}
+}
