@@ -1,0 +1,33 @@
+.logo{
+  align-items:center;
+  gap:12px;
+}
+
+.logo-image{
+  width:44px;
+  height:44px;
+  display:block;
+  object-fit:contain;
+  flex:0 0 44px;
+  filter:drop-shadow(0 10px 22px rgba(83,216,255,.18));
+}
+
+.logo-copy b{
+  letter-spacing:1.35px;
+}
+
+.logo-copy small{
+  white-space:nowrap;
+}
+
+@media (max-width: 620px){
+  .logo{
+    gap:10px;
+  }
+
+  .logo-image{
+    width:40px;
+    height:40px;
+    flex-basis:40px;
+  }
+}

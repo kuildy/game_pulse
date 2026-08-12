@@ -10,7 +10,10 @@
   <meta property="og:type" content="website">
   <title>WAVESIG｜看見下一波遊戲熱潮</title>
   <link rel="preconnect" href="https://images.igdb.com" crossorigin>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='branding/favicon.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='branding/wavesig-icon-512.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/logo-branding.css') }}">
 </head>
 <body>
   <div class="ambient ambient-a"></div>
@@ -18,7 +21,7 @@
 
   <header class="nav">
     <a class="logo" href="#">
-      <span class="logo-mark">WS</span>
+      <img class="logo-image" src="{{ url_for('static', filename='branding/wavesig-mark.png') }}" alt="WAVESIG logo">
       <span class="logo-copy"><b>WAVESIG</b><small>遊戲熱度偵測與解讀</small></span>
     </a>
 

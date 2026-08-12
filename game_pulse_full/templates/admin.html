@@ -4,13 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>管理後台｜WAVESIG</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='branding/favicon.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='branding/wavesig-icon-512.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/logo-branding.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 </head>
 <body class="admin-page">
   <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
   <header class="nav">
-    <a class="logo" href="{{ url_for('index') }}"><span class="logo-mark">WS</span><span class="logo-copy"><b>WAVESIG</b><small>ADMIN</small></span></a>
+    <a class="logo" href="{{ url_for('index') }}"><img class="logo-image" src="{{ url_for('static', filename='branding/wavesig-mark.png') }}" alt="WAVESIG logo">
+      <span class="logo-copy"><b>WAVESIG</b><small>ADMIN</small></span></a>
     {% if authenticated %}<form method="post" action="{{ url_for('admin_logout') }}"><button class="secondary admin-logout">登出</button></form>{% endif %}
   </header>
 

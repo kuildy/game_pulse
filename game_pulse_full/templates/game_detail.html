@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="{{ game.title }}｜WAVESIG 遊戲詳細資訊">
   <title>{{ game.title }}｜WAVESIG</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='branding/favicon.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='branding/wavesig-icon-512.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/logo-branding.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/game_detail.css') }}">
 </head>
 <body class="detail-page" data-game-identifier="{{ game.slug or game.game_key }}">
@@ -14,7 +17,7 @@
 
   <header class="nav detail-nav">
     <a class="logo" href="{{ url_for('index') }}">
-      <span class="logo-mark">WS</span>
+      <img class="logo-image" src="{{ url_for('static', filename='branding/wavesig-mark.png') }}" alt="WAVESIG logo">
       <span class="logo-copy"><b>WAVESIG</b><small>遊戲熱度偵測與解讀</small></span>
     </a>
     <div class="detail-nav-links">
