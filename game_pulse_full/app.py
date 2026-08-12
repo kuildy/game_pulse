@@ -111,7 +111,7 @@ def _steam_reviews_cached(appid, review_type="all", limit=10):
         return {"reviews": [], "summary": {}, "language": ""}
 
     review_type = review_type if review_type in {"all", "positive", "negative"} else "all"
-    limit = max(1, min(int(limit), 20))
+    limit = max(1, min(int(limit), 30))
     cache_key = f"{appid}:{review_type}:{limit}"
     cached = _REVIEWS_CACHE.get(cache_key)
     if cached and time.time() - cached["at"] < _REVIEWS_CACHE_TTL:
@@ -135,6 +135,58 @@ def _steam_reviews_cached(appid, review_type="all", limit=10):
     _REVIEWS_CACHE[cache_key] = {"at": time.time(), "data": data}
     return data
 
+
+
+
+def _review_quality_score(review):
+    """Rank recent Steam reviews by how useful they are to a reader."""
+    content = str(review.get("content") or "").strip()
+    meaningful_chars = re.findall(r"[\w\u3400-\u9fff]", content, flags=re.UNICODE)
+    length_score = min(len(meaningful_chars), 220) / 22.0
+
+    votes_up = max(0, int(review.get("votes_up") or 0))
+    helpful_score = min(votes_up, 50) * 0.18
+
+    playtime = review.get("playtime_hours")
+    try:
+        playtime = float(playtime or 0)
+    except (TypeError, ValueError):
+        playtime = 0
+    playtime_score = min(playtime, 100) / 50.0
+
+    return length_score + helpful_score + playtime_score
+
+
+def _is_meaningful_review(review):
+    """Reject obvious low-information / spam-like review snippets."""
+    content = str(review.get("content") or "").strip()
+    if not content:
+        return False
+
+    without_urls = re.sub(r"https?://\S+|www\.\S+", " ", content, flags=re.I)
+    meaningful = re.findall(r"[\w\u3400-\u9fff]", without_urls, flags=re.UNICODE)
+    if len(meaningful) < 18:
+        return False
+
+    normalized = "".join(meaningful).lower()
+    if len(set(normalized)) < 6:
+        return False
+
+    return True
+
+
+def _best_recent_review(appid, review_type):
+    """Return one useful recent positive or negative review."""
+    data = _steam_reviews_cached(appid, review_type=review_type, limit=30)
+    candidates = [
+        review for review in (data.get("reviews") or [])
+        if _is_meaningful_review(review)
+    ]
+    if not candidates:
+        return None, data
+
+    best = max(candidates, key=_review_quality_score)
+    return dict(best), data
 
 def _publisher_fallback(game, detail):
     publisher_details = detail.get("publisher_details") or []
@@ -328,10 +380,6 @@ def api_game_reviews(identifier):
     review_type = request.args.get("type", "all")
     if review_type not in {"all", "positive", "negative"}:
         review_type = "all"
-    try:
-        limit = max(1, min(20, int(request.args.get("limit", "10"))))
-    except ValueError:
-        limit = 10
 
     appid = str(game.get("steam_appid") or "").strip()
     if not appid.isdigit():
@@ -346,16 +394,39 @@ def api_game_reviews(identifier):
         })
 
     try:
-        data = _steam_reviews_cached(appid, review_type=review_type, limit=limit)
+        selected = []
+        summary = {}
+        languages = []
+
+        wanted_types = ["positive", "negative"] if review_type == "all" else [review_type]
+        for sentiment in wanted_types:
+            review, data = _best_recent_review(appid, sentiment)
+            if not summary:
+                summary = data.get("summary") or {}
+            language = data.get("language")
+            if language:
+                languages.append(language)
+            if review:
+                review["selected_sentiment"] = sentiment
+                selected.append(review)
+
+        selected.sort(key=lambda item: 0 if item.get("voted_up") else 1)
+
         return jsonify({
             "game_key": game["game_key"],
             "title": game["title"],
             "steam_appid": appid,
             "source": "Steam User Reviews",
-            "available": bool(data.get("reviews")),
-            "language": data.get("language"),
-            "reviews": data.get("reviews") or [],
-            "summary": data.get("summary") or {},
+            "available": bool(selected),
+            "language": ", ".join(dict.fromkeys(languages)),
+            "reviews": selected,
+            "summary": summary,
+            "selection": "one_meaningful_positive_and_negative",
+            "message": (
+                "顯示近期評論中各一則較有內容的推薦與不推薦評論。"
+                if review_type == "all" else
+                "顯示近期評論中一則較有內容的代表評論。"
+            ),
         })
     except Exception as exc:
         return jsonify({
@@ -372,18 +443,17 @@ def api_game_reviews(identifier):
 @app.get("/api/reviews/recent")
 def api_recent_reviews():
     try:
-        limit = max(1, min(9, int(request.args.get("limit", "6"))))
+        limit = max(2, min(10, int(request.args.get("limit", "6"))))
     except ValueError:
         limit = 6
 
-    # One recent review per hot Steam game keeps the homepage diverse instead
-    # of letting a single game fill the entire feed.
+    game_limit = max(1, (limit + 1) // 2)
     candidates = []
     for game in get_games("hot", 16):
         appid = str(game.get("steam_appid") or "").strip()
         if appid.isdigit():
             candidates.append(game)
-        if len(candidates) >= max(limit + 2, 8):
+        if len(candidates) >= game_limit + 2:
             break
 
     if not candidates:
@@ -392,35 +462,59 @@ def api_recent_reviews():
     rows = []
     workers = max(1, min(4, len(candidates)))
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = {
-            pool.submit(_steam_reviews_cached, game.get("steam_appid"), "all", 2): game
-            for game in candidates
-        }
+        futures = {}
+        for game in candidates:
+            appid = game.get("steam_appid")
+            futures[pool.submit(_best_recent_review, appid, "positive")] = (game, "positive")
+            futures[pool.submit(_best_recent_review, appid, "negative")] = (game, "negative")
+
+        grouped = {}
         for future in as_completed(futures):
-            game = futures[future]
+            game, sentiment = futures[future]
             try:
-                data = future.result()
+                review, _data = future.result()
             except Exception:
                 continue
-            reviews = data.get("reviews") or []
-            if not reviews:
+            if not review:
                 continue
-            review = dict(reviews[0])
+            game_key = game.get("game_key")
             review.update({
-                "game_key": game.get("game_key"),
+                "game_key": game_key,
                 "title": game.get("title"),
                 "slug": game.get("slug"),
                 "cover_url": game.get("cover_url"),
                 "pulse_score": game.get("pulse_score"),
                 "steam_appid": game.get("steam_appid"),
+                "selected_sentiment": sentiment,
             })
-            rows.append(review)
+            grouped.setdefault(game_key, {})[sentiment] = review
 
-    rows.sort(key=lambda item: int(item.get("timestamp_created") or 0), reverse=True)
+    for game in candidates:
+        pair = grouped.get(game.get("game_key"), {})
+        positive = pair.get("positive")
+        negative = pair.get("negative")
+        if positive and negative:
+            rows.extend([positive, negative])
+            if len(rows) >= limit:
+                break
+
+    if len(rows) < limit:
+        seen_ids = {item.get("recommendationid") for item in rows}
+        leftovers = []
+        for game in candidates:
+            pair = grouped.get(game.get("game_key"), {})
+            for sentiment in ("positive", "negative"):
+                review = pair.get(sentiment)
+                if review and review.get("recommendationid") not in seen_ids:
+                    leftovers.append(review)
+        leftovers.sort(key=lambda item: int(item.get("timestamp_created") or 0), reverse=True)
+        rows.extend(leftovers[: max(0, limit - len(rows))])
+
     return jsonify({
         "source": "Steam User Reviews",
         "reviews": rows[:limit],
-        "disclaimer": "評論內容來自 Steam 使用者；WAVESIG 僅顯示短摘錄並標示來源。",
+        "selection": "paired_meaningful_positive_negative",
+        "disclaimer": "每款遊戲優先顯示近期評論中各一則較有內容的好評與負評；內容來自 Steam 使用者。",
     })
 
 

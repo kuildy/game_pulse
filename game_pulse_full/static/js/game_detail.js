@@ -8,7 +8,6 @@
   let range = "24h";
   let metric = "pulse_score";
   let watching = false;
-  let reviewType = "all";
 
   function formatValue(value, key=metric){
     if(value == null || !Number.isFinite(Number(value))) return "—";
@@ -160,13 +159,12 @@
     if(!target) return;
     target.innerHTML = `<div class="detail-notice">正在讀取 Steam 近期評論…</div>`;
     try{
-      const r = await fetch(`/api/game/${enc}/reviews?type=${encodeURIComponent(reviewType)}&limit=10`);
+      const r = await fetch(`/api/game/${enc}/reviews?type=all&limit=2`);
       const data = await r.json();
       if(!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
       const rows = Array.isArray(data.reviews) ? data.reviews : [];
-      const langMap = {tchinese:"繁體中文", english:"英文", all:"多語言"};
       const source = $("#reviewsSource");
-      if(source) source.textContent = rows.length ? `STEAM · ${langMap[data.language] || "USER REVIEWS"}` : "STEAM USER REVIEWS";
+      if(source) source.textContent = rows.length >= 2 ? "STEAM · 好評 + 負評" : "STEAM USER REVIEWS";
       if(!rows.length){
         target.innerHTML = `<div class="detail-notice">${escapeHtml(data.message || "目前沒有可顯示的近期 Steam 玩家評論。")}</div>`;
         return;
@@ -177,11 +175,8 @@
     }
   }
 
-  document.querySelectorAll("#reviewFilter [data-review-type]").forEach(btn => btn.addEventListener("click",()=>{
-    reviewType = btn.dataset.reviewType || "all";
-    document.querySelectorAll("#reviewFilter button").forEach(x=>x.classList.toggle("active", x === btn));
-    loadReviews();
-  }));
+  const reviewFilter = $("#reviewFilter");
+  if(reviewFilter) reviewFilter.style.display = "none";
 
   function prefs(){
     return {
