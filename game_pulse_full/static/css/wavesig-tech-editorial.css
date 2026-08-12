@@ -564,3 +564,282 @@ footer b{letter-spacing:.14em}
   .today-summary-card{border-right:0!important;border-bottom:1px solid var(--ws-line)!important}
   .today-summary-card:last-child{border-bottom:0!important}
 }
+
+/* =========================================================
+   WAVESIG section depth + typography pass
+   Clearer section backgrounds, larger type, no behavior changes.
+   ========================================================= */
+
+:root{
+  --ws-zone-hero:#0b0f15;
+  --ws-zone-today:#0d1218;
+  --ws-zone-radar:#0a1319;
+  --ws-zone-why:#100f18;
+  --ws-zone-hot:#0c0f14;
+  --ws-zone-review:#101116;
+  --ws-zone-method:#0a0e13;
+}
+
+/* Background atmosphere: visible enough to avoid empty black space, still subtle. */
+body:before{
+  opacity:.31;
+  background-image:
+    linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+  background-size:52px 52px;
+  mask-image:linear-gradient(to bottom,black 0%,rgba(0,0,0,.82) 54%,transparent 93%);
+}
+body:after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-3;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 16% 9%,rgba(70,215,255,.07),transparent 26%),
+    radial-gradient(circle at 84% 34%,rgba(141,116,255,.065),transparent 28%),
+    linear-gradient(180deg,#080a0e 0%,#090c11 46%,#07090d 100%);
+}
+
+/* Each homepage zone gets its own dark tone and thin editorial boundary. */
+.hero{
+  position:relative;
+  padding-left:34px!important;
+  padding-right:34px!important;
+  margin-top:24px;
+  margin-bottom:42px;
+  border:1px solid rgba(255,255,255,.075);
+  border-radius:14px;
+  background:
+    linear-gradient(90deg,rgba(70,215,255,.035),transparent 34%),
+    linear-gradient(180deg,#0c1118 0%,var(--ws-zone-hero) 100%);
+  overflow:hidden;
+}
+.hero:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:.18;
+  background:
+    linear-gradient(90deg,transparent 0 78%,rgba(70,215,255,.11) 78% 78.12%,transparent 78.12%),
+    repeating-linear-gradient(180deg,transparent 0 29px,rgba(255,255,255,.025) 30px);
+}
+.hero>*{position:relative;z-index:1}
+
+.today-section{
+  padding:30px!important;
+  margin-bottom:28px!important;
+  border:1px solid var(--ws-line)!important;
+  border-left:3px solid rgba(70,215,255,.68)!important;
+  border-radius:10px!important;
+  background:var(--ws-zone-today)!important;
+}
+.today-heading{padding-bottom:18px!important}
+
+.radar-section{
+  background:
+    linear-gradient(90deg,rgba(70,215,255,.045),transparent 34%),
+    var(--ws-zone-radar)!important;
+  border-color:rgba(70,215,255,.18)!important;
+}
+.radar-section .feature-toggle-heading{border-left:3px solid rgba(70,215,255,.76)}
+
+.why-section{
+  background:
+    linear-gradient(90deg,rgba(141,116,255,.05),transparent 36%),
+    var(--ws-zone-why)!important;
+  border-color:rgba(141,116,255,.19)!important;
+}
+.why-section .feature-toggle-heading{border-left:3px solid rgba(141,116,255,.78)}
+
+.hot-control{
+  margin-top:36px;
+  padding:28px 30px!important;
+  border:1px solid var(--ws-line)!important;
+  border-bottom:0!important;
+  border-radius:10px 10px 0 0!important;
+  background:var(--ws-zone-hot)!important;
+}
+#games + section{
+  margin-bottom:34px;
+  padding:0 30px 32px;
+  border:1px solid var(--ws-line);
+  border-top:0;
+  border-radius:0 0 10px 10px;
+  background:var(--ws-zone-hot);
+}
+#games + section .tab-strip{border-top:1px solid rgba(255,255,255,.04)}
+
+.recent-reviews-section{
+  padding:30px!important;
+  margin-bottom:30px!important;
+  border:1px solid var(--ws-line)!important;
+  border-left:3px solid rgba(255,184,107,.5)!important;
+  border-radius:10px!important;
+  background:var(--ws-zone-review)!important;
+}
+
+.method{
+  padding:42px 34px!important;
+  margin-bottom:28px;
+  border:1px solid var(--ws-line)!important;
+  border-radius:10px!important;
+  background:var(--ws-zone-method)!important;
+}
+
+.source-section{
+  padding:30px;
+  margin-bottom:46px;
+  border:1px solid var(--ws-line);
+  border-radius:10px;
+  background:#0b0e13;
+}
+
+/* Slightly more space between major blocks helps the background separation read clearly. */
+.pulse-map{margin-bottom:30px!important}
+.feature-section{margin-bottom:20px!important}
+
+/* Larger typography across the desktop experience. */
+@media (min-width:1100px){
+  body{font-size:17px}
+  .eyebrow,.micro,.section-title>span{font-size:12px}
+  .hero h1{font-size:clamp(72px,7vw,112px)!important}
+  .hero-copy p{font-size:19px!important;line-height:1.85!important}
+  .hero-pill-row span{font-size:11px!important}
+  .hero-actions button,.hero-actions a{font-size:15px!important;min-height:52px!important}
+  .signal-top{font-size:11px!important}
+  .ring-inner strong{font-size:72px!important}
+  .ring-inner small{font-size:11px!important}
+  .source-mini b{font-size:12px!important}
+  .source-mini span{font-size:12px!important}
+
+  .pulse-map-card b{font-size:15.5px!important}
+  .pulse-map-card p{font-size:11.5px!important}
+
+  .today-heading h2{font-size:37px!important}
+  .today-heading p{font-size:15px!important}
+  .today-summary-card h3{font-size:18px!important}
+  .today-summary-card strong{font-size:29px!important}
+  .today-summary-card p{font-size:12px!important}
+
+  .feature-toggle-heading h2{font-size:39px!important}
+  .feature-toggle-heading p{font-size:15px!important}
+  .radar-body h3,.why-body h3{font-size:20px!important}
+  .radar-body p{font-size:12.5px!important}
+  .why-body h4{font-size:14px!important}
+  .why-body p{font-size:12px!important}
+  .radar-signals>div,.why-metric{font-size:11px!important}
+  .radar-metric,.why-metric strong{font-size:12px!important}
+
+  .section-title h2{font-size:40px!important}
+  .section-title p{font-size:15.5px!important}
+  .search input{font-size:15px!important}
+  .filters select{font-size:14px!important}
+  .filter-button{font-size:13px!important}
+  .result-count{font-size:11px!important}
+  .section-tab{font-size:15px!important}
+
+  .game-card h3{font-size:23px!important}
+  .summary{font-size:14px!important;line-height:1.68!important}
+  .meta{font-size:11.5px!important}
+  .score{font-size:12px!important}
+  .score b{font-size:19px!important}
+  .store-row a,.more-btn{font-size:12px!important}
+
+  .recent-reviews-heading h2{font-size:39px!important}
+  .recent-reviews-heading p{font-size:15.5px!important}
+  .recent-review-card{font-size:15px}
+
+  .method h2{font-size:46px!important}
+  .method p{font-size:16px!important}
+  .formula-row b{font-size:27px!important}
+  .formula-row span{font-size:15px!important}
+
+  .source-section .section-title h2{font-size:34px!important}
+  .source-card b{font-size:15px!important}
+}
+
+/* Tablet: increase readability without losing grid density. */
+@media (min-width:761px) and (max-width:1099px){
+  .hero{padding-left:26px!important;padding-right:26px!important}
+  .hero h1{font-size:clamp(60px,8vw,82px)!important}
+  .hero-copy p{font-size:17px!important}
+  .today-heading h2{font-size:32px!important}
+  .feature-toggle-heading h2{font-size:33px!important}
+  .section-title h2{font-size:34px!important}
+  .game-card h3{font-size:21px!important}
+}
+
+/* Mobile: larger text, clearer zones, more breathing room around search/filter. */
+@media (max-width:620px){
+  .hero{
+    margin-top:14px;
+    margin-bottom:28px;
+    padding:34px 18px 28px!important;
+    border-radius:10px;
+  }
+  .hero h1{font-size:clamp(47px,14vw,59px)!important}
+  .hero-copy p{font-size:16.5px!important;line-height:1.76!important}
+  .hero-pill-row span{font-size:10.5px!important}
+  .hero-actions button,.hero-actions a{font-size:14px!important}
+
+  .today-section{padding:20px 16px!important}
+  .today-heading h2{font-size:29px!important}
+  .today-heading p{font-size:14px!important}
+  .today-summary-card h3{font-size:16px!important}
+  .today-summary-card strong{font-size:25px!important}
+  .today-summary-card p{font-size:11.5px!important}
+
+  .feature-toggle-heading{padding:21px 16px!important}
+  .feature-toggle-heading h2{font-size:29px!important}
+  .feature-toggle-heading p{font-size:13.5px!important}
+  .radar-body h3,.why-body h3{font-size:17px!important}
+  .radar-body p,.why-body p{font-size:11.5px!important}
+  .why-body h4{font-size:13px!important}
+
+  .hot-control{
+    margin-top:26px;
+    padding:22px 16px 16px!important;
+  }
+  #games + section{padding:0 16px 22px}
+  .section-title h2{font-size:33px!important}
+  .section-title p{font-size:14px!important}
+
+  .filter-area{
+    margin-top:4px;
+    padding:14px!important;
+    gap:12px!important;
+    border:1px solid var(--ws-line);
+    border-radius:9px;
+    background:#090d12;
+  }
+  .filters{gap:12px!important}
+  .search{height:56px!important;padding:0 16px!important}
+  .search input{font-size:17px!important}
+  #platformFilter,#genreFilter{height:54px!important;font-size:16px!important}
+  #favoriteFilter,#clearFilters{height:52px!important;font-size:14px!important}
+  .result-count{font-size:12px!important;padding-top:4px}
+  .section-tab{font-size:14px!important}
+
+  .game-card h3{font-size:22px!important}
+  .summary{font-size:14px!important}
+  .meta{font-size:11px!important}
+  .store-row a,.more-btn{font-size:12px!important}
+
+  .recent-reviews-section{padding:22px 16px!important}
+  .recent-reviews-heading h2{font-size:31px!important}
+  .recent-reviews-heading p{font-size:14px!important}
+
+  .method{padding:28px 18px!important}
+  .method h2{font-size:34px!important}
+  .method p{font-size:15px!important}
+
+  .source-section{padding:22px 16px;margin-bottom:32px}
+}
+
+@media (max-width:380px){
+  .hero h1{font-size:45px!important}
+  .section-title h2{font-size:31px!important}
+  .filter-area{padding:12px!important}
+}
