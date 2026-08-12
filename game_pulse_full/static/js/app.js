@@ -184,11 +184,12 @@ function card(game, index, rankNumber){
   const gameDetailUrl = detailUrl(game);
   const favorite = isFavorite(game);
 
-  return `<article class="game-card" data-index="${index}" data-platform="${platformClass(game.platforms).join(" ")}">
+  return `<article class="game-card full-bleed-card" data-index="${index}" data-platform="${platformClass(game.platforms).join(" ")}">
     <a class="card-hit-area" href="${gameDetailUrl}" aria-label="查看 ${escapeHtml(game.title)} 的遊戲詳情"></a>
     <div class="game-cover">${image}
       <div class="cover-summary" aria-hidden="true">
         <span class="cover-summary-label">GAME OVERVIEW</span>
+        <strong class="cover-summary-title">${escapeHtml(game.title)}</strong>
         <p>${escapeHtml(game.summary || "目前暫無遊戲介紹。")}</p>
         <span class="cover-summary-cta">查看完整介紹 ↗</span>
       </div>
@@ -202,6 +203,7 @@ function card(game, index, rankNumber){
       ${liveSignals}
       ${trendSignal}
       ${genreChips ? `<div class="chips">${genreChips}</div>` : ""}
+      <p class="mobile-card-summary">${escapeHtml(game.summary || "目前暫無遊戲介紹。")}</p>
       <a class="more-btn detail-link" href="${gameDetailUrl}">查看遊戲詳情</a>
     </div>
   </article>`;
