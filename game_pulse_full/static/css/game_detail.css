@@ -22,3 +22,12 @@
 /* Publisher / official-source fallback */
 .company-links a{color:var(--cyan);text-decoration:none}.company-links a:hover{text-decoration:underline}.company-links em{font-style:normal;color:var(--muted);font-weight:400}
 .publisher-fallback{grid-column:1/-1;padding:22px;border:1px solid rgba(83,216,255,.16);border-radius:18px;background:linear-gradient(135deg,rgba(83,216,255,.055),rgba(139,108,255,.045))}.publisher-fallback-head span{font-size:9px;letter-spacing:1.4px;color:var(--cyan);font-weight:900}.publisher-fallback-head h3{margin:7px 0 10px;font-size:20px}.publisher-fallback p{margin:6px 0;color:var(--muted);font-size:11px;line-height:1.65}.publisher-fallback-copy strong{color:#eef2f8}.publisher-source-grid{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}.publisher-source-card{min-width:210px;display:flex;flex-direction:column;gap:5px;padding:14px 16px;border:1px solid var(--line);border-radius:13px;background:rgba(255,255,255,.03);text-decoration:none}.publisher-source-card span{font-size:8px;letter-spacing:1px;color:var(--muted)}.publisher-source-card b{font-size:13px;color:white}.publisher-source-card em{font-size:9px;color:var(--cyan);font-style:normal;font-weight:800}
+
+@media(max-width:520px){
+  .detail-copy h1{font-size:clamp(34px,11vw,42px);letter-spacing:-1.6px}
+  .watch-panel-head{align-items:flex-start;flex-direction:column}
+  .watch-actions{width:100%}
+  .watch-actions button{flex:1;min-height:42px}
+  .detail-panel{padding:20px}
+  .trend-switch button{min-height:38px}
+}

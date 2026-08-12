@@ -26,6 +26,11 @@
       {{ '● LIVE DATA' if mode == 'live' else '● DEMO MODE' }}
     </div>
   </header>
+  <nav class="subpage-mobile-nav" aria-label="手機頁面導覽">
+    <a href="{{ url_for('index') }}#games">🏆 熱門</a>
+    <a href="{{ url_for('release_calendar_page') }}">📅 日曆</a>
+    <a href="{{ url_for('notifications_page') }}">🔔 通知</a>
+  </nav>
 
   <main class="detail-shell">
     <section class="detail-hero">

@@ -97,7 +97,7 @@
             <div class="publisher-fallback-head"><span>OFFICIAL SOURCE</span><h3>目前尚無可顯示的 Steam 最新消息</h3></div>
             ${publisherLine}
             <p>GAME PULSE 已改為提供發行商或遊戲官方來源，不會用不明第三方新聞填補空缺。</p>
-            <div class="publisher-source-grid">${publisherCards || gameOfficial || ""}</div>
+            <div class="publisher-source-grid">${publisherCards}${gameOfficial}</div>
           </div>`;
         return;
       }

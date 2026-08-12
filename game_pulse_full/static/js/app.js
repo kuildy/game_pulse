@@ -10,6 +10,24 @@ const copy = {
   upcoming: ["03 · COMING SOON","即將推出","未來 90 天預計推出的遊戲。"]
 };
 
+// Share identical first-load API requests so the homepage does not ask the NAS
+// for the same Hot/RADAR data twice at the same moment.
+const apiRequestCache = new Map();
+async function fetchJsonCached(url, ttl=8000){
+  const now = Date.now();
+  const cached = apiRequestCache.get(url);
+  if(cached && cached.expires > now) return cached.promise;
+  const promise = fetch(url).then(async response => {
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  }).catch(error => {
+    apiRequestCache.delete(url);
+    throw error;
+  });
+  apiRequestCache.set(url, {expires: now + ttl, promise});
+  return promise;
+}
+
 function escapeHtml(str=""){
   return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
@@ -243,14 +261,15 @@ async function loadSection(section){
   setSectionUI(section);
   $("#gameGrid").innerHTML = `<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>`;
   try{
-    const r = await fetch(`/api/games?section=${encodeURIComponent(section)}&limit=50`);
-    const data = await r.json();
+    const data = await fetchJsonCached(`/api/games?section=${encodeURIComponent(section)}&limit=50`);
     state.games = data.games || [];
     state.mode = data.mode || "demo";
     populateGenreFilter();
     render();
   }catch(e){
-    $("#gameGrid").innerHTML = `<div class="empty">資料讀取失敗，請確認 Flask 是否正在執行。</div>`;
+    $("#gameGrid").innerHTML = `<div class="empty">遊戲資料暫時無法讀取，請稍後再試。</div>`;
+    const count = $("#resultCount");
+    if(count) count.textContent = "讀取失敗";
   }
 }
 
@@ -270,13 +289,10 @@ async function loadTodaySummary(){
   const meta = $("#todaySummaryMeta");
   if(!grid || !meta) return;
   try{
-    const [hotResponse, radarResponse] = await Promise.all([
-      fetch("/api/games?section=hot&limit=50"),
-      fetch("/api/radar?limit=1&window=12")
+    const [hotData, radarData] = await Promise.all([
+      fetchJsonCached("/api/games?section=hot&limit=50"),
+      fetchJsonCached("/api/radar?limit=6&window=12").catch(()=>({items:[]}))
     ]);
-    if(!hotResponse.ok) throw new Error(`HTTP ${hotResponse.status}`);
-    const hotData = await hotResponse.json();
-    const radarData = radarResponse.ok ? await radarResponse.json() : {items:[]};
     const games = hotData.games || [];
     if(!games.length) throw new Error("No games");
 
@@ -363,9 +379,7 @@ async function loadRadar(){
   const note = $("#radarNote");
   if(!grid || !note) return;
   try{
-    const r = await fetch("/api/radar?limit=6&window=12");
-    if(!r.ok) throw new Error(`HTTP ${r.status}`);
-    const data = await r.json();
+    const data = await fetchJsonCached("/api/radar?limit=6&window=12");
     const items = data.items || [];
     if(items.length){
       grid.innerHTML = items.map(radarCard).join("");
@@ -409,9 +423,7 @@ async function loadWhy(){
   const note = $("#whyNote");
   if(!grid || !note) return;
   try{
-    const r = await fetch("/api/why?limit=6&window=24");
-    if(!r.ok) throw new Error(`HTTP ${r.status}`);
-    const data = await r.json();
+    const data = await fetchJsonCached("/api/why?limit=6&window=24");
     const items = data.items || [];
     if(items.length){
       grid.innerHTML = items.map(whyCard).join("");
@@ -428,8 +440,7 @@ async function loadWhy(){
 
 async function loadStatus(){
   try{
-    const r = await fetch("/api/status");
-    const data = await r.json();
+    const data = await fetchJsonCached("/api/status");
     const live = data.mode === "live";
     $("#modeBadge").textContent = live ? "● LIVE DATA" : "● DEMO MODE";
     $("#modeBadge").className = `mode-badge ${live?"live":"demo"}`;
@@ -470,7 +481,19 @@ async function loadStatus(){
       </div>`).join("");
 
     $("#lastStatus").textContent = live ? "3 MAIN SOURCES" : "DEMO DATA";
-  }catch(e){}
+  }catch(e){
+    const badge = $("#modeBadge");
+    if(badge){
+      badge.textContent = "● 狀態未知";
+      badge.className = "mode-badge demo";
+    }
+    if($("#lastStatus")) $("#lastStatus").textContent = "來源狀態暫時無法取得";
+    if($("#sourceStatus")) $("#sourceStatus").innerHTML = [
+      ["IGDB","遊戲資訊・發售日期・平台資料"],
+      ["Twitch","即時觀看・熱門趨勢"],
+      ["Steam","即時玩家・遊戲消息"]
+    ].map(([name,description])=>`<div class="source-card"><div class="head"><b>${name}</b><i class="status-dot error"></i></div><p>${description} · 暫時無法確認</p></div>`).join("");
+  }
 }
 
 function bindModalButtons(games){

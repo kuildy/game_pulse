@@ -232,3 +232,28 @@ footer{width:min(1240px,92vw);margin:auto;padding:28px 0 42px;border-top:1px sol
   .feature-toggle-side .radar-legend,.feature-toggle-side .why-types{display:none}
   .feature-chevron{width:32px;height:32px;font-size:20px}
 }
+
+
+/* ========================================
+   GAME PULSE pre-NAS mobile QA fixes
+   ======================================== */
+.subpage-mobile-nav{display:none}
+@media(max-width:930px){
+  .subpage .subpage-mobile-nav{position:sticky;top:76px;z-index:29;display:flex;gap:7px;overflow-x:auto;padding:8px 4vw;border-bottom:1px solid var(--line);background:rgba(8,10,15,.94);backdrop-filter:blur(14px);scrollbar-width:none}
+  .subpage .subpage-mobile-nav::-webkit-scrollbar{display:none}
+  .subpage-mobile-nav a{min-height:42px;display:flex;align-items:center;justify-content:center;white-space:nowrap;color:#dce4f3;text-decoration:none;font-size:10px;font-weight:800;padding:9px 12px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.025)}
+  .subpage-mobile-nav a.active{color:white;border-color:rgba(83,216,255,.28);background:rgba(83,216,255,.07)}
+}
+@media(max-width:800px){
+  .detail-page .subpage-mobile-nav{position:sticky;top:76px;z-index:29;display:flex;gap:7px;overflow-x:auto;padding:8px 4vw;border-bottom:1px solid var(--line);background:rgba(8,10,15,.94);backdrop-filter:blur(14px);scrollbar-width:none}
+}
+@media(max-width:760px){
+  /* Avoid three stacked sticky bars (header + quick nav + section tabs) on phones. */
+  .tab-strip{position:static;top:auto;background:transparent;backdrop-filter:none}
+  .mobile-quick-nav a,.mobile-quick-nav button{min-height:42px;display:flex;align-items:center;justify-content:center;padding:9px 12px}
+}
+@media(max-width:520px){
+  .favorite-button{width:42px;height:42px}
+  .player-count{flex-wrap:wrap}
+  .player-count em{width:100%;margin-left:13px}
+}

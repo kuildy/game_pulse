@@ -9,10 +9,18 @@
 
   async function load(){
     $("#monthTitle").textContent = title();
+    $("#calendarCount").textContent = "讀取中…";
     const platform = $("#calendarPlatform").value;
-    const r = await fetch(`/api/calendar?month=${key(cursor)}&platform=${encodeURIComponent(platform)}`);
-    const data = await r.json();
-    render(data.games || []);
+    try{
+      const r = await fetch(`/api/calendar?month=${key(cursor)}&platform=${encodeURIComponent(platform)}`);
+      if(!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
+      render(data.games || []);
+    }catch(e){
+      $("#calendarGrid").innerHTML = `<div class="calendar-load-error">發售日曆暫時無法讀取，請稍後再試。</div>`;
+      $("#calendarList").innerHTML = `<div class="calendar-empty">目前無法取得本月作品。</div>`;
+      $("#calendarCount").textContent = "讀取失敗";
+    }
   }
 
   function render(games){
@@ -25,11 +33,11 @@
     for(let i=0;i<firstDay;i++) cells.push(`<div class="calendar-day muted"></div>`);
     for(let d=1;d<=days;d++){
       const items = byDay[d] || [];
-      cells.push(`<div class="calendar-day ${items.length?'has-games':''}"><div class="day-number">${d}</div><div class="day-games">${items.slice(0,3).map(g=>`<a href="${dateLink(g)}" title="${escapeHtml(g.title)}">${g.cover_url?`<img src="${escapeHtml(g.cover_url)}" alt="">`:''}<span>${escapeHtml(g.title)}</span></a>`).join("")}${items.length>3?`<small>+${items.length-3} 款</small>`:""}</div></div>`);
+      cells.push(`<div class="calendar-day ${items.length?'has-games':''}"><div class="day-number">${d}</div><div class="day-games">${items.slice(0,3).map(g=>`<a href="${dateLink(g)}" title="${escapeHtml(g.title)}">${g.cover_url?`<img src="${escapeHtml(g.cover_url)}" alt="" loading="lazy">`:''}<span>${escapeHtml(g.title)}</span></a>`).join("")}${items.length>3?`<small>+${items.length-3} 款</small>`:""}</div></div>`);
     }
     $("#calendarGrid").innerHTML = cells.join("");
     $("#calendarCount").textContent = `${games.length} 款`;
-    $("#calendarList").innerHTML = games.length ? games.map(g=>`<a class="calendar-game-row" href="${dateLink(g)}"><div>${g.cover_url?`<img src="${escapeHtml(g.cover_url)}" alt="">`:''}</div><div><b>${escapeHtml(g.title)}</b><span>${escapeHtml(g.release_date||"日期未定")}</span><small>${escapeHtml((g.platforms||[]).slice(0,4).join(" · "))}</small></div></a>`).join("") : `<div class="calendar-empty">這個月份目前沒有已同步的發售資料。</div>`;
+    $("#calendarList").innerHTML = games.length ? games.map(g=>`<a class="calendar-game-row" href="${dateLink(g)}"><div>${g.cover_url?`<img src="${escapeHtml(g.cover_url)}" alt="" loading="lazy">`:''}</div><div><b>${escapeHtml(g.title)}</b><span>${escapeHtml(g.release_date||"日期未定")}</span><small>${escapeHtml((g.platforms||[]).slice(0,4).join(" · "))}</small></div></a>`).join("") : `<div class="calendar-empty">這個月份目前沒有已同步的發售資料。</div>`;
   }
 
   $("#prevMonth").addEventListener("click",()=>{ cursor.setMonth(cursor.getMonth()-1); load(); });
