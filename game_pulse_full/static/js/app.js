@@ -192,6 +192,10 @@ function card(game, index, rankNumber){
 
   return `<article class="game-card" data-index="${index}" data-platform="${platformClass(game.platforms).join(" ")}">
     <div class="game-cover">${image}
+      <div class="cover-summary" aria-hidden="true">
+        <span class="cover-summary-label">GAME OVERVIEW</span>
+        <p>${escapeHtml(game.summary || "目前暫無遊戲介紹。")}</p>
+      </div>
       <span class="rank">#${String(rankNumber || index+1).padStart(2,"0")}</span>
       <button class="favorite-button ${favorite ? "active" : ""}" type="button" data-favorite-key="${escapeHtml(favoriteKey(game))}" aria-label="${favorite ? "取消收藏" : "收藏"}${escapeHtml(game.title)}" title="${favorite ? "取消收藏" : "加入收藏"}">${favorite ? "♥" : "♡"}</button>
       <span class="score">PULSE <b>${Math.round(game.pulse_score||0)}</b></span>
@@ -201,7 +205,6 @@ function card(game, index, rankNumber){
       <h3>${escapeHtml(game.title)}</h3>
       ${liveSignals}
       ${trendSignal}
-      <div class="summary">${escapeHtml(game.summary || "暫無介紹。")}</div>
       <div class="chips">${genreChips}${platformChips}${sourceChips}</div>
       <div class="store-row">${stores || "<span class='chip'>商店資料整理中</span>"}</div>
       <a class="more-btn detail-link" href="${gameDetailUrl}">查看完整資訊</a>

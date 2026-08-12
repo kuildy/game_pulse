@@ -843,3 +843,53 @@ body:after{
   .section-title h2{font-size:31px!important}
   .filter-area{padding:12px!important}
 }
+/* Game-card cover overview */
+.cover-summary{
+  position:absolute;
+  z-index:1;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  padding:56px 20px 19px;
+  color:#f5f8ff;
+  background:linear-gradient(180deg,rgba(5,8,13,.18) 0%,rgba(5,8,13,.9) 45%,rgba(5,8,13,.98) 100%);
+  opacity:0;
+  transform:translateY(10px);
+  transition:opacity .24s ease,transform .24s ease;
+  pointer-events:none;
+}
+.cover-summary-label{
+  margin-bottom:7px;
+  color:var(--cyan);
+  font-family:var(--ws-mono);
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.13em;
+}
+.cover-summary p{
+  display:-webkit-box;
+  margin:0;
+  overflow:hidden;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:5;
+  font-size:12px;
+  line-height:1.55;
+  text-shadow:0 1px 12px rgba(0,0,0,.65);
+}
+.game-card:hover .cover-summary,
+.game-card:focus-within .cover-summary{
+  opacity:1;
+  transform:translateY(0);
+}
+.game-card:hover .game-cover img,
+.game-card:focus-within .game-cover img{
+  transform:scale(1.04);
+  filter:brightness(.64);
+}
+@media (prefers-reduced-motion:reduce){.cover-summary{transition:none}}
+@media (hover:none){
+  .cover-summary{inset:auto 0 0;padding:38px 14px 13px;background:linear-gradient(180deg,transparent,rgba(5,8,13,.92));opacity:1;transform:none}
+  .cover-summary-label{display:none}
+  .cover-summary p{-webkit-line-clamp:2;font-size:11px}
+}
