@@ -85,19 +85,19 @@
     </section>
 
     <section class="pulse-map" aria-label="WAVESIG 快速導覽">
+      <a href="#games" class="pulse-map-card hot-map">
+        <span class="pulse-map-icon">HOT</span>
+        <div><small>01 / LIVE RANK</small><b>熱門排行</b><p>跨來源即時熱度榜</p></div>
+        <i>01</i>
+      </a>
       <a href="#radar" class="pulse-map-card radar-map">
         <span class="pulse-map-icon">RDR</span>
-        <div><small>01 / SIGNAL</small><b>PULSE RADAR</b><p>找下一個正在升溫的黑馬</p></div>
-        <i>01</i>
+        <div><small>02 / SIGNAL</small><b>PULSE RADAR</b><p>找下一個正在升溫的黑馬</p></div>
+        <i>02</i>
       </a>
       <a href="#why" class="pulse-map-card why-map">
         <span class="pulse-map-icon">WHY</span>
-        <div><small>02 / ANALYSIS</small><b>PULSE WHY</b><p>看懂這波熱度從哪裡來</p></div>
-        <i>02</i>
-      </a>
-      <a href="#games" class="pulse-map-card hot-map">
-        <span class="pulse-map-icon">HOT</span>
-        <div><small>03 / LIVE RANK</small><b>熱門排行</b><p>跨來源即時熱度榜</p></div>
+        <div><small>03 / ANALYSIS</small><b>PULSE WHY</b><p>看懂這波熱度從哪裡來</p></div>
         <i>03</i>
       </a>
       <a href="{{ url_for('release_calendar_page') }}" class="pulse-map-card calendar-map">
@@ -124,61 +124,9 @@
       </div>
     </section>
 
-    <section class="radar-section feature-section collapsible-feature" id="radar" data-collapsible="radar">
-      <button class="feature-toggle" type="button" aria-expanded="true" aria-controls="radarContent" data-toggle-feature="radar">
-        <div class="radar-heading feature-toggle-heading">
-          <div>
-            <span class="micro">01 · EARLY SIGNAL</span>
-            <h2>PULSE RADAR</h2>
-            <p>不是找現在最紅，而是找正在加速、可能成為下一波熱門的遊戲。</p>
-          </div>
-          <div class="feature-toggle-side">
-            <div class="radar-legend">
-              <span>WATCH</span><span>RISING</span><span>HEATING UP</span><span>BREAKOUT</span>
-            </div>
-            <span class="feature-chevron" aria-hidden="true">⌄</span>
-          </div>
-        </div>
-      </button>
-      <div id="radarContent" class="feature-collapse-content">
-        <div id="radarGrid" class="radar-grid">
-          <div class="radar-skeleton"></div>
-          <div class="radar-skeleton"></div>
-          <div class="radar-skeleton"></div>
-        </div>
-        <p id="radarNote" class="radar-note">正在讀取近期熱度變化…</p>
-      </div>
-    </section>
-
-    <section class="why-section feature-section collapsible-feature" id="why" data-collapsible="why">
-      <button class="feature-toggle" type="button" aria-expanded="true" aria-controls="whyContent" data-toggle-feature="why">
-        <div class="why-heading feature-toggle-heading">
-          <div>
-            <span class="micro">02 · SIGNAL INTERPRETATION</span>
-            <h2>PULSE WHY</h2>
-            <p>不只告訴你什麼遊戲在紅，也解讀這波熱度比較像「大家在看」還是「大家真的回去玩」。</p>
-          </div>
-          <div class="feature-toggle-side">
-            <div class="why-types">
-              <span>直播帶動</span><span>玩家回流</span><span>全面爆發</span><span>只看不玩</span>
-            </div>
-            <span class="feature-chevron" aria-hidden="true">⌄</span>
-          </div>
-        </div>
-      </button>
-      <div id="whyContent" class="feature-collapse-content">
-        <div id="whyGrid" class="why-grid">
-          <div class="why-skeleton"></div>
-          <div class="why-skeleton"></div>
-          <div class="why-skeleton"></div>
-        </div>
-        <p id="whyNote" class="why-note">正在解讀最近 24 小時的多來源熱度變化…</p>
-      </div>
-    </section>
-
     <section class="control-bar hot-control" id="games">
       <div class="section-title">
-        <span id="sectionEyebrow">03 · TRENDING NOW</span>
+        <span id="sectionEyebrow">01 · TRENDING NOW</span>
         <h2 id="sectionTitle">近日熱門</h2>
         <p id="sectionDescription">跨來源訊號計算出的 WAVESIG 熱門榜。</p>
       </div>
@@ -220,10 +168,62 @@
       </div>
     </section>
 
+    <section class="radar-section feature-section collapsible-feature" id="radar" data-collapsible="radar">
+      <button class="feature-toggle" type="button" aria-expanded="true" aria-controls="radarContent" data-toggle-feature="radar">
+        <div class="radar-heading feature-toggle-heading">
+          <div>
+            <span class="micro">02 · EARLY SIGNAL</span>
+            <h2>PULSE RADAR</h2>
+            <p>不是找現在最紅，而是找正在加速、可能成為下一波熱門的遊戲。</p>
+          </div>
+          <div class="feature-toggle-side">
+            <div class="radar-legend">
+              <span>WATCH</span><span>RISING</span><span>HEATING UP</span><span>BREAKOUT</span>
+            </div>
+            <span class="feature-chevron" aria-hidden="true">⌄</span>
+          </div>
+        </div>
+      </button>
+      <div id="radarContent" class="feature-collapse-content">
+        <div id="radarGrid" class="radar-grid">
+          <div class="radar-skeleton"></div>
+          <div class="radar-skeleton"></div>
+          <div class="radar-skeleton"></div>
+        </div>
+        <p id="radarNote" class="radar-note">正在讀取近期熱度變化…</p>
+      </div>
+    </section>
+
+    <section class="why-section feature-section collapsible-feature" id="why" data-collapsible="why">
+      <button class="feature-toggle" type="button" aria-expanded="true" aria-controls="whyContent" data-toggle-feature="why">
+        <div class="why-heading feature-toggle-heading">
+          <div>
+            <span class="micro">03 · SIGNAL INTERPRETATION</span>
+            <h2>PULSE WHY</h2>
+            <p>不只告訴你什麼遊戲在紅，也解讀這波熱度比較像「大家在看」還是「大家真的回去玩」。</p>
+          </div>
+          <div class="feature-toggle-side">
+            <div class="why-types">
+              <span>直播帶動</span><span>玩家回流</span><span>全面爆發</span><span>只看不玩</span>
+            </div>
+            <span class="feature-chevron" aria-hidden="true">⌄</span>
+          </div>
+        </div>
+      </button>
+      <div id="whyContent" class="feature-collapse-content">
+        <div id="whyGrid" class="why-grid">
+          <div class="why-skeleton"></div>
+          <div class="why-skeleton"></div>
+          <div class="why-skeleton"></div>
+        </div>
+        <p id="whyNote" class="why-note">正在解讀最近 24 小時的多來源熱度變化…</p>
+      </div>
+    </section>
+
     <section class="recent-reviews-section" id="reviews">
       <div class="recent-reviews-heading">
         <div>
-          <span class="micro">04 · RECENT REVIEWS</span>
+          <span class="micro">05 · RECENT REVIEWS</span>
           <h2>近期遊戲評論</h2>
           <p>從 Steam 最近玩家評論中挑出熱門遊戲的最新聲音，快速看看玩家最近在說什麼。</p>
         </div>

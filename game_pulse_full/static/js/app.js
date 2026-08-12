@@ -5,9 +5,9 @@ const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 
 const copy = {
-  hot: ["03 · TRENDING NOW","近日熱門","跨來源訊號計算出的 WAVESIG 熱門榜。"],
-  new: ["03 · NEW RELEASES","近日新上市","過去 30 天內推出的跨平台遊戲。"],
-  upcoming: ["03 · COMING SOON","即將推出","未來 90 天預計推出的遊戲。"]
+  hot: ["01 · TRENDING NOW","近日熱門","跨來源訊號計算出的 WAVESIG 熱門榜。"],
+  new: ["01 · NEW RELEASES","近日新上市","過去 30 天內推出的跨平台遊戲。"],
+  upcoming: ["01 · COMING SOON","即將推出","未來 90 天預計推出的遊戲。"]
 };
 
 // Share identical first-load API requests so the homepage does not ask the NAS
