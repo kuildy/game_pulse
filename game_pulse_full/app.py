@@ -1,6 +1,7 @@
 import os
 import re
 import secrets
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from functools import wraps
@@ -36,6 +37,7 @@ from db import (
     list_watch_subscriptions,
     mark_notification_read,
     mark_live_sources_refreshing,
+    set_source_status,
     upsert_twitch_override,
     upsert_watch_subscription,
 )
@@ -59,18 +61,47 @@ _NEWS_CACHE_TTL = 900
 _REVIEWS_CACHE = {}
 _REVIEWS_CACHE_TTL = 900
 _DEVICE_RE = re.compile(r"^[A-Za-z0-9_-]{8,80}$")
+_REFRESH_LOCK = threading.Lock()
+
+
+def _start_background_refresh(include_social=True):
+    """Start one non-blocking refresh per web process.
+
+    External API aggregation can exceed a web worker timeout on a cold database,
+    so it must never run synchronously while Gunicorn is booting or serving the
+    admin refresh request.
+    """
+    if not _REFRESH_LOCK.acquire(blocking=False):
+        return False
+
+    def run():
+        try:
+            if effective_mode() == "live":
+                mark_live_sources_refreshing()
+            set_source_status("Updater", "refreshing", "背景資料更新進行中")
+            refresh_all(include_social=include_social)
+            set_source_status("Updater", "ok", "背景資料更新完成")
+        except Exception as exc:
+            set_source_status("Updater", "error", f"背景更新失敗：{str(exc)[:180]}")
+            print("WAVESIG background refresh failed:", exc, flush=True)
+        finally:
+            _REFRESH_LOCK.release()
+
+    threading.Thread(target=run, name="wavesig-refresh", daemon=True).start()
+    return True
+
 
 init_db()
 
-# Live mode refreshes at boot so an old demo SQLite file cannot mask live API data.
-try:
-    if effective_mode() == "live":
-        mark_live_sources_refreshing()
-        refresh_all(include_social=False)
-    elif not get_games("hot", 1):
+# Let Gunicorn become healthy immediately; live API work continues in the
+# background. Demo refresh is local-only and safe to complete synchronously.
+if effective_mode() == "live":
+    _start_background_refresh(include_social=False)
+elif not get_games("hot", 1):
+    try:
         refresh_all()
-except Exception as exc:
-    print("WAVESIG startup refresh failed:", exc)
+    except Exception as exc:
+        print("WAVESIG demo startup refresh failed:", exc, flush=True)
 
 
 def _safe_device_id(value):
@@ -650,11 +681,8 @@ def admin_logout():
 @app.post("/admin/refresh")
 @admin_required
 def admin_refresh():
-    try:
-        refresh_all()
-        session["admin_flash"] = "資料更新完成"
-    except Exception as exc:
-        session["admin_flash"] = f"更新失敗：{str(exc)[:160]}"
+    started = _start_background_refresh(include_social=True)
+    session["admin_flash"] = "背景更新已開始" if started else "資料更新已在進行中"
     return redirect(url_for("admin_page"))
 
 
