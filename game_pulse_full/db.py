@@ -99,6 +99,19 @@ CREATE TABLE IF NOT EXISTS twitch_overrides (
     canonical_title TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS social_signal_snapshots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    game_key TEXT NOT NULL,
+    title TEXT NOT NULL,
+    source TEXT NOT NULL,
+    metrics_json TEXT NOT NULL DEFAULT '{}',
+    source_url TEXT,
+    collected_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_social_signal_key_source_time
+ON social_signal_snapshots(game_key, source, collected_at DESC);
 """
 
 
@@ -131,6 +144,20 @@ def init_db():
             ("32399", "242408", "730", "Counter-Strike 2", now),
         )
 
+        for source, message in (
+            ("YouTube", "等待第一次排程更新；未設定 API 金鑰時會安全略過"),
+            ("Wikipedia", "等待第一次排程更新；此來源不需要 API 金鑰"),
+        ):
+            conn.execute(
+                """
+                INSERT INTO source_status(source,status,message,updated_at)
+                VALUES(?,?,?,?)
+                ON CONFLICT(source) DO NOTHING
+                """,
+                (source, "optional", message, now),
+            )
+        conn.execute("DELETE FROM source_status WHERE source='Reddit'")
+
     # Remove categories that older versions may already have stored. This runs
     # at every startup, so deploying the filter also cleans an existing SQLite
     # database even when the next external API refresh is temporarily offline.
@@ -156,7 +183,13 @@ def purge_excluded_twitch_categories():
         game_params.extend(category_titles)
 
     if not game_filters:
-        return {"games": 0, "history": 0, "subscriptions": 0, "notifications": 0}
+        return {
+            "games": 0,
+            "history": 0,
+            "subscriptions": 0,
+            "notifications": 0,
+            "social_signals": 0,
+        }
 
     game_where = " OR ".join(game_filters)
 
@@ -187,6 +220,7 @@ def purge_excluded_twitch_categories():
         deleted_history = 0
         deleted_subscriptions = 0
         deleted_notifications = 0
+        deleted_social_signals = 0
         if blocked_keys:
             key_values = tuple(sorted(blocked_keys))
             key_placeholders = ",".join("?" for _ in key_values)
@@ -202,12 +236,17 @@ def purge_excluded_twitch_categories():
                 f"DELETE FROM notifications WHERE game_key IN ({key_placeholders})",
                 key_values,
             ).rowcount
+            deleted_social_signals = conn.execute(
+                f"DELETE FROM social_signal_snapshots WHERE game_key IN ({key_placeholders})",
+                key_values,
+            ).rowcount
 
     return {
         "games": max(0, deleted_games),
         "history": max(0, deleted_history),
         "subscriptions": max(0, deleted_subscriptions),
         "notifications": max(0, deleted_notifications),
+        "social_signals": max(0, deleted_social_signals),
     }
 
 
@@ -861,6 +900,123 @@ def get_source_status():
         ).fetchall()]
 
 
+# ---- YouTube / Wikipedia signal snapshots --------------------------------------
+
+def latest_social_signal_at(game_key, source):
+    with connect() as conn:
+        row = conn.execute(
+            """
+            SELECT collected_at
+            FROM social_signal_snapshots
+            WHERE game_key=? AND source=?
+            ORDER BY collected_at DESC, id DESC
+            LIMIT 1
+            """,
+            (game_key, source),
+        ).fetchone()
+    return row["collected_at"] if row else None
+
+
+def social_signal_is_stale(game_key, source, ttl_hours=24):
+    latest = latest_social_signal_at(game_key, source)
+    if not latest:
+        return True
+    try:
+        collected = datetime.fromisoformat(str(latest).replace("Z", "+00:00"))
+        if collected.tzinfo is None:
+            collected = collected.replace(tzinfo=timezone.utc)
+    except (TypeError, ValueError):
+        return True
+    return collected <= datetime.now(timezone.utc) - timedelta(hours=max(1, float(ttl_hours)))
+
+
+def save_social_signal(game_key, title, source, metrics, source_url="", collected_at=None):
+    collected_at = collected_at or datetime.now(timezone.utc).isoformat()
+    payload = dict(metrics or {})
+    payload.pop("source_url", None)
+    with connect() as conn:
+        conn.execute(
+            """
+            INSERT INTO social_signal_snapshots(
+              game_key,title,source,metrics_json,source_url,collected_at
+            ) VALUES(?,?,?,?,?,?)
+            """,
+            (
+                game_key,
+                title,
+                source,
+                json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
+                source_url or "",
+                collected_at,
+            ),
+        )
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=35)).isoformat()
+        conn.execute(
+            "DELETE FROM social_signal_snapshots WHERE collected_at < ?",
+            (cutoff,),
+        )
+
+
+def _decode_social_signal(row):
+    item = dict(row)
+    try:
+        item["metrics"] = json.loads(item.pop("metrics_json") or "{}")
+    except (TypeError, ValueError):
+        item["metrics"] = {}
+    return item
+
+
+def get_social_signals(identifier, history_days=0):
+    game = get_game_by_identifier(identifier)
+    if not game:
+        return None
+
+    game_key = game["game_key"]
+    with connect() as conn:
+        latest_rows = conn.execute(
+            """
+            SELECT s.source,s.metrics_json,s.source_url,s.collected_at
+            FROM social_signal_snapshots s
+            WHERE s.game_key=?
+              AND s.id=(
+                SELECT s2.id
+                FROM social_signal_snapshots s2
+                WHERE s2.game_key=s.game_key AND s2.source=s.source
+                ORDER BY s2.collected_at DESC,s2.id DESC
+                LIMIT 1
+              )
+            ORDER BY s.source
+            """,
+            (game_key,),
+        ).fetchall()
+
+        history_rows = []
+        if history_days:
+            cutoff = (
+                datetime.now(timezone.utc) - timedelta(days=max(1, min(int(history_days), 30)))
+            ).isoformat()
+            history_rows = conn.execute(
+                """
+                SELECT source,metrics_json,source_url,collected_at
+                FROM social_signal_snapshots
+                WHERE game_key=? AND collected_at>=?
+                ORDER BY collected_at ASC,id ASC
+                """,
+                (game_key, cutoff),
+            ).fetchall()
+
+    payload = {
+        "game_key": game_key,
+        "title": game["title"],
+        "ranking_included": False,
+        "signals": [_decode_social_signal(row) for row in latest_rows],
+    }
+    if history_days:
+        payload["history_days"] = max(1, min(int(history_days), 30))
+        payload["history"] = [_decode_social_signal(row) for row in history_rows]
+    return payload
+
+
 # ---- Watch / notification center -------------------------------------------------
 
 def upsert_watch_subscription(device_id, game_key, title, prefs):
@@ -1046,6 +1202,9 @@ def get_admin_stats():
         source_problem_count = conn.execute(
             "SELECT COUNT(*) AS count FROM source_status WHERE status IN ('error','partial')"
         ).fetchone()["count"]
+        social_signal_count = conn.execute(
+            "SELECT COUNT(*) AS count FROM social_signal_snapshots"
+        ).fetchone()["count"]
 
     return {
         "sections": {r["section"]: {"count": r["count"], "updated_at": r["updated_at"]} for r in section_rows},
@@ -1054,4 +1213,5 @@ def get_admin_stats():
         "notification_count": notification_count,
         "unread_count": unread_count,
         "source_problem_count": source_problem_count,
+        "social_signal_count": social_signal_count,
     }

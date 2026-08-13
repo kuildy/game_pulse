@@ -446,12 +446,14 @@ async function loadStatus(){
     $("#modeBadge").className = `mode-badge ${live?"live":"demo"}`;
     const rows = data.sources || [];
 
-    // 首頁只顯示一般使用者需要知道的三個主要來源。
+    // 首頁顯示一般使用者需要知道的主要來源。
     // IGDB Match / Twitch Filter / Steam CCU 等完整技術狀態仍保留在 Admin。
     const sourceDefs = [
       { key:"IGDB", label:"IGDB", description:"遊戲資訊・發售日期・平台資料" },
       { key:"Twitch", label:"Twitch", description:"即時觀看・熱門趨勢" },
       { key:"Steam", label:"Steam", description:"即時玩家・遊戲消息" },
+      { key:"YouTube", label:"YouTube", description:"近期遊戲影片・觀看互動" },
+      { key:"Wikipedia", label:"Wikipedia", description:"百科條目・每日瀏覽量" },
     ];
 
     const statusText = status => ({
@@ -480,7 +482,7 @@ async function loadStatus(){
         <p>${escapeHtml(s.description)} · ${escapeHtml(statusText(s.status))}</p>
       </div>`).join("");
 
-    $("#lastStatus").textContent = live ? "3 MAIN SOURCES" : "DEMO DATA";
+    $("#lastStatus").textContent = live ? "5 DATA SOURCES" : "DEMO DATA";
   }catch(e){
     const badge = $("#modeBadge");
     if(badge){
@@ -491,7 +493,9 @@ async function loadStatus(){
     if($("#sourceStatus")) $("#sourceStatus").innerHTML = [
       ["IGDB","遊戲資訊・發售日期・平台資料"],
       ["Twitch","即時觀看・熱門趨勢"],
-      ["Steam","即時玩家・遊戲消息"]
+      ["Steam","即時玩家・遊戲消息"],
+      ["YouTube","近期遊戲影片・觀看互動"],
+      ["Wikipedia","百科條目・每日瀏覽量"]
     ].map(([name,description])=>`<div class="source-card"><div class="head"><b>${name}</b><i class="status-dot error"></i></div><p>${description} · 暫時無法確認</p></div>`).join("");
   }
 }

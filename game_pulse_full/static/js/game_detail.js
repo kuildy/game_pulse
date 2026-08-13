@@ -54,6 +54,57 @@
     }catch(e){ history=[]; drawChart(); }
   }
 
+  function socialCard(signal){
+    const metrics = signal?.metrics || {};
+    const collected = signal?.collected_at
+      ? new Date(signal.collected_at).toLocaleString("zh-TW", {month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"})
+      : "";
+    const sourceUrl = signal?.source_url || "#";
+
+    if(signal?.source === "YouTube"){
+      const videos = Math.max(0, Number(metrics.matched_videos || 0));
+      const views = Math.max(0, Number(metrics.sample_views || 0));
+      const interactions = Math.max(0, Number(metrics.sample_likes || 0)) + Math.max(0, Number(metrics.sample_comments || 0));
+      return `<article class="social-signal-card youtube">
+        <div class="social-signal-head"><span>YouTube</span><time>${escapeHtml(collected)}</time></div>
+        <strong>${views.toLocaleString("zh-TW")}</strong>
+        <p>近期相符影片樣本觀看數</p>
+        <div class="social-signal-meta"><span>${videos.toLocaleString("zh-TW")} 部影片</span><span>${interactions.toLocaleString("zh-TW")} 次互動</span></div>
+        <a href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener noreferrer">查看 YouTube 搜尋 ↗</a>
+      </article>`;
+    }
+
+    const latest = Math.max(0, Number(metrics.latest_daily_views || 0));
+    const sevenDays = Math.max(0, Number(metrics.seven_day_views || 0));
+    const change = Number(metrics.daily_change_percent);
+    const changeText = Number.isFinite(change) ? `${change > 0 ? "+" : ""}${change.toFixed(1)}% 日變化` : "日變化累積中";
+    return `<article class="social-signal-card wikipedia">
+      <div class="social-signal-head"><span>Wikipedia</span><time>${escapeHtml(collected)}</time></div>
+      <strong>${latest.toLocaleString("zh-TW")}</strong>
+      <p>${escapeHtml(metrics.article_title || "尚未找到可靠條目")}・最近完整日瀏覽量</p>
+      <div class="social-signal-meta"><span>7 日 ${sevenDays.toLocaleString("zh-TW")}</span><span>${escapeHtml(changeText)}</span></div>
+      <a href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener noreferrer">查看 Wikipedia 來源 ↗</a>
+    </article>`;
+  }
+
+  async function loadSocialSignals(){
+    const target = $("#socialSignalGrid");
+    if(!target) return;
+    try{
+      const r = await fetch(`/api/game/${enc}/social`);
+      const data = await r.json();
+      if(!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+      const rows = Array.isArray(data.signals) ? data.signals : [];
+      if(!rows.length){
+        target.innerHTML = `<div class="detail-notice social-signal-loading">訊號尚未蒐集。請在後台執行一次「立即重新抓取資料」，排程更新後會顯示。</div>`;
+        return;
+      }
+      target.innerHTML = rows.map(socialCard).join("");
+    }catch(_){
+      target.innerHTML = `<div class="detail-notice social-signal-loading">YouTube / Wikipedia 訊號暫時無法讀取。</div>`;
+    }
+  }
+
   document.querySelectorAll("#trendRange [data-range]").forEach(btn => btn.addEventListener("click",()=>{
     range = btn.dataset.range;
     document.querySelectorAll("#trendRange button").forEach(x=>x.classList.toggle("active",x===btn));
@@ -266,6 +317,7 @@
   });
 
   loadHistory();
+  loadSocialSignals();
   loadNews();
   loadReviews();
   loadWatch();

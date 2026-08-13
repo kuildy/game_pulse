@@ -27,6 +27,7 @@ from db import (
     get_pulse_radar,
     get_pulse_why,
     get_release_calendar,
+    get_social_signals,
     get_source_status,
     get_watch_subscription,
     init_db,
@@ -63,7 +64,7 @@ init_db()
 # Live mode refreshes at boot so an old demo SQLite file cannot mask live API data.
 try:
     if effective_mode() == "live":
-        refresh_all()
+        refresh_all(include_social=False)
     elif not get_games("hot", 1):
         refresh_all()
 except Exception as exc:
@@ -529,6 +530,18 @@ def api_calendar():
 @app.get("/api/status")
 def api_status():
     return jsonify({"mode": effective_mode(), "sources": get_source_status()})
+
+
+@app.get("/api/game/<path:identifier>/social")
+def api_game_social(identifier):
+    try:
+        history_days = max(0, min(30, int(request.args.get("history", "0"))))
+    except ValueError:
+        history_days = 0
+    payload = get_social_signals(identifier, history_days=history_days)
+    if payload is None:
+        abort(404)
+    return jsonify(payload)
 
 
 # ---- Anonymous watch + notification API ----------------------------------------

@@ -13,6 +13,8 @@
 - IGDB PopScore 熱門 primitives
 - Twitch Top Games
 - Steam current players（IGDB 能取得 Steam App ID 時）
+- YouTube 近期遊戲影片與觀看互動快照（選配 API Key）
+- Wikipedia 條目每日瀏覽量快照（免 API Key）
 - Steam / Epic / GOG / PlayStation / Xbox / Nintendo / 官方網站入口
 - 沒有 API Key 也能跑的 Demo Mode
 - 手動更新與每 3 小時更新工具
@@ -59,6 +61,25 @@ IGDB API 使用 Twitch Developer Application 的 Client ID / Secret。
 
     LIVE DATA
 
+### YouTube、Wikipedia 社群訊號
+
+在 `.env` 設定下列選配欄位：
+
+    YOUTUBE_API_KEY=你的YouTubeDataAPIKey
+
+Wikipedia 不需要金鑰。每次排程更新只會針對熱門榜前 20 款蒐集，且同一來源 24 小時內使用 SQLite 快取，適合資源較小的 NAS。可用下列環境變數調整：
+
+    SOCIAL_SIGNAL_LIMIT=20
+    SOCIAL_SIGNAL_TTL_HOURS=24
+    SOCIAL_SIGNAL_WINDOW_HOURS=48
+
+兩個來源目前只累積獨立快照，不會改動 PULSE 排名。單款遊戲的最新訊號可由以下 API 查詢：
+
+    GET /api/game/<game_key-or-slug>/social
+    GET /api/game/<game_key-or-slug>/social?history=7
+
+完整的申請與 Render 設定步驟請看 `API_SETUP_ZH-TW.md`。
+
 ---
 
 # 3. 自動每 3 小時更新
@@ -98,16 +119,14 @@ IGDB API 使用 Twitch Developer Application 的 Client ID / Secret。
 
 Live Mode 目前：
 
-    65% IGDB PopScore 組合
-    35% Twitch Top Games
+    45% IGDB Interest
+    35% Twitch Live Viewers
+    20% Steam CCU
 
 IGDB 內部再混合可取得的 primitives，例如：
 - Visits
 - Want to Play
 - Playing
-- Steam 24hr Peak Players
-- Steam Global Top Sellers
-- Twitch Hours Watched
 - Total Reviews
 
 每個 primitive 先 max-normalize，再做加權。
@@ -143,6 +162,7 @@ B. 「去哪裡玩 / 買」
     ├─ db.py
     ├─ requirements.txt
     ├─ .env.example
+    ├─ API_SETUP_ZH-TW.md
     ├─ start.bat
     ├─ update_now.bat
     ├─ auto_update_3h.bat
@@ -151,7 +171,10 @@ B. 「去哪裡玩 / 買」
     │  ├─ aggregator.py
     │  ├─ igdb.py
     │  ├─ twitch.py
-    │  └─ steam.py
+    │  ├─ steam.py
+    │  ├─ youtube.py
+    │  ├─ wikipedia.py
+    │  └─ social_signals.py
     ├─ scripts/
     │  └─ update_games.py
     ├─ templates/
