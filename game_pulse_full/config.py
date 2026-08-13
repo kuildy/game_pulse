@@ -5,7 +5,17 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
 
-DATABASE_PATH = BASE_DIR / "data" / "game_pulse.db"
+_database_path = os.getenv("DATABASE_PATH", "").strip()
+if _database_path:
+    DATABASE_PATH = Path(_database_path)
+    if not DATABASE_PATH.is_absolute():
+        DATABASE_PATH = BASE_DIR / DATABASE_PATH
+elif os.getenv("RENDER"):
+    # Render deployments must never read a stale SQLite file committed to GitHub.
+    # Set DATABASE_PATH explicitly when using a paid Persistent Disk.
+    DATABASE_PATH = Path("/tmp/wavesig/game_pulse.db")
+else:
+    DATABASE_PATH = BASE_DIR / "data" / "game_pulse.db"
 
 TWITCH_CLIENT_ID = os.getenv("TWITCH_CLIENT_ID", "").strip()
 TWITCH_CLIENT_SECRET = os.getenv("TWITCH_CLIENT_SECRET", "").strip()

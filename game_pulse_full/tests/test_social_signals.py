@@ -130,6 +130,20 @@ class StoreAndRefreshTests(unittest.TestCase):
         self.assertEqual(payload["signals"][0]["metrics"]["latest_daily_views"], 42)
         self.assertEqual(len(payload["history"]), 1)
 
+    def test_live_refresh_replaces_legacy_demo_status_without_overwriting_live_status(self):
+        for source in ("IGDB", "Twitch", "Steam"):
+            db.set_source_status(source, "demo", "legacy demo")
+        db.mark_live_sources_refreshing()
+        rows = {row["source"]: row for row in db.get_source_status()}
+        for source in ("IGDB", "Twitch", "Steam"):
+            self.assertEqual(rows[source]["status"], "refreshing")
+
+        db.set_source_status("IGDB", "ok", "live result")
+        db.mark_live_sources_refreshing()
+        rows = {row["source"]: row for row in db.get_source_status()}
+        self.assertEqual(rows["IGDB"]["status"], "ok")
+        self.assertEqual(rows["IGDB"]["message"], "live result")
+
     def test_refresh_skips_optional_sources_and_caches_wikipedia(self):
         import services.social_signals as social
 

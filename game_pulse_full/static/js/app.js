@@ -462,6 +462,7 @@ async function loadStatus(){
       error: "暫時異常",
       demo: "示範資料",
       optional: "部分功能未啟用",
+      refreshing: "正在更新",
     }[status] || "待確認");
 
     const mainSources = sourceDefs.map(def => {

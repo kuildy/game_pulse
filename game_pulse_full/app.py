@@ -35,6 +35,7 @@ from db import (
     list_twitch_overrides,
     list_watch_subscriptions,
     mark_notification_read,
+    mark_live_sources_refreshing,
     upsert_twitch_override,
     upsert_watch_subscription,
 )
@@ -64,6 +65,7 @@ init_db()
 # Live mode refreshes at boot so an old demo SQLite file cannot mask live API data.
 try:
     if effective_mode() == "live":
+        mark_live_sources_refreshing()
         refresh_all(include_social=False)
     elif not get_games("hot", 1):
         refresh_all()

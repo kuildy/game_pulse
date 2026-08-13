@@ -900,6 +900,35 @@ def get_source_status():
         ).fetchall()]
 
 
+def mark_live_sources_refreshing():
+    """Prevent a committed legacy demo DB from masquerading as current status.
+
+    This only changes stale demo labels. Existing live success/error details are
+    preserved until the current refresh updates them source by source.
+    """
+    now = datetime.now(timezone.utc).isoformat()
+    sources = ("IGDB", "Twitch", "Steam")
+    with connect() as conn:
+        for source in sources:
+            conn.execute(
+                """
+                INSERT INTO source_status(source,status,message,updated_at)
+                VALUES(?,?,?,?)
+                ON CONFLICT(source) DO UPDATE SET
+                  status=excluded.status,
+                  message=excluded.message,
+                  updated_at=excluded.updated_at
+                WHERE source_status.status='demo'
+                """,
+                (
+                    source,
+                    "refreshing",
+                    "Live 模式已啟用，正在重新抓取正式資料",
+                    now,
+                ),
+            )
+
+
 # ---- YouTube / Wikipedia signal snapshots --------------------------------------
 
 def latest_social_signal_at(game_key, source):
