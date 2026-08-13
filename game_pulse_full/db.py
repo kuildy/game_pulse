@@ -4,6 +4,10 @@ import sqlite3
 from datetime import datetime, timedelta, timezone
 
 from config import DATABASE_PATH
+from content_policy import (
+    EXCLUDED_TWITCH_CATEGORY_IDS,
+    EXCLUDED_TWITCH_CATEGORY_TITLES,
+)
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS games (
@@ -126,6 +130,85 @@ def init_db():
             """,
             ("32399", "242408", "730", "Counter-Strike 2", now),
         )
+
+    # Remove categories that older versions may already have stored. This runs
+    # at every startup, so deploying the filter also cleans an existing SQLite
+    # database even when the next external API refresh is temporarily offline.
+    purge_excluded_twitch_categories()
+
+
+def purge_excluded_twitch_categories():
+    category_ids = tuple(sorted(EXCLUDED_TWITCH_CATEGORY_IDS))
+    category_titles = tuple(
+        sorted(title.casefold() for title in EXCLUDED_TWITCH_CATEGORY_TITLES)
+    )
+
+    id_placeholders = ",".join("?" for _ in category_ids)
+    title_placeholders = ",".join("?" for _ in category_titles)
+    game_filters = []
+    game_params = []
+
+    if category_ids:
+        game_filters.append(f"twitch_game_id IN ({id_placeholders})")
+        game_params.extend(category_ids)
+    if category_titles:
+        game_filters.append(f"LOWER(TRIM(title)) IN ({title_placeholders})")
+        game_params.extend(category_titles)
+
+    if not game_filters:
+        return {"games": 0, "history": 0, "subscriptions": 0, "notifications": 0}
+
+    game_where = " OR ".join(game_filters)
+
+    with connect() as conn:
+        blocked_keys = {
+            row["game_key"]
+            for row in conn.execute(
+                f"SELECT game_key FROM games WHERE {game_where}",
+                tuple(game_params),
+            ).fetchall()
+        }
+
+        if category_titles:
+            blocked_keys.update(
+                row["game_key"]
+                for row in conn.execute(
+                    f"SELECT DISTINCT game_key FROM game_history "
+                    f"WHERE LOWER(TRIM(title)) IN ({title_placeholders})",
+                    category_titles,
+                ).fetchall()
+            )
+
+        deleted_games = conn.execute(
+            f"DELETE FROM games WHERE {game_where}",
+            tuple(game_params),
+        ).rowcount
+
+        deleted_history = 0
+        deleted_subscriptions = 0
+        deleted_notifications = 0
+        if blocked_keys:
+            key_values = tuple(sorted(blocked_keys))
+            key_placeholders = ",".join("?" for _ in key_values)
+            deleted_history = conn.execute(
+                f"DELETE FROM game_history WHERE game_key IN ({key_placeholders})",
+                key_values,
+            ).rowcount
+            deleted_subscriptions = conn.execute(
+                f"DELETE FROM watch_subscriptions WHERE game_key IN ({key_placeholders})",
+                key_values,
+            ).rowcount
+            deleted_notifications = conn.execute(
+                f"DELETE FROM notifications WHERE game_key IN ({key_placeholders})",
+                key_values,
+            ).rowcount
+
+    return {
+        "games": max(0, deleted_games),
+        "history": max(0, deleted_history),
+        "subscriptions": max(0, deleted_subscriptions),
+        "notifications": max(0, deleted_notifications),
+    }
 
 
 def _decode_game_row(row):

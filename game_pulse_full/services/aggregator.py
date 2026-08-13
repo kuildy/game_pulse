@@ -12,6 +12,10 @@ from config import (
     STEAM_WEB_API_KEY,
     effective_mode
 )
+from content_policy import (
+    EXCLUDED_TWITCH_CATEGORY_IDS,
+    EXCLUDED_TWITCH_CATEGORY_TITLES,
+)
 from db import list_twitch_overrides, replace_section, set_source_status
 from services.igdb import IGDBClient
 from services.twitch import TwitchClient
@@ -74,9 +78,14 @@ def apply_twitch_game_override(game, overrides=None):
     return game
 
 
-def is_non_game_twitch_category(title):
-    return norm_title(title) in {
-        norm_title(x) for x in NON_GAME_TWITCH_CATEGORIES
+def is_non_game_twitch_category(game):
+    twitch_game_id = str(game.get("twitch_game_id") or "").strip()
+    if twitch_game_id in EXCLUDED_TWITCH_CATEGORY_IDS:
+        return True
+
+    excluded_titles = NON_GAME_TWITCH_CATEGORIES | set(EXCLUDED_TWITCH_CATEGORY_TITLES)
+    return norm_title(game.get("title")) in {
+        norm_title(title) for title in excluded_titles
     }
 
 def best_igdb_match(title, candidates):
@@ -216,14 +225,14 @@ def refresh_live():
         filtered_categories = [
             g["title"]
             for g in raw_twitch_hot
-            if is_non_game_twitch_category(g.get("title", ""))
+            if is_non_game_twitch_category(g)
         ]
 
         twitch_overrides = load_twitch_game_overrides()
         twitch_hot = [
             apply_twitch_game_override(g, twitch_overrides)
             for g in raw_twitch_hot
-            if not is_non_game_twitch_category(g.get("title", ""))
+            if not is_non_game_twitch_category(g)
         ][:HOT_LIMIT]
 
         override_names = [
