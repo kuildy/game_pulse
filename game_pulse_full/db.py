@@ -50,6 +50,9 @@ CREATE TABLE IF NOT EXISTS game_history (
 CREATE INDEX IF NOT EXISTS idx_game_history_key_time
 ON game_history(game_key, recorded_at);
 
+CREATE INDEX IF NOT EXISTS idx_game_history_recorded_at
+ON game_history(recorded_at);
+
 CREATE TABLE IF NOT EXISTS source_status (
     source TEXT PRIMARY KEY,
     status TEXT NOT NULL,
@@ -112,19 +115,48 @@ CREATE TABLE IF NOT EXISTS social_signal_snapshots (
 
 CREATE INDEX IF NOT EXISTS idx_social_signal_key_source_time
 ON social_signal_snapshots(game_key, source, collected_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_social_signal_collected_at
+ON social_signal_snapshots(collected_at);
 """
+
+
+class _ClosingConnection(sqlite3.Connection):
+    """Commit/rollback and then really close a ``with connect()`` connection.
+
+    ``sqlite3.Connection`` normally stays open after leaving its context manager.
+    Under a long-running Gunicorn worker those lingering handles can retain journal
+    state long enough for the background updater to stall every API request.
+    """
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        try:
+            return super().__exit__(exc_type, exc_value, traceback)
+        finally:
+            self.close()
 
 
 def connect():
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DATABASE_PATH, timeout=10)
+    conn = sqlite3.connect(
+        DATABASE_PATH,
+        timeout=3,
+        factory=_ClosingConnection,
+    )
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA busy_timeout=10000")
+    conn.execute("PRAGMA busy_timeout=3000")
+    conn.execute("PRAGMA foreign_keys=ON")
     return conn
 
 
 def init_db():
     with connect() as conn:
+        # WAL lets public API reads continue while the background refresh writes
+        # a new snapshot. This is essential when Flask and the updater share one
+        # SQLite database on Render or a NAS.
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA synchronous=NORMAL")
+        conn.execute("PRAGMA wal_autocheckpoint=1000")
         conn.executescript(SCHEMA)
 
         # Lightweight migration for users who already have the older DB.
