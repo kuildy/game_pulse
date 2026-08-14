@@ -41,8 +41,17 @@ from db import (
     upsert_watch_subscription,
 )
 from services.aggregator import refresh_all
-from services.four_gamers import latest_news as four_gamers_latest_news
-from services.four_gamers import related_news as four_gamers_related_news
+try:
+    from services.four_gamers import latest_news as four_gamers_latest_news
+    from services.four_gamers import related_news as four_gamers_related_news
+except ModuleNotFoundError as exc:
+    # GitHub's browser uploader can flatten a newly added service into the
+    # project root. Keep that deployment working while the canonical package
+    # location remains services/four_gamers.py.
+    if exc.name != "services.four_gamers":
+        raise
+    from four_gamers import latest_news as four_gamers_latest_news
+    from four_gamers import related_news as four_gamers_related_news
 from services.igdb import IGDBClient
 from services.steam import app_news, app_reviews
 
