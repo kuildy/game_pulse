@@ -582,16 +582,46 @@ async function loadRecentReviews(){
   }
 }
 
-function fourGamersNewsCard(article){
+function fourGamersPublishedText(value){
+  if(!value) return "剛剛更新";
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return "最新消息";
+  return date.toLocaleString("zh-TW", {
+    month:"2-digit",
+    day:"2-digit",
+    hour:"2-digit",
+    minute:"2-digit"
+  });
+}
+
+function fourGamersFeaturedArticle(article){
+  const url = escapeHtml(article.url || "https://www.4gamers.com.tw/news");
+  return `<a class="fourgamers-featured" href="${url}" target="_blank" rel="noopener noreferrer">
+    <div class="fourgamers-featured-top">
+      <span class="fourgamers-headline-label">LATEST / 頭條</span>
+      <time>${escapeHtml(fourGamersPublishedText(article.published_at))}</time>
+    </div>
+    <div class="fourgamers-featured-body">
+      <h3>${escapeHtml(article.title || "最新遊戲新聞")}</h3>
+      <p>${escapeHtml(article.contents || "前往來源網站閱讀完整內容。")}</p>
+    </div>
+    <span class="fourgamers-read-more">閱讀完整報導 <b>↗</b></span>
+  </a>`;
+}
+
+function fourGamersNewsRow(article, index){
   const published = article.published_at
-    ? new Date(article.published_at).toLocaleString("zh-TW", {month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit"})
-    : "";
-  return `<article class="fourgamers-news-card">
-    <div class="fourgamers-news-meta"><span>4GAMERS</span><time>${escapeHtml(published)}</time></div>
-    <h3>${escapeHtml(article.title || "4Gamers 遊戲新聞")}</h3>
-    <p>${escapeHtml(article.contents || "")}</p>
-    <a href="${escapeHtml(article.url || "https://www.4gamers.com.tw/news")}" target="_blank" rel="noopener noreferrer">前往 4Gamers 閱讀原文 ↗</a>
-  </article>`;
+    ? fourGamersPublishedText(article.published_at)
+    : "最新消息";
+  const url = escapeHtml(article.url || "https://www.4gamers.com.tw/news");
+  return `<a class="fourgamers-news-row" href="${url}" target="_blank" rel="noopener noreferrer">
+    <span class="fourgamers-news-order">${String(index + 1).padStart(2, "0")}</span>
+    <div class="fourgamers-news-row-copy">
+      <div class="fourgamers-news-meta"><span>4GAMERS</span><time>${escapeHtml(published)}</time></div>
+      <h3>${escapeHtml(article.title || "遊戲新聞")}</h3>
+    </div>
+    <span class="fourgamers-news-arrow">↗</span>
+  </a>`;
 }
 
 async function loadFourGamersNews(){
@@ -605,7 +635,9 @@ async function loadFourGamersNews(){
       section.hidden = true;
       return;
     }
-    grid.innerHTML = rows.map(fourGamersNewsCard).join("");
+    const [featured, ...rest] = rows;
+    grid.innerHTML = `${fourGamersFeaturedArticle(featured)}
+      <div class="fourgamers-news-list">${rest.map((article, index) => fourGamersNewsRow(article, index + 1)).join("")}</div>`;
   }catch(_){
     section.hidden = true;
   }

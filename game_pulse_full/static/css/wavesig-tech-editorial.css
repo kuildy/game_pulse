@@ -697,6 +697,79 @@ body:after{
   background:#0b0e13;
 }
 
+/* Latest briefing: one clear lead story, followed by a compact scan list. */
+.fourgamers-news-section{
+  margin:0 0 34px!important;
+  padding:30px!important;
+  border:1px solid var(--ws-line)!important;
+  border-left:3px solid rgba(255,184,107,.68)!important;
+  border-radius:10px!important;
+  background:linear-gradient(110deg,rgba(255,184,107,.04),transparent 42%),#0b0e13!important;
+}
+.fourgamers-news-heading{align-items:flex-start!important;margin-bottom:20px!important}
+.fourgamers-news-heading h2{font-size:37px!important;letter-spacing:-.04em!important;margin:7px 0 6px!important}
+.fourgamers-news-heading p{font-size:14px!important;max-width:720px!important}
+.fourgamers-source-pill{
+  flex:none;margin-top:4px;padding:8px 10px!important;border-radius:5px!important;
+  font:700 9px/1 var(--ws-mono)!important;letter-spacing:.08em!important;
+}
+.fourgamers-news-grid{
+  display:grid!important;grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr)!important;
+  gap:0!important;border:1px solid var(--ws-line);border-radius:8px;overflow:hidden;
+  background:var(--ws-line)!important;
+}
+.fourgamers-featured{
+  min-width:0;min-height:380px;padding:26px;display:flex;flex-direction:column;
+  color:inherit;text-decoration:none;background:
+    radial-gradient(circle at 88% 14%,rgba(255,184,107,.09),transparent 30%),
+    linear-gradient(145deg,#11151c,#0b0e13 68%);
+  transition:background .18s ease;
+}
+.fourgamers-featured:hover{background:linear-gradient(145deg,#151a23,#0d1118 68%)}
+.fourgamers-featured-top{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.fourgamers-featured-top time,.fourgamers-news-meta time{font:500 9px/1.2 var(--ws-mono);color:var(--muted)}
+.fourgamers-headline-label{font:800 9px/1 var(--ws-mono);letter-spacing:.12em;color:#ffd09b}
+.fourgamers-featured-body{margin:auto 0}
+.fourgamers-featured h3{max-width:720px;margin:30px 0 13px;font-size:clamp(25px,2.35vw,38px);line-height:1.3;letter-spacing:-.04em}
+.fourgamers-featured p{max-width:680px;margin:0;color:#bac4d2;font-size:13px;line-height:1.75;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.fourgamers-read-more{display:flex;align-items:center;justify-content:space-between;padding-top:18px;border-top:1px solid var(--ws-line);font:700 10px/1 var(--ws-mono);color:#ffd09b;letter-spacing:.05em}
+.fourgamers-read-more b{font-size:17px}
+.fourgamers-news-list{min-width:0;display:flex;flex-direction:column;gap:1px;background:var(--ws-line)}
+.fourgamers-news-row{
+  min-width:0;flex:1;display:grid;grid-template-columns:34px minmax(0,1fr) 18px;align-items:center;gap:12px;
+  padding:15px 16px;color:inherit;text-decoration:none;background:#0b0f15;transition:background .18s ease;
+}
+.fourgamers-news-row:hover{background:#121821}
+.fourgamers-news-order{font:700 10px/1 var(--ws-mono);color:#ffd09b}
+.fourgamers-news-row-copy{min-width:0}
+.fourgamers-news-meta{margin-bottom:6px!important;justify-content:flex-start!important;gap:8px!important}
+.fourgamers-news-meta span{font:800 7px/1 var(--ws-mono)!important;letter-spacing:.11em!important}
+.fourgamers-news-row h3{margin:0!important;font-size:13px!important;line-height:1.42!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fourgamers-news-arrow{color:#ffd09b;font-size:14px;text-align:right}
+.fourgamers-news-note{margin:12px 0 0!important;font-size:9px!important}
+.fourgamers-featured-skeleton{min-height:380px;background:linear-gradient(90deg,#10151c,#171d26,#10151c);background-size:200% 100%;animation:shimmer 1.2s infinite}
+.fourgamers-list-skeleton{display:flex;flex-direction:column;gap:1px;background:var(--ws-line)}
+.fourgamers-list-skeleton span{flex:1;min-height:70px;background:linear-gradient(90deg,#0e131a,#161c25,#0e131a);background-size:200% 100%;animation:shimmer 1.2s infinite}
+
+@media(max-width:900px){
+  .fourgamers-news-grid{grid-template-columns:1fr!important}
+  .fourgamers-featured{min-height:300px}
+  .fourgamers-news-list{border-top:1px solid var(--ws-line)}
+}
+
+@media(max-width:620px){
+  .fourgamers-news-section{padding:20px 16px!important;margin-bottom:26px!important}
+  .fourgamers-news-heading{display:flex!important;flex-direction:column!important;gap:10px!important}
+  .fourgamers-news-heading h2{font-size:29px!important}
+  .fourgamers-news-heading p{font-size:13.5px!important}
+  .fourgamers-source-pill{align-self:flex-start!important}
+  .fourgamers-featured{min-height:285px;padding:20px 17px}
+  .fourgamers-featured h3{font-size:25px;margin-top:24px}
+  .fourgamers-featured p{font-size:12px;-webkit-line-clamp:3}
+  .fourgamers-news-row{grid-template-columns:26px minmax(0,1fr) 16px;padding:15px 12px;gap:9px}
+  .fourgamers-news-row h3{font-size:13px!important;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+}
+
 /* Slightly more space between major blocks helps the background separation read clearly. */
 .pulse-map{margin-bottom:30px!important}
 .feature-section{margin-bottom:20px!important}
