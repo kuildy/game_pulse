@@ -94,7 +94,7 @@
           : `<p class="publisher-fallback-copy">目前尚未取得可靠的發行商網站資料。</p>`;
         target.innerHTML = `
           <div class="publisher-fallback">
-            <div class="publisher-fallback-head"><span>OFFICIAL SOURCE</span><h3>目前尚無可顯示的 Steam 最新消息</h3></div>
+            <div class="publisher-fallback-head"><span>OFFICIAL SOURCE</span><h3>目前尚無可顯示的 4Gamers 或 Steam 最新消息</h3></div>
             ${publisherLine}
             <p>WAVESIG 會優先提供發行商或遊戲官方來源，不會用不明第三方新聞填補空缺。</p>
             <div class="publisher-source-grid">${publisherCards}${gameOfficial}</div>
@@ -103,7 +103,7 @@
       }
       target.innerHTML = rows.map(n=>{
         const dt = n.published_at ? new Date(n.published_at).toLocaleString("zh-TW",{year:"numeric",month:"2-digit",day:"2-digit"}) : "";
-        return `<article class="news-card"><div class="news-meta"><span>${escapeHtml(n.feedlabel||"Steam")}</span><time>${escapeHtml(dt)}</time></div><h3>${escapeHtml(n.title||"Steam News")}</h3><p>${escapeHtml(n.contents||"")}</p><a href="${escapeHtml(n.url||"#")}" target="_blank" rel="noopener noreferrer">閱讀原文 ↗</a></article>`;
+        return `<article class="news-card"><div class="news-meta"><span>${escapeHtml(n.feedlabel||"新聞來源")}</span><time>${escapeHtml(dt)}</time></div><h3>${escapeHtml(n.title||"遊戲新聞")}</h3><p>${escapeHtml(n.contents||"")}</p><a href="${escapeHtml(n.url||"#")}" target="_blank" rel="noopener noreferrer">閱讀原文 ↗</a></article>`;
       }).join("");
     }catch(e){ target.innerHTML = `<div class="detail-notice">新聞暫時讀取失敗，稍後再試。</div>`; }
   }

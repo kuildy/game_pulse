@@ -41,6 +41,8 @@ from db import (
     upsert_watch_subscription,
 )
 from services.aggregator import refresh_all
+from services.four_gamers import latest_news as four_gamers_latest_news
+from services.four_gamers import related_news as four_gamers_related_news
 from services.igdb import IGDBClient
 from services.steam import app_news, app_reviews
 
@@ -367,7 +369,14 @@ def api_game_news(identifier):
 
     fallback = _publisher_fallback(game, detail)
     appid = str(game.get("steam_appid") or "").strip()
-    rows = []
+    four_gamers_rows = []
+    four_gamers_error = None
+    try:
+        four_gamers_rows = four_gamers_related_news(game.get("title") or "", limit=4)
+    except Exception as exc:
+        four_gamers_error = str(exc)[:180]
+
+    steam_rows = []
     steam_error = None
 
     if appid.isdigit():
@@ -375,17 +384,26 @@ def api_game_news(identifier):
         cached = _NEWS_CACHE.get(cache_key)
         try:
             if cached and time.time() - cached["at"] < _NEWS_CACHE_TTL:
-                rows = cached["data"]
+                steam_rows = cached["data"]
             else:
-                rows = app_news(appid, count=8, maxlength=900)
-                _NEWS_CACHE[cache_key] = {"at": time.time(), "data": rows}
+                steam_rows = app_news(appid, count=8, maxlength=900)
+                _NEWS_CACHE[cache_key] = {"at": time.time(), "data": steam_rows}
         except Exception as exc:
             steam_error = str(exc)[:180]
 
+    rows = four_gamers_rows + steam_rows
+    rows.sort(key=lambda row: row.get("published_at") or "", reverse=True)
+    rows = rows[:8]
+
     if rows:
+        source_names = []
+        if four_gamers_rows:
+            source_names.append("4Gamers")
+        if steam_rows:
+            source_names.append("Steam News")
         return jsonify({
             "game_key": game["game_key"],
-            "source": "Steam News",
+            "source": " / ".join(source_names),
             "news": rows,
             "publishers": fallback["publishers"],
             "official_game_url": fallback["official_game_url"],
@@ -400,8 +418,28 @@ def api_game_news(identifier):
         "publishers": fallback["publishers"],
         "official_game_url": fallback["official_game_url"],
         "steam_error": steam_error,
+        "four_gamers_error": four_gamers_error,
         "detail_error": detail_error,
     })
+
+
+@app.get("/api/news/4gamers")
+def api_four_gamers_news():
+    try:
+        limit = max(1, min(12, int(request.args.get("limit", "8"))))
+    except ValueError:
+        limit = 8
+    try:
+        rows = four_gamers_latest_news(limit=limit)
+    except Exception:
+        rows = []
+    response = jsonify({
+        "source": "4Gamers RSS",
+        "news": rows,
+        "status": "ok" if rows else "unavailable",
+    })
+    response.headers["Cache-Control"] = "public, max-age=300"
+    return response
 
 
 @app.get("/api/game/<path:identifier>/reviews")

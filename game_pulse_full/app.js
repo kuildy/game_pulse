@@ -582,6 +582,35 @@ async function loadRecentReviews(){
   }
 }
 
+function fourGamersNewsCard(article){
+  const published = article.published_at
+    ? new Date(article.published_at).toLocaleString("zh-TW", {month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit"})
+    : "";
+  return `<article class="fourgamers-news-card">
+    <div class="fourgamers-news-meta"><span>4GAMERS</span><time>${escapeHtml(published)}</time></div>
+    <h3>${escapeHtml(article.title || "4Gamers 遊戲新聞")}</h3>
+    <p>${escapeHtml(article.contents || "")}</p>
+    <a href="${escapeHtml(article.url || "https://www.4gamers.com.tw/news")}" target="_blank" rel="noopener noreferrer">前往 4Gamers 閱讀原文 ↗</a>
+  </article>`;
+}
+
+async function loadFourGamersNews(){
+  const section = $("#news4gamers");
+  const grid = $("#fourGamersNewsGrid");
+  if(!section || !grid) return;
+  try{
+    const data = await fetchJsonCached("/api/news/4gamers?limit=6", 300000);
+    const rows = Array.isArray(data.news) ? data.news : [];
+    if(!rows.length){
+      section.hidden = true;
+      return;
+    }
+    grid.innerHTML = rows.map(fourGamersNewsCard).join("");
+  }catch(_){
+    section.hidden = true;
+  }
+}
+
 function closeModal(){
   $("#modal").classList.remove("open");
   $("#modal").setAttribute("aria-hidden","true");
@@ -703,4 +732,5 @@ loadTodaySummary();
 loadRadar();
 loadWhy();
 loadRecentReviews();
+loadFourGamersNews();
 loadSection("hot");

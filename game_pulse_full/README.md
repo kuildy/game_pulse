@@ -15,6 +15,7 @@ Synology DS220j 安裝方式請看 `NAS_SETUP_DS220J_ZH-TW.md`。
 - IGDB PopScore 熱門 primitives
 - Twitch Top Games
 - Steam current players（IGDB 能取得 Steam App ID 時）
+- 4Gamers 公開 RSS 最新中文遊戲新聞（30 分鐘快取）
 - Steam / Epic / GOG / PlayStation / Xbox / Nintendo / 官方網站入口
 - 沒有 API Key 也能跑的 Demo Mode
 - 手動更新與每 3 小時更新工具
@@ -149,6 +150,7 @@ B. 「去哪裡玩 / 買」
     │  ├─ aggregator.py
     │  ├─ igdb.py
     │  ├─ twitch.py
+    │  ├─ four_gamers.py
     │  └─ steam.py
     ├─ scripts/
     │  └─ update_games.py
