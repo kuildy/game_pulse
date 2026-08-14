@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="WAVESIG — 遊戲熱度偵測與解讀平台。用 PULSE RADAR 發現正在起飛的遊戲，用 PULSE WHY 看懂熱度從哪裡來。">
+  <meta name="theme-color" content="#080a0f">
+  <meta property="og:title" content="WAVESIG｜看見下一波遊戲熱潮">
+  <meta property="og:description" content="跨平台整合 IGDB、Twitch、Steam 訊號，偵測正在升溫的遊戲並解讀熱度來源。">
+  <meta property="og:type" content="website">
+  <title>WAVESIG｜看見下一波遊戲熱潮</title>
+  <link rel="preconnect" href="https://images.igdb.com" crossorigin>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='branding/favicon.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='branding/wavesig-icon-512.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/logo-branding.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/wavesig-tech-editorial.css') }}">
+</head>
+<body>
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+
+  <header class="nav">
+    <a class="logo" href="#">
+      <img class="logo-image" src="{{ url_for('static', filename='branding/wavesig-mark.png') }}" alt="WAVESIG logo">
+      <span class="logo-copy"><b>WAVESIG</b><small>遊戲熱度偵測與解讀</small></span>
+    </a>
+
+    <nav class="nav-links">
+      <button data-section="hot" class="nav-tab active">熱門</button>
+      <button data-section="new" class="nav-tab">新上市</button>
+      <button data-section="upcoming" class="nav-tab">即將推出</button>
+      <button id="favoriteNavButton" class="nav-tab favorite-nav-button" type="button">♡ 收藏 <span class="favorite-count">0</span></button>
+      <a class="nav-page-link" href="{{ url_for('release_calendar_page') }}">發售日曆</a>
+      <a class="nav-page-link notify-link" href="{{ url_for('notifications_page') }}">通知 <span id="notificationBadge" class="notification-badge">0</span></a>
+    </nav>
+
+    <div id="modeBadge" class="mode-badge">讀取中</div>
+  </header>
+
+  <div class="mobile-quick-nav" aria-label="手機快速導覽">
+    <a href="#today">今日</a>
+    <a href="#radar">RADAR</a>
+    <a href="#why">WHY</a>
+    <a href="#games">熱門</a>
+    <button type="button" data-favorites-nav>♡ 收藏 <span class="favorite-count">0</span></button>
+    <a href="{{ url_for('release_calendar_page') }}">日曆</a>
+  </div>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="live-dot"></span> GAME HEAT INTELLIGENCE</div>
+        <h1>看見熱門，<br><em>也看懂熱門。</em></h1>
+        <p>
+          WAVESIG 不只整理排行榜。PULSE RADAR 找出正在起飛的遊戲，
+          PULSE WHY 解讀這波熱度是直播帶動、玩家回流，還是全面爆發。
+        </p>
+        <div class="hero-pill-row" aria-label="WAVESIG 核心功能">
+          <span>RADAR / EARLY SIGNAL</span><span>WHY / SIGNAL ANALYSIS</span><span>24H / TREND</span>
+        </div>
+        <div class="hero-actions">
+          <button class="primary" data-go-radar>探索 PULSE RADAR</button>
+          <button class="secondary" data-go-hot>查看熱門榜</button>
+        </div>
+      </div>
+
+      <div class="signal-panel">
+        <div class="signal-top">
+          <span>WS / LIVE SIGNAL</span>
+          <span id="lastStatus">資料載入中</span>
+        </div>
+        <div class="signal-ring">
+          <div class="ring-inner">
+            <strong id="heroScore">--</strong>
+            <small>TOP SCORE</small>
+          </div>
+        </div>
+        <div class="source-mini">
+          <div><b>IGDB</b><span>跨平台資料</span></div>
+          <div><b>Twitch</b><span>即時熱門</span></div>
+          <div><b>Steam</b><span>PC 活躍度</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pulse-map" aria-label="WAVESIG 快速導覽">
+      <a href="#games" class="pulse-map-card hot-map">
+        <span class="pulse-map-icon">HOT</span>
+        <div><small>01 / LIVE RANK</small><b>熱門排行</b><p>跨來源即時熱度榜</p></div>
+        <i>01</i>
+      </a>
+      <a href="#radar" class="pulse-map-card radar-map">
+        <span class="pulse-map-icon">RDR</span>
+        <div><small>02 / SIGNAL</small><b>PULSE RADAR</b><p>找下一個正在升溫的黑馬</p></div>
+        <i>02</i>
+      </a>
+      <a href="#why" class="pulse-map-card why-map">
+        <span class="pulse-map-icon">WHY</span>
+        <div><small>03 / ANALYSIS</small><b>PULSE WHY</b><p>看懂這波熱度從哪裡來</p></div>
+        <i>03</i>
+      </a>
+      <a href="{{ url_for('release_calendar_page') }}" class="pulse-map-card calendar-map">
+        <span class="pulse-map-icon">CAL</span>
+        <div><small>04 / RELEASE</small><b>發售日曆</b><p>掌握近期上市與倒數</p></div>
+        <i>04</i>
+      </a>
+    </section>
+
+    <section class="today-section" id="today">
+      <div class="today-heading">
+        <div>
+          <span class="micro">TODAY ON WAVESIG</span>
+          <h2>今天遊戲圈，先看這四件事。</h2>
+          <p>把熱門、RADAR、Twitch 與 Steam 訊號濃縮成 30 秒摘要。</p>
+        </div>
+        <div id="todaySummaryMeta" class="today-summary-meta">正在整理今日脈搏…</div>
+      </div>
+      <div id="todaySummaryGrid" class="today-summary-grid">
+        <div class="today-summary-skeleton"></div>
+        <div class="today-summary-skeleton"></div>
+        <div class="today-summary-skeleton"></div>
+        <div class="today-summary-skeleton"></div>
+      </div>
+    </section>
+
+    <section class="control-bar hot-control" id="games">
+      <div class="section-title">
+        <span id="sectionEyebrow">01 · TRENDING NOW</span>
+        <h2 id="sectionTitle">近日熱門</h2>
+        <p id="sectionDescription">跨來源訊號計算出的 WAVESIG 熱門榜。</p>
+      </div>
+
+      <div class="filter-area">
+        <div class="filters">
+          <label class="search">
+            <span>⌕</span>
+            <input id="searchInput" type="search" placeholder="搜尋遊戲、類型、平台" autocomplete="off">
+          </label>
+          <select id="platformFilter" aria-label="平台篩選">
+            <option value="all">全部平台</option>
+            <option value="pc">PC</option>
+            <option value="playstation">PlayStation</option>
+            <option value="xbox">Xbox</option>
+            <option value="nintendo">Nintendo</option>
+          </select>
+          <select id="genreFilter" aria-label="遊戲類型篩選">
+            <option value="all">全部類型</option>
+          </select>
+          <button id="favoriteFilter" class="filter-button favorite-filter" type="button" aria-pressed="false">♡ 只看收藏 <span class="favorite-count">0</span></button>
+          <button id="clearFilters" class="filter-button clear-filter" type="button">清除</button>
+        </div>
+        <div id="resultCount" class="result-count" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="tab-strip">
+        <button class="section-tab active" data-section="hot"><span>01</span>近日熱門</button>
+        <button class="section-tab" data-section="new"><span>02</span>新上市</button>
+        <button class="section-tab" data-section="upcoming"><span>03</span>即將推出</button>
+      </div>
+
+      <div id="gameGrid" class="game-grid">
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+      </div>
+    </section>
+
+    <section class="radar-section feature-section collapsible-feature" id="radar" data-collapsible="radar">
+      <button class="feature-toggle" type="button" aria-expanded="true" aria-controls="radarContent" data-toggle-feature="radar">
+        <div class="radar-heading feature-toggle-heading">
+          <div>
+            <span class="micro">02 · EARLY SIGNAL</span>
+            <h2>PULSE RADAR</h2>
+            <p>不是找現在最紅，而是找正在加速、可能成為下一波熱門的遊戲。</p>
+          </div>
+          <div class="feature-toggle-side">
+            <div class="radar-legend">
+              <span>WATCH</span><span>RISING</span><span>HEATING UP</span><span>BREAKOUT</span>
+            </div>
+            <span class="feature-chevron" aria-hidden="true">⌄</span>
+          </div>
+        </div>
+      </button>
+      <div id="radarContent" class="feature-collapse-content">
+        <div id="radarGrid" class="radar-grid">
+          <div class="radar-skeleton"></div>
+          <div class="radar-skeleton"></div>
+          <div class="radar-skeleton"></div>
+        </div>
+        <p id="radarNote" class="radar-note">正在讀取近期熱度變化…</p>
+      </div>
+    </section>
+
+    <section class="why-section feature-section collapsible-feature" id="why" data-collapsible="why">
+      <button class="feature-toggle" type="button" aria-expanded="true" aria-controls="whyContent" data-toggle-feature="why">
+        <div class="why-heading feature-toggle-heading">
+          <div>
+            <span class="micro">03 · SIGNAL INTERPRETATION</span>
+            <h2>PULSE WHY</h2>
+            <p>不只告訴你什麼遊戲在紅，也解讀這波熱度比較像「大家在看」還是「大家真的回去玩」。</p>
+          </div>
+          <div class="feature-toggle-side">
+            <div class="why-types">
+              <span>直播帶動</span><span>玩家回流</span><span>全面爆發</span><span>只看不玩</span>
+            </div>
+            <span class="feature-chevron" aria-hidden="true">⌄</span>
+          </div>
+        </div>
+      </button>
+      <div id="whyContent" class="feature-collapse-content">
+        <div id="whyGrid" class="why-grid">
+          <div class="why-skeleton"></div>
+          <div class="why-skeleton"></div>
+          <div class="why-skeleton"></div>
+        </div>
+        <p id="whyNote" class="why-note">正在解讀最近 24 小時的多來源熱度變化…</p>
+      </div>
+    </section>
+
+    <section class="recent-reviews-section" id="reviews">
+      <div class="recent-reviews-heading">
+        <div>
+          <span class="micro">05 · RECENT REVIEWS</span>
+          <h2>近期遊戲評論</h2>
+          <p>從 Steam 最近玩家評論中挑出熱門遊戲的最新聲音，快速看看玩家最近在說什麼。</p>
+        </div>
+        <span class="review-source-pill">STEAM USER REVIEWS</span>
+      </div>
+      <div id="recentReviewsGrid" class="recent-reviews-grid">
+        <div class="review-skeleton"></div>
+        <div class="review-skeleton"></div>
+        <div class="review-skeleton"></div>
+      </div>
+      <p id="recentReviewsNote" class="recent-reviews-note">評論內容來自 Steam 使用者；WAVESIG 顯示短摘錄並保留來源標示。</p>
+    </section>
+
+    <section class="method" id="method">
+      <div class="method-copy">
+        <span class="micro">HOW IT WORKS</span>
+        <h2>不是「Steam 第一名」<br>就叫全平台最熱門。</h2>
+        <p>
+          WAVESIG 會把不同來源先正規化，再混合成 0–100 分。
+          IGDB PopScore 可涵蓋 IGDB 行為、Steam 指標與 Twitch 觀看等 primitives；
+          Twitch Top Games 則補上更即時的直播熱門訊號。
+        </p>
+      </div>
+      <div class="formula">
+        <div class="formula-row"><b>45%</b><span>IGDB Interest 跨平台興趣基線</span></div>
+        <div class="formula-row"><b>35%</b><span>Twitch Live Viewers 即時觀看訊號</span></div>
+        <div class="formula-row"><b>20%</b><span>Steam CCU 即時玩家數</span></div>
+        <div class="formula-note">觀看/玩家數採對數正規化；若某來源缺資料，系統會以目前可用來源重新正規化，不直接判零分。</div>
+      </div>
+    </section>
+
+    <section class="source-section">
+      <div class="section-title">
+        <span>SOURCES</span>
+        <h2>資料來源狀態</h2>
+      </div>
+      <div id="sourceStatus" class="source-grid"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div>
+      <b>WAVESIG</b>
+      <p>遊戲熱度偵測・趨勢分析・跨平台情報</p>
+    </div>
+    <p>資料與商標屬各自權利人所有。排名為本站自訂指標，不代表官方排行。</p>
+  </footer>
+
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal></div>
+    <article class="modal-card">
+      <button class="modal-close" data-close-modal>×</button>
+      <div id="modalContent"></div>
+    </article>
+  </div>
+
+  <div id="favoriteToast" class="favorite-toast" role="status" aria-live="polite"></div>
+
+  <script defer src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

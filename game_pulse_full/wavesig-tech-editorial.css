@@ -1,0 +1,1083 @@
+/* WAVESIG Tech Gaming Editorial
+   Mature gaming media + data terminal. No API or JS behavior changes. */
+
+:root{
+  --ws-bg:#080a0e;
+  --ws-surface:#0d1117;
+  --ws-surface-2:#11161e;
+  --ws-line:#222a35;
+  --ws-line-soft:rgba(255,255,255,.075);
+  --ws-text:#f4f7fa;
+  --ws-muted:#8893a3;
+  --ws-cyan:#46d7ff;
+  --ws-violet:#8d74ff;
+  --ws-green:#55dfa1;
+  --ws-red:#ff667d;
+  --ws-radius:10px;
+  --ws-radius-lg:14px;
+  --ws-mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+}
+
+html{background:var(--ws-bg)}
+body{background:var(--ws-bg);color:var(--ws-text)}
+body:before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:-2;
+  opacity:.22;
+  background-image:
+    linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);
+  background-size:48px 48px;
+  mask-image:linear-gradient(to bottom,black,transparent 58%);
+}
+
+/* Kill the template-y neon blobs; keep only a trace of atmosphere. */
+.ambient{opacity:.36;filter:blur(120px)}
+.ambient-a{background:rgba(141,116,255,.11)}
+.ambient-b{background:rgba(70,215,255,.055)}
+
+/* Header: product navigation rather than floating SaaS pills. */
+.nav{
+  height:70px;
+  border-bottom:1px solid var(--ws-line);
+  background:rgba(8,10,14,.94);
+  backdrop-filter:blur(14px);
+}
+.logo-image{filter:none!important}
+.logo-copy b{font-size:15px;letter-spacing:.16em}
+.nav-links{padding:0;background:transparent;border:0;border-radius:0;gap:18px}
+.nav-tab,.nav-page-link{
+  position:relative;
+  padding:8px 0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:var(--ws-muted)!important;
+  text-decoration:none;
+  font-size:12px;
+  letter-spacing:.04em;
+}
+.nav-tab.active,.nav-page-link.active{color:var(--ws-text)!important}
+.nav-tab.active:after,.nav-page-link.active:after{
+  content:"";position:absolute;left:0;right:0;bottom:-17px;height:2px;background:var(--ws-cyan)
+}
+.mode-badge{font-family:var(--ws-mono);border-radius:5px;letter-spacing:.06em;background:transparent!important}
+.notification-badge,.favorite-count{font-family:var(--ws-mono)}
+
+/* Hero: editorial headline plus data-terminal instrument. */
+.hero{min-height:570px;padding:70px 0 52px;gap:72px}
+.hero-copy:before{display:none!important}
+.eyebrow,.micro,.section-title>span{
+  font-family:var(--ws-mono);
+  letter-spacing:.14em;
+  color:var(--ws-cyan);
+}
+.hero h1{font-size:clamp(54px,7vw,90px);line-height:.96;letter-spacing:-.055em;max-width:760px}
+.hero h1 em{
+  background:none!important;
+  -webkit-background-clip:initial!important;
+  color:var(--ws-text)!important;
+  position:relative;
+}
+.hero h1 em:after{
+  content:"";display:block;width:120px;height:2px;margin-top:18px;background:linear-gradient(90deg,var(--ws-cyan),var(--ws-violet));
+}
+.hero-copy p{font-size:15px;max-width:650px;line-height:1.85}
+.hero-pill-row{gap:18px;margin-top:24px}
+.hero-pill-row span{
+  padding:0;border:0;background:transparent;border-radius:0;color:#b5bfcc;
+  font-family:var(--ws-mono);font-size:9px;letter-spacing:.08em;
+}
+.hero-pill-row span:before{content:"+ ";color:var(--ws-cyan)}
+.hero-actions button,.hero-actions a{border-radius:7px;min-height:44px;padding:0 18px;font-size:12px;letter-spacing:.03em}
+.hero-actions .primary{background:var(--ws-text);color:#0a0d11;box-shadow:none}
+.hero-actions .secondary{background:transparent;border-color:var(--ws-line)}
+.hero-actions button:hover,.hero-actions a:hover{transform:translateY(-1px)}
+
+.signal-panel{
+  position:relative;overflow:hidden;padding:20px;border:1px solid var(--ws-line);border-radius:var(--ws-radius-lg);
+  background:linear-gradient(180deg,rgba(17,22,30,.96),rgba(10,13,18,.96));box-shadow:none;
+}
+.signal-panel:before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.35;
+  background:repeating-linear-gradient(180deg,transparent 0 7px,rgba(70,215,255,.025) 8px);
+}
+.signal-panel:after{
+  content:"WS-01";position:absolute;right:18px;bottom:14px;color:rgba(255,255,255,.18);
+  font:9px/1 var(--ws-mono);letter-spacing:.16em;
+}
+.signal-top{position:relative;z-index:1;font-family:var(--ws-mono);letter-spacing:.12em}
+.signal-ring{
+  width:228px;height:228px;margin:28px auto;border:1px solid rgba(70,215,255,.22);
+  background:radial-gradient(circle,transparent 0 41%,rgba(70,215,255,.05) 42% 43%,transparent 44%),
+             conic-gradient(from 45deg,rgba(70,215,255,.92) 0 18%,rgba(141,116,255,.7) 18% 35%,rgba(255,255,255,.055) 35% 100%);
+  box-shadow:none;
+}
+.signal-ring:before{inset:8px;background:var(--ws-surface);border:1px solid rgba(255,255,255,.05)}
+.signal-ring:after{content:"";position:absolute;inset:28px;border-radius:50%;border:1px dashed rgba(70,215,255,.14)}
+.ring-inner strong{font-family:var(--ws-mono);font-size:62px;letter-spacing:-.07em}
+.ring-inner small{font-family:var(--ws-mono);letter-spacing:.14em}
+.source-mini{position:relative;z-index:1;gap:0;border-top:1px solid var(--ws-line)}
+.source-mini div{padding:12px 10px;border:0;border-right:1px solid var(--ws-line);border-radius:0;background:transparent}
+.source-mini div:last-child{border-right:0}
+.source-mini b{font-family:var(--ws-mono);font-size:10px;color:#dbe5ef}
+
+/* Product map: compact terminal shortcuts, not four glossy cards. */
+.pulse-map{
+  grid-template-columns:repeat(4,1fr);gap:0;padding:0;margin-bottom:42px;border:1px solid var(--ws-line);
+  border-radius:var(--ws-radius);background:var(--ws-surface);overflow:hidden;
+}
+.pulse-map-card{
+  min-height:92px;padding:14px 16px;border:0;border-right:1px solid var(--ws-line);border-radius:0;background:transparent;
+  grid-template-columns:38px 1fr auto;
+}
+.pulse-map-card:last-child{border-right:0}
+.pulse-map-card:hover{transform:none;background:#111720;border-color:transparent}
+.pulse-map-icon{
+  width:32px;height:32px;border-radius:5px!important;background:transparent!important;border:1px solid var(--ws-line)!important;
+  color:var(--ws-cyan);font:700 9px/1 var(--ws-mono);letter-spacing:.04em;
+}
+.pulse-map-card small{font-family:var(--ws-mono);font-size:7px;letter-spacing:.12em}
+.pulse-map-card b{font-size:12px}
+.pulse-map-card>i{font-family:var(--ws-mono)}
+
+/* Today: editorial summary strip. */
+.today-section{
+  padding:0 0 30px;margin-bottom:46px;border:0;border-bottom:1px solid var(--ws-line);border-radius:0;background:transparent;
+}
+.today-heading{padding-bottom:14px;border-bottom:1px solid var(--ws-line)}
+.today-heading h2{font-size:27px;letter-spacing:-.03em}
+.today-summary-meta{font-family:var(--ws-mono);border:0;background:transparent;padding:0;border-radius:0}
+.today-summary-grid{gap:0;border:1px solid var(--ws-line);border-radius:var(--ws-radius);overflow:hidden}
+.today-summary-card{border:0!important;border-right:1px solid var(--ws-line)!important;border-radius:0!important;background:var(--ws-surface)!important;box-shadow:none!important}
+.today-summary-card:last-child{border-right:0!important}
+
+/* Feature sections: strong section rules and restrained signal accents. */
+.feature-section{border-radius:var(--ws-radius-lg)!important;background:var(--ws-surface)!important;border:1px solid var(--ws-line)!important;box-shadow:none!important}
+.feature-section:before{display:none!important}
+.radar-section,.why-section{padding:0!important;margin-bottom:22px!important}
+.feature-toggle{padding:0!important}
+.feature-toggle-heading{padding:22px 24px;margin:0!important;align-items:center!important}
+.feature-toggle-heading h2{font-size:28px!important;letter-spacing:-.035em;margin:5px 0!important}
+.feature-toggle-heading p{font-size:12px!important}
+.feature-toggle-heading .micro:before{content:"// ";color:var(--ws-violet)}
+.feature-toggle-side{gap:16px}
+.radar-legend,.why-types{gap:0!important;border:1px solid var(--ws-line);border-radius:5px;overflow:hidden}
+.radar-legend span,.why-types span{border:0!important;border-right:1px solid var(--ws-line)!important;border-radius:0!important;background:transparent!important;padding:6px 8px!important;font-family:var(--ws-mono);font-size:7px!important}
+.radar-legend span:last-child,.why-types span:last-child{border-right:0!important}
+.feature-chevron{font-family:var(--ws-mono);font-size:18px;color:var(--ws-cyan)}
+.feature-collapse-content{border-top:1px solid var(--ws-line);padding:18px 20px 20px!important}
+.radar-grid,.why-grid{gap:1px!important;background:var(--ws-line);border:1px solid var(--ws-line);border-radius:8px;overflow:hidden}
+.radar-card,.why-card{
+  border:0!important;border-radius:0!important;background:#0b0f15!important;box-shadow:none!important;transform:none!important;
+}
+.radar-card:hover,.why-card:hover{background:#10161e!important;transform:none!important}
+.radar-body,.why-body{padding:13px!important}
+.radar-topline strong,.radar-level,.why-type,.why-topline strong,.radar-metric,.why-metric strong{font-family:var(--ws-mono)}
+.radar-level,.why-type{border-radius:4px!important}
+.radar-pulse-row{font-family:var(--ws-mono)}
+.radar-signals,.why-evidence{font-family:var(--ws-mono)}
+
+/* Hot list: game art first, subtle HUD data second. */
+.control-bar{
+  padding:22px 0;border:0;border-top:1px solid var(--ws-line);border-bottom:1px solid var(--ws-line);border-radius:0;background:transparent;box-shadow:none!important;
+}
+.section-title h2{font-size:29px;letter-spacing:-.03em}
+.filters{gap:6px}
+.search,.filters select,.filter-button{
+  height:40px!important;border-radius:6px!important;background:var(--ws-surface)!important;border-color:var(--ws-line)!important;box-shadow:none!important;
+}
+.search input{font-size:12px}
+.result-count{font-family:var(--ws-mono)}
+.tab-strip{position:static!important;background:transparent!important;backdrop-filter:none!important;padding:18px 0 16px!important}
+.section-tab{
+  border:0!important;border-radius:0!important;background:transparent!important;padding:8px 16px 8px 0!important;color:var(--ws-muted)!important;
+}
+.section-tab span{font-family:var(--ws-mono);font-size:8px;color:#5f6b79;margin-right:8px}
+.section-tab.active{color:var(--ws-text)!important}
+.section-tab.active:after{content:"";display:block;width:28px;height:1px;background:var(--ws-cyan);margin-top:8px}
+.game-grid{gap:14px}
+.game-card,.game-grid .game-card:nth-child(-n+3){
+  border:1px solid var(--ws-line)!important;border-radius:var(--ws-radius)!important;background:var(--ws-surface)!important;box-shadow:none!important;overflow:hidden;
+}
+.game-card:hover{transform:translateY(-2px)!important;border-color:rgba(70,215,255,.38)!important;box-shadow:none!important}
+.game-cover{aspect-ratio:16/9}
+.game-cover img{transition:transform .28s ease}
+.game-card:hover .game-cover img{transform:scale(1.025)}
+.rank{
+  width:auto;height:auto;min-width:31px;padding:6px 7px;border-radius:4px;background:rgba(8,10,14,.9)!important;
+  border:1px solid rgba(255,255,255,.18)!important;font-family:var(--ws-mono);font-size:10px;
+}
+.game-grid .game-card:nth-child(-n+3) .rank{background:rgba(8,10,14,.9)!important;color:var(--ws-cyan)}
+.score{
+  border-radius:4px;background:rgba(8,10,14,.92);font-family:var(--ws-mono);letter-spacing:.04em;
+}
+.score b{font-family:var(--ws-mono);color:var(--ws-cyan)}
+.card-body{padding:15px 15px 16px}
+.meta{font-family:var(--ws-mono);font-size:9px}
+.game-card h3{font-size:18px;margin:8px 0 6px}
+.game-card .chips{margin:11px 0 4px}
+.chip{border-radius:4px;padding:4px 6px;font-family:var(--ws-mono);font-size:8px}
+.store-row a,.more-btn{border-radius:5px!important}
+.game-card .more-btn{margin-top:12px}
+.sparkline,.trend-chip,.live-signal-row,.signal-stat{font-family:var(--ws-mono)}
+
+/* Reviews: read like player voices, not nested AI cards. */
+.recent-reviews-section{
+  padding:28px 0 36px!important;margin-bottom:52px!important;border:0!important;border-top:1px solid var(--ws-line)!important;border-bottom:1px solid var(--ws-line)!important;
+  border-radius:0!important;background:transparent!important;
+}
+.recent-reviews-heading{margin-bottom:16px!important}
+.recent-reviews-heading h2{font-size:28px!important;letter-spacing:-.03em}
+.review-source-pill{border-radius:4px!important;background:transparent!important;border-color:var(--ws-line)!important;font-family:var(--ws-mono);letter-spacing:.08em}
+.recent-reviews-grid{gap:1px!important;background:var(--ws-line);border:1px solid var(--ws-line);border-radius:8px;overflow:hidden}
+.recent-review-card{border:0!important;border-radius:0!important;background:var(--ws-surface)!important;box-shadow:none!important;transform:none!important}
+.recent-review-card:hover{background:#111720!important;transform:none!important}
+.recent-review-sentiment,.recent-review-meta,.recent-review-source{font-family:var(--ws-mono)}
+.recent-review-sentiment{border-radius:4px!important}
+
+/* Method + sources: more editorial, less dashboard. */
+.method{
+  padding:38px 0;grid-template-columns:1.05fr .95fr;border:0;border-top:1px solid var(--ws-line);border-bottom:1px solid var(--ws-line);
+  border-radius:0;background:transparent;
+}
+.formula{border-radius:8px;background:var(--ws-surface);border-color:var(--ws-line)}
+.formula-row b{font-family:var(--ws-mono);font-size:22px}
+.source-grid{gap:1px;background:var(--ws-line);border:1px solid var(--ws-line);border-radius:8px;overflow:hidden}
+.source-card{border:0!important;border-radius:0!important;background:var(--ws-surface)!important}
+.source-card .head,.source-card .status{font-family:var(--ws-mono)}
+
+/* Detail page: same visual language, especially Steam review pair. */
+.detail-panel,.watch-panel,.media-section,.history-chart-card{
+  border-color:var(--ws-line)!important;border-radius:var(--ws-radius)!important;background:var(--ws-surface)!important;box-shadow:none!important;
+}
+.detail-stat strong,.history-chart-meta b,.signal-metric strong{font-family:var(--ws-mono)}
+.review-filter{gap:14px!important;border-bottom:1px solid var(--ws-line);padding-bottom:10px}
+.review-filter button{
+  border:0!important;border-radius:0!important;background:transparent!important;color:var(--ws-muted)!important;padding:6px 0!important;font-family:var(--ws-mono);font-size:9px!important;
+}
+.review-filter button.active{color:var(--ws-text)!important;background:transparent!important}
+.review-filter button.active:after{content:"";display:block;width:22px;height:1px;background:var(--ws-cyan);margin-top:6px}
+.game-reviews-list{gap:1px!important;background:var(--ws-line);border:1px solid var(--ws-line);border-radius:8px;overflow:hidden}
+.game-review-card,.game-review-card.positive,.game-review-card.negative{
+  border:0!important;border-radius:0!important;background:#0b0f15!important;padding:18px!important;
+}
+.review-sentiment{border-radius:4px!important;background:transparent!important;font-family:var(--ws-mono)}
+.review-primary-meta>span{
+  min-height:auto!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;font-family:var(--ws-mono);font-size:8px!important;
+}
+.review-primary-meta>span+span:before{content:"/";margin-right:8px;color:#46515f}
+.review-playtime strong{font-family:var(--ws-mono);font-size:11px!important}
+.review-expand-toggle,.game-review-source{font-family:var(--ws-mono);letter-spacing:.04em}
+.review-missing-note{border-radius:6px!important;background:transparent!important}
+
+/* Footer */
+footer{border-top:1px solid var(--ws-line);color:var(--ws-muted)}
+footer b{letter-spacing:.14em}
+
+/* Mobile */
+@media(max-width:930px){
+  .mobile-quick-nav{background:rgba(8,10,14,.97)!important;border-bottom-color:var(--ws-line)!important}
+  .mobile-quick-nav a,.mobile-quick-nav button{border-radius:4px!important;font-family:var(--ws-mono);font-size:9px!important}
+  .pulse-map{grid-template-columns:repeat(2,1fr)}
+  .pulse-map-card:nth-child(2){border-right:0}
+  .pulse-map-card:nth-child(-n+2){border-bottom:1px solid var(--ws-line)}
+}
+@media(max-width:760px){
+  .hero{grid-template-columns:1fr;gap:32px;padding-top:44px}
+  .signal-panel{max-width:520px;width:100%;margin:auto}
+  .game-reviews-list{grid-template-columns:1fr!important}
+  .game-review-card+.game-review-card{border-top:1px solid var(--ws-line)!important}
+}
+@media(max-width:620px){
+  .hero h1{font-size:52px;letter-spacing:-.05em}
+  .hero-pill-row{display:grid;grid-template-columns:1fr;gap:6px}
+  .pulse-map{grid-template-columns:1fr}
+  .pulse-map-card{border-right:0!important;border-bottom:1px solid var(--ws-line)!important}
+  .pulse-map-card:last-child{border-bottom:0!important}
+  .today-summary-grid{display:grid;grid-template-columns:1fr 1fr}
+  .today-summary-card:nth-child(2){border-right:0!important}
+  .today-summary-card:nth-child(-n+2){border-bottom:1px solid var(--ws-line)!important}
+  .feature-toggle-heading{padding:18px!important}
+  .feature-collapse-content{padding:14px!important}
+  .radar-legend,.why-types{display:none!important}
+  .control-bar{padding:18px 0}
+  .filters{width:100%}
+  .recent-reviews-section{padding-top:22px!important}
+  .method{padding:30px 0}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .game-cover img,.game-card,.hero-actions button,.hero-actions a{transition:none!important}
+}
+
+/* =========================================================
+   WAVESIG responsive scale tune
+   Desktop: increase visual scale and reading comfort.
+   Mobile: reduce filter crowding and increase touch targets.
+   ========================================================= */
+
+/* Desktop / large laptop */
+@media (min-width:1100px){
+  body{font-size:16px}
+  main{width:min(1380px,94vw)}
+
+  .nav{height:78px;padding-left:max(28px,4vw);padding-right:max(28px,4vw)}
+  .logo-image{width:48px!important;height:48px!important;flex-basis:48px!important}
+  .logo-copy b{font-size:17px}
+  .nav-links{gap:22px}
+  .nav-tab,.nav-page-link{font-size:13px}
+  .mode-badge{font-size:12px;padding:9px 12px}
+  .nav-tab.active:after,.nav-page-link.active:after{bottom:-20px}
+
+  .hero{min-height:640px;padding:76px 0 60px;gap:88px;grid-template-columns:1.12fr .88fr}
+  .hero h1{font-size:clamp(66px,6.8vw,104px);max-width:820px}
+  .hero-copy p{font-size:18px;line-height:1.82;max-width:720px}
+  .eyebrow,.micro,.section-title>span{font-size:12px}
+  .hero-pill-row span{font-size:10px}
+  .hero-actions{margin-top:32px;gap:12px}
+  .hero-actions button,.hero-actions a{min-height:50px;padding:0 22px;font-size:14px}
+
+  .signal-panel{padding:26px}
+  .signal-top{font-size:11px}
+  .signal-ring{width:260px;height:260px;margin:32px auto}
+  .ring-inner strong{font-size:72px}
+  .source-mini b{font-size:11px}
+  .source-mini span{font-size:11px;line-height:1.45}
+  .source-mini div{padding:15px 12px}
+
+  .pulse-map{margin-bottom:50px}
+  .pulse-map-card{min-height:108px;padding:18px 20px;grid-template-columns:42px 1fr auto}
+  .pulse-map-icon{width:36px;height:36px;font-size:10px}
+  .pulse-map-card small{font-size:8px}
+  .pulse-map-card b{font-size:14px}
+  .pulse-map-card p{font-size:10.5px;margin-top:5px}
+
+  .today-section{margin-bottom:54px;padding-bottom:36px}
+  .today-heading h2{font-size:32px}
+  .today-heading p{font-size:14px}
+  .today-summary-meta{font-size:10px}
+  .today-summary-card{padding:20px!important;min-height:148px}
+  .today-summary-top small{font-size:8px}
+  .today-summary-card h3{font-size:16px}
+  .today-summary-card strong{font-size:26px}
+  .today-summary-card p{font-size:11px;line-height:1.55}
+
+  .feature-toggle-heading{padding:28px 30px!important}
+  .feature-toggle-heading h2{font-size:34px!important}
+  .feature-toggle-heading p{font-size:14px!important;line-height:1.6}
+  .feature-collapse-content{padding:22px 24px 24px!important}
+  .radar-grid,.why-grid{gap:1px!important}
+  .radar-card,.why-card{min-height:196px}
+  .radar-body,.why-body{padding:17px!important}
+  .radar-body h3,.why-body h3{font-size:18px}
+  .radar-body p{font-size:11.5px}
+  .why-body h4{font-size:13px}
+  .why-body p{font-size:11px}
+  .radar-level,.why-type{font-size:9px}
+  .radar-topline strong,.why-topline strong{font-size:10px}
+  .radar-signals>div,.why-metric{font-size:10px}
+  .radar-metric,.why-metric strong{font-size:11px}
+
+  .control-bar{padding:28px 0;gap:42px}
+  .section-title h2{font-size:35px}
+  .section-title p{font-size:14px;line-height:1.55}
+  .filter-area{min-width:min(100%,820px);gap:10px}
+  .filters{gap:8px}
+  .search,.filters select,.filter-button{height:48px!important}
+  .search{padding:0 15px}
+  .search input{width:290px;font-size:14px}
+  .filters select{min-width:145px;font-size:13px}
+  .filter-button{font-size:12px;padding:0 15px}
+  .result-count{font-size:10px}
+
+  .tab-strip{padding:22px 0 20px!important;gap:14px}
+  .section-tab{font-size:14px;padding-right:22px!important}
+  .section-tab span{font-size:9px}
+
+  .game-grid{gap:18px;padding-bottom:84px}
+  .game-card h3{font-size:21px}
+  .card-body{padding:18px 18px 19px}
+  .meta{font-size:10.5px}
+  .summary{font-size:13px;line-height:1.65;min-height:44px}
+  .chip{font-size:9px;padding:5px 7px}
+  .score{font-size:11px;padding:9px 11px}
+  .score b{font-size:17px}
+  .rank{font-size:11px;padding:7px 8px}
+  .store-row a,.more-btn{font-size:11px;padding-top:9px;padding-bottom:9px}
+
+  .recent-reviews-section{padding:34px 0 42px!important;margin-bottom:60px!important}
+  .recent-reviews-heading h2{font-size:34px!important}
+  .recent-reviews-heading p{font-size:14px!important;line-height:1.6}
+  .recent-review-card{padding:20px!important}
+
+  .method{padding:46px 0;gap:72px}
+  .method h2{font-size:42px}
+  .method p{font-size:15px}
+  .formula-row{padding:19px}
+  .formula-row b{font-size:25px}
+  .formula-row span{font-size:14px}
+  .source-card{padding:22px!important}
+
+  /* Game detail page */
+  .detail-shell{width:min(1380px,94vw)!important;padding-top:66px!important}
+  .detail-hero{grid-template-columns:minmax(300px,400px) 1fr!important;gap:64px!important}
+  .detail-copy h1{font-size:clamp(58px,5.8vw,88px)!important}
+  .detail-summary{font-size:17px!important;line-height:1.9!important}
+  .detail-kicker{font-size:12px!important}
+  .signal-box{min-width:145px!important;padding:16px 18px!important}
+  .signal-box small{font-size:10px!important}
+  .signal-box strong{font-size:25px!important}
+  .detail-store-row a{font-size:12px!important;padding:12px 15px!important}
+  .detail-panel{padding:32px!important}
+  .detail-panel h2,.media-section h2{font-size:32px!important}
+  .info-grid>div{padding:18px!important}
+  .info-grid small,.info-group>small,.story-block small{font-size:10px!important}
+  .info-grid b{font-size:15px!important}
+  .story-block p{font-size:15px!important}
+  .signal-list span{font-size:12px!important}
+  .signal-list b{font-size:18px!important}
+  .detail-section-head>span{font-size:11px!important}
+  .game-review-card{padding:22px!important}
+  .game-review-content{font-size:14px!important;line-height:1.82!important}
+  .review-playtime strong{font-size:13px!important}
+  .game-review-source{font-size:10px!important}
+  .news-card h3{font-size:19px!important}
+  .news-card p{font-size:13px!important}
+}
+
+/* Tablet / small laptop: slightly larger than previous UI without making it cramped. */
+@media (min-width:761px) and (max-width:1099px){
+  main,.detail-shell{width:min(100% - 42px,1180px)!important}
+  .hero-copy p{font-size:16px}
+  .section-title h2,.feature-toggle-heading h2{font-size:30px!important}
+  .game-card h3{font-size:19px}
+  .card-body{padding:17px}
+  .search input{width:240px}
+}
+
+/* Phones: one clear filter task per row. */
+@media (max-width:620px){
+  main{width:min(100% - 28px,620px)}
+  .nav{height:66px;padding-left:14px;padding-right:14px}
+  .logo-image{width:38px!important;height:38px!important;flex-basis:38px!important}
+  .logo-copy b{font-size:15px}
+
+  .hero{padding-top:36px;gap:26px}
+  .hero h1{font-size:clamp(43px,13vw,54px);line-height:.98}
+  .hero-copy p{font-size:15px;line-height:1.75}
+  .hero-actions button,.hero-actions a{min-height:50px;font-size:13px}
+  .signal-panel{padding:18px}
+
+  .today-heading h2{font-size:26px}
+  .today-heading p{font-size:13px;line-height:1.6}
+  .today-summary-card{min-height:132px}
+
+  .feature-toggle-heading{padding:19px 16px!important}
+  .feature-toggle-heading h2{font-size:26px!important}
+  .feature-toggle-heading p{font-size:12.5px!important;line-height:1.55}
+  .feature-collapse-content{padding:12px!important}
+  .radar-card,.why-card{grid-template-columns:82px 1fr!important}
+  .radar-body,.why-body{padding:12px!important}
+  .radar-body h3,.why-body h3{font-size:16px}
+  .why-body h4{font-size:12px}
+
+  /* HOT NOW title and filters */
+  .control-bar{
+    padding:22px 0 20px!important;
+    gap:18px!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+  }
+  .section-title h2{font-size:30px}
+  .section-title p{font-size:13px;line-height:1.55}
+  .filter-area{width:100%!important;min-width:0!important;align-items:stretch!important;gap:10px!important}
+  .filters{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    width:100%!important;
+    gap:10px!important;
+  }
+  .search{
+    grid-column:1 / -1!important;
+    width:100%!important;
+    height:52px!important;
+    padding:0 14px!important;
+  }
+  .search input{
+    width:100%!important;
+    min-width:0!important;
+    font-size:16px!important;
+  }
+  #platformFilter,#genreFilter{
+    grid-column:1 / -1!important;
+    width:100%!important;
+    min-width:0!important;
+    height:50px!important;
+    font-size:15px!important;
+    padding-left:14px!important;
+  }
+  #favoriteFilter,#clearFilters{
+    width:100%!important;
+    min-width:0!important;
+    height:48px!important;
+    font-size:13px!important;
+  }
+  #favoriteFilter{grid-column:1 / 2!important}
+  #clearFilters{grid-column:2 / 3!important}
+  .result-count{font-size:11px!important;line-height:1.5;padding-top:2px}
+
+  .tab-strip{gap:8px;overflow-x:auto;white-space:nowrap;padding:17px 0!important}
+  .section-tab{font-size:13px!important;flex:0 0 auto}
+
+  .game-grid{gap:16px}
+  .card-body{padding:17px}
+  .game-card h3{font-size:20px}
+  .summary{font-size:13px;line-height:1.65}
+  .meta{font-size:10px}
+  .score b{font-size:16px}
+  .store-row a{min-height:40px;display:inline-flex;align-items:center}
+
+  .recent-reviews-heading h2{font-size:28px!important}
+  .recent-reviews-heading p{font-size:13px!important;line-height:1.6}
+
+  /* Detail page breathing room */
+  .detail-shell{width:min(100% - 28px,620px)!important;padding-top:28px!important}
+  .detail-hero{gap:28px!important}
+  .detail-cover-wrap{max-width:250px!important;margin:0 auto}
+  .detail-copy h1{font-size:clamp(38px,11vw,48px)!important;line-height:1!important}
+  .detail-summary{font-size:15px!important;line-height:1.8!important}
+  .detail-signals{gap:8px!important}
+  .signal-box{padding:13px!important}
+  .detail-panel{padding:18px!important}
+  .detail-panel h2,.media-section h2{font-size:26px!important}
+  .game-review-card{padding:16px!important}
+  .game-review-content{font-size:13px!important;line-height:1.78!important}
+}
+
+/* Very narrow phones: keep the action row usable rather than forcing tiny controls. */
+@media (max-width:380px){
+  main,.detail-shell{width:min(100% - 22px,380px)!important}
+  #favoriteFilter,#clearFilters{grid-column:1 / -1!important}
+  .today-summary-grid{grid-template-columns:1fr!important}
+  .today-summary-card{border-right:0!important;border-bottom:1px solid var(--ws-line)!important}
+  .today-summary-card:last-child{border-bottom:0!important}
+}
+
+/* =========================================================
+   WAVESIG section depth + typography pass
+   Clearer section backgrounds, larger type, no behavior changes.
+   ========================================================= */
+
+:root{
+  --ws-zone-hero:#0b0f15;
+  --ws-zone-today:#0d1218;
+  --ws-zone-radar:#0a1319;
+  --ws-zone-why:#100f18;
+  --ws-zone-hot:#0c0f14;
+  --ws-zone-review:#101116;
+  --ws-zone-method:#0a0e13;
+}
+
+/* Background atmosphere: visible enough to avoid empty black space, still subtle. */
+body:before{
+  opacity:.31;
+  background-image:
+    linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+  background-size:52px 52px;
+  mask-image:linear-gradient(to bottom,black 0%,rgba(0,0,0,.82) 54%,transparent 93%);
+}
+body:after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-3;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 16% 9%,rgba(70,215,255,.07),transparent 26%),
+    radial-gradient(circle at 84% 34%,rgba(141,116,255,.065),transparent 28%),
+    linear-gradient(180deg,#080a0e 0%,#090c11 46%,#07090d 100%);
+}
+
+/* Each homepage zone gets its own dark tone and thin editorial boundary. */
+.hero{
+  position:relative;
+  padding-left:34px!important;
+  padding-right:34px!important;
+  margin-top:24px;
+  margin-bottom:42px;
+  border:1px solid rgba(255,255,255,.075);
+  border-radius:14px;
+  background:
+    linear-gradient(90deg,rgba(70,215,255,.035),transparent 34%),
+    linear-gradient(180deg,#0c1118 0%,var(--ws-zone-hero) 100%);
+  overflow:hidden;
+}
+.hero:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:.18;
+  background:
+    linear-gradient(90deg,transparent 0 78%,rgba(70,215,255,.11) 78% 78.12%,transparent 78.12%),
+    repeating-linear-gradient(180deg,transparent 0 29px,rgba(255,255,255,.025) 30px);
+}
+.hero>*{position:relative;z-index:1}
+
+.today-section{
+  padding:30px!important;
+  margin-bottom:28px!important;
+  border:1px solid var(--ws-line)!important;
+  border-left:3px solid rgba(70,215,255,.68)!important;
+  border-radius:10px!important;
+  background:var(--ws-zone-today)!important;
+}
+.today-heading{padding-bottom:18px!important}
+
+.radar-section{
+  background:
+    linear-gradient(90deg,rgba(70,215,255,.045),transparent 34%),
+    var(--ws-zone-radar)!important;
+  border-color:rgba(70,215,255,.18)!important;
+}
+.radar-section .feature-toggle-heading{border-left:3px solid rgba(70,215,255,.76)}
+
+.why-section{
+  background:
+    linear-gradient(90deg,rgba(141,116,255,.05),transparent 36%),
+    var(--ws-zone-why)!important;
+  border-color:rgba(141,116,255,.19)!important;
+}
+.why-section .feature-toggle-heading{border-left:3px solid rgba(141,116,255,.78)}
+
+.hot-control{
+  margin-top:36px;
+  padding:28px 30px!important;
+  border:1px solid var(--ws-line)!important;
+  border-bottom:0!important;
+  border-radius:10px 10px 0 0!important;
+  background:var(--ws-zone-hot)!important;
+}
+#games + section{
+  margin-bottom:34px;
+  padding:0 30px 32px;
+  border:1px solid var(--ws-line);
+  border-top:0;
+  border-radius:0 0 10px 10px;
+  background:var(--ws-zone-hot);
+}
+#games + section .tab-strip{border-top:1px solid rgba(255,255,255,.04)}
+
+.recent-reviews-section{
+  padding:30px!important;
+  margin-bottom:30px!important;
+  border:1px solid var(--ws-line)!important;
+  border-left:3px solid rgba(255,184,107,.5)!important;
+  border-radius:10px!important;
+  background:var(--ws-zone-review)!important;
+}
+
+.method{
+  padding:42px 34px!important;
+  margin-bottom:28px;
+  border:1px solid var(--ws-line)!important;
+  border-radius:10px!important;
+  background:var(--ws-zone-method)!important;
+}
+
+.source-section{
+  padding:30px;
+  margin-bottom:46px;
+  border:1px solid var(--ws-line);
+  border-radius:10px;
+  background:#0b0e13;
+}
+
+/* Slightly more space between major blocks helps the background separation read clearly. */
+.pulse-map{margin-bottom:30px!important}
+.feature-section{margin-bottom:20px!important}
+
+/* Larger typography across the desktop experience. */
+@media (min-width:1100px){
+  body{font-size:17px}
+  .eyebrow,.micro,.section-title>span{font-size:12px}
+  .hero h1{font-size:clamp(72px,7vw,112px)!important}
+  .hero-copy p{font-size:19px!important;line-height:1.85!important}
+  .hero-pill-row span{font-size:11px!important}
+  .hero-actions button,.hero-actions a{font-size:15px!important;min-height:52px!important}
+  .signal-top{font-size:11px!important}
+  .ring-inner strong{font-size:72px!important}
+  .ring-inner small{font-size:11px!important}
+  .source-mini b{font-size:12px!important}
+  .source-mini span{font-size:12px!important}
+
+  .pulse-map-card b{font-size:15.5px!important}
+  .pulse-map-card p{font-size:11.5px!important}
+
+  .today-heading h2{font-size:37px!important}
+  .today-heading p{font-size:15px!important}
+  .today-summary-card h3{font-size:18px!important}
+  .today-summary-card strong{font-size:29px!important}
+  .today-summary-card p{font-size:12px!important}
+
+  .feature-toggle-heading h2{font-size:39px!important}
+  .feature-toggle-heading p{font-size:15px!important}
+  .radar-body h3,.why-body h3{font-size:20px!important}
+  .radar-body p{font-size:12.5px!important}
+  .why-body h4{font-size:14px!important}
+  .why-body p{font-size:12px!important}
+  .radar-signals>div,.why-metric{font-size:11px!important}
+  .radar-metric,.why-metric strong{font-size:12px!important}
+
+  .section-title h2{font-size:40px!important}
+  .section-title p{font-size:15.5px!important}
+  .search input{font-size:15px!important}
+  .filters select{font-size:14px!important}
+  .filter-button{font-size:13px!important}
+  .result-count{font-size:11px!important}
+  .section-tab{font-size:15px!important}
+
+  .game-card h3{font-size:23px!important}
+  .summary{font-size:14px!important;line-height:1.68!important}
+  .meta{font-size:11.5px!important}
+  .score{font-size:12px!important}
+  .score b{font-size:19px!important}
+  .store-row a,.more-btn{font-size:12px!important}
+
+  .recent-reviews-heading h2{font-size:39px!important}
+  .recent-reviews-heading p{font-size:15.5px!important}
+  .recent-review-card{font-size:15px}
+
+  .method h2{font-size:46px!important}
+  .method p{font-size:16px!important}
+  .formula-row b{font-size:27px!important}
+  .formula-row span{font-size:15px!important}
+
+  .source-section .section-title h2{font-size:34px!important}
+  .source-card b{font-size:15px!important}
+}
+
+/* Tablet: increase readability without losing grid density. */
+@media (min-width:761px) and (max-width:1099px){
+  .hero{padding-left:26px!important;padding-right:26px!important}
+  .hero h1{font-size:clamp(60px,8vw,82px)!important}
+  .hero-copy p{font-size:17px!important}
+  .today-heading h2{font-size:32px!important}
+  .feature-toggle-heading h2{font-size:33px!important}
+  .section-title h2{font-size:34px!important}
+  .game-card h3{font-size:21px!important}
+}
+
+/* Mobile: larger text, clearer zones, more breathing room around search/filter. */
+@media (max-width:620px){
+  .hero{
+    margin-top:14px;
+    margin-bottom:28px;
+    padding:34px 18px 28px!important;
+    border-radius:10px;
+  }
+  .hero h1{font-size:clamp(47px,14vw,59px)!important}
+  .hero-copy p{font-size:16.5px!important;line-height:1.76!important}
+  .hero-pill-row span{font-size:10.5px!important}
+  .hero-actions button,.hero-actions a{font-size:14px!important}
+
+  .today-section{padding:20px 16px!important}
+  .today-heading h2{font-size:29px!important}
+  .today-heading p{font-size:14px!important}
+  .today-summary-card h3{font-size:16px!important}
+  .today-summary-card strong{font-size:25px!important}
+  .today-summary-card p{font-size:11.5px!important}
+
+  .feature-toggle-heading{padding:21px 16px!important}
+  .feature-toggle-heading h2{font-size:29px!important}
+  .feature-toggle-heading p{font-size:13.5px!important}
+  .radar-body h3,.why-body h3{font-size:17px!important}
+  .radar-body p,.why-body p{font-size:11.5px!important}
+  .why-body h4{font-size:13px!important}
+
+  .hot-control{
+    margin-top:26px;
+    padding:22px 16px 16px!important;
+  }
+  #games + section{padding:0 16px 22px}
+  .section-title h2{font-size:33px!important}
+  .section-title p{font-size:14px!important}
+
+  .filter-area{
+    margin-top:4px;
+    padding:14px!important;
+    gap:12px!important;
+    border:1px solid var(--ws-line);
+    border-radius:9px;
+    background:#090d12;
+  }
+  .filters{gap:12px!important}
+  .search{height:56px!important;padding:0 16px!important}
+  .search input{font-size:17px!important}
+  #platformFilter,#genreFilter{height:54px!important;font-size:16px!important}
+  #favoriteFilter,#clearFilters{height:52px!important;font-size:14px!important}
+  .result-count{font-size:12px!important;padding-top:4px}
+  .section-tab{font-size:14px!important}
+
+  .game-card h3{font-size:22px!important}
+  .summary{font-size:14px!important}
+  .meta{font-size:11px!important}
+  .store-row a,.more-btn{font-size:12px!important}
+
+  .recent-reviews-section{padding:22px 16px!important}
+  .recent-reviews-heading h2{font-size:31px!important}
+  .recent-reviews-heading p{font-size:14px!important}
+
+  .method{padding:28px 18px!important}
+  .method h2{font-size:34px!important}
+  .method p{font-size:15px!important}
+
+  .source-section{padding:22px 16px;margin-bottom:32px}
+}
+
+@media (max-width:380px){
+  .hero h1{font-size:45px!important}
+  .section-title h2{font-size:31px!important}
+  .filter-area{padding:12px!important}
+}
+/* Game-card cover overview */
+.game-card{cursor:pointer}
+.card-hit-area{
+  position:absolute;
+  z-index:3;
+  inset:0;
+  border-radius:inherit;
+}
+.card-hit-area:focus-visible{
+  outline:2px solid var(--ws-cyan);
+  outline-offset:-3px;
+}
+.game-card .favorite-button,
+.game-card .detail-link{
+  position:relative;
+  z-index:4;
+}
+.game-card .favorite-button{position:absolute}
+.cover-summary{
+  position:absolute;
+  z-index:1;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  padding:62px 20px 18px;
+  color:#f5f8ff;
+  background:linear-gradient(180deg,rgba(5,8,13,.26) 0%,rgba(5,8,13,.93) 42%,rgba(5,8,13,.99) 100%);
+  opacity:0;
+  transform:translateY(10px);
+  transition:opacity .24s ease,transform .24s ease;
+  pointer-events:none;
+}
+.cover-summary-label{
+  margin-bottom:7px;
+  color:var(--cyan);
+  font-family:var(--ws-mono);
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.13em;
+}
+.cover-summary p{
+  display:-webkit-box;
+  margin:0;
+  overflow:hidden;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:4;
+  font-size:12px;
+  line-height:1.55;
+  text-shadow:0 1px 12px rgba(0,0,0,.65);
+}
+.cover-summary-cta{
+  margin-top:9px;
+  color:#fff;
+  font-family:var(--ws-mono);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.04em;
+  opacity:.82;
+}
+.game-card:hover .cover-summary,
+.game-card:focus-within .cover-summary{
+  opacity:1;
+  transform:translateY(0);
+}
+.game-card:hover .game-cover img,
+.game-card:focus-within .game-cover img{
+  transform:scale(1.04);
+  filter:brightness(.48);
+}
+@media (prefers-reduced-motion:reduce){.cover-summary{transition:none}}
+@media (max-width:1100px) and (hover:hover){
+  .cover-summary p{-webkit-line-clamp:3}
+}
+@media (hover:none){
+  .cover-summary{inset:auto 0 0;padding:38px 14px 13px;background:linear-gradient(180deg,transparent,rgba(5,8,13,.92));opacity:1;transform:none}
+  .cover-summary-label{display:none}
+  .cover-summary p{-webkit-line-clamp:2;font-size:11px}
+  .cover-summary-cta{display:none}
+}
+
+/* Full-bleed game cards */
+.game-card.full-bleed-card,
+.game-grid .game-card.full-bleed-card:nth-child(-n+3){
+  position:relative;
+  min-height:500px;
+  aspect-ratio:4/5;
+  isolation:isolate;
+  background:#080c12!important;
+}
+.full-bleed-card .game-cover{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  aspect-ratio:auto!important;
+  background:#111824;
+}
+.full-bleed-card .game-cover:after{
+  background:linear-gradient(180deg,rgba(4,7,11,.22) 0%,transparent 30%,rgba(4,7,11,.16) 45%,rgba(4,7,11,.98) 100%);
+}
+.full-bleed-card .game-cover img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+}
+.full-bleed-card .card-body{
+  position:absolute;
+  z-index:2;
+  right:0;
+  bottom:0;
+  left:0;
+  padding:108px 18px 18px!important;
+  color:#f5f8ff;
+  background:linear-gradient(180deg,transparent 0%,rgba(5,8,13,.78) 29%,rgba(5,8,13,.97) 70%,#05080d 100%);
+  transition:opacity .22s ease,transform .22s ease;
+  pointer-events:none;
+}
+.full-bleed-card .meta{
+  color:#c1cad7;
+  text-shadow:0 2px 10px rgba(0,0,0,.8);
+}
+.full-bleed-card h3{
+  margin:7px 0 10px!important;
+  color:#fff;
+  font-size:22px!important;
+  line-height:1.15;
+  text-shadow:0 2px 14px rgba(0,0,0,.9);
+}
+.full-bleed-card .live-signal-stack{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px;
+  margin:0 0 7px;
+}
+.full-bleed-card .player-count{
+  min-width:0;
+  margin:0;
+  padding:7px 8px;
+  gap:5px;
+  border-color:rgba(255,255,255,.14);
+  background:rgba(7,11,17,.72);
+  backdrop-filter:blur(10px);
+  color:#c4ccd8;
+  font-family:var(--ws-mono);
+  font-size:8px;
+}
+.full-bleed-card .player-count strong{font-size:11px}
+.full-bleed-card .player-count>span:last-child{display:none}
+.full-bleed-card .trend-box{
+  margin:0 0 8px;
+  padding:7px 9px;
+  border-color:rgba(255,255,255,.13);
+  background:rgba(7,11,17,.72);
+  backdrop-filter:blur(10px);
+}
+.full-bleed-card .trend-box.pending>small{display:none}
+.full-bleed-card .trend-sparkline{width:84px;flex-basis:84px}
+.full-bleed-card .chips{margin:8px 0 2px}
+.full-bleed-card .chip{
+  border-color:rgba(255,255,255,.2);
+  background:rgba(7,11,17,.62);
+  color:#e6ebf3;
+  backdrop-filter:blur(8px);
+}
+.full-bleed-card .detail-link{
+  margin-top:10px;
+  border-color:rgba(255,255,255,.2);
+  background:rgba(8,12,18,.64);
+  color:#f3f7ff;
+  pointer-events:auto;
+}
+.full-bleed-card .favorite-button{
+  right:14px;
+  bottom:auto;
+  top:56px;
+}
+.full-bleed-card .cover-summary{
+  z-index:2;
+  justify-content:center;
+  padding:78px 24px 28px;
+  background:linear-gradient(180deg,rgba(4,7,11,.7),rgba(4,7,11,.94));
+}
+.cover-summary-title{
+  display:block;
+  margin:0 0 12px;
+  color:#fff;
+  font-size:24px;
+  line-height:1.15;
+  text-shadow:0 2px 16px rgba(0,0,0,.9);
+}
+.full-bleed-card .cover-summary p{
+  -webkit-line-clamp:6;
+  font-size:13px;
+  line-height:1.65;
+}
+.full-bleed-card:hover .card-body{
+  opacity:0;
+  transform:translateY(12px);
+}
+.mobile-card-summary{display:none}
+
+@media (max-width:1100px) and (hover:hover){
+  .game-card.full-bleed-card,
+  .game-grid .game-card.full-bleed-card:nth-child(-n+3){min-height:440px}
+  .full-bleed-card .card-body{padding:92px 15px 15px!important}
+  .full-bleed-card .cover-summary p{-webkit-line-clamp:5}
+}
+
+@media (hover:none){
+  .full-bleed-card .cover-summary{display:none}
+  .full-bleed-card .card-body{opacity:1;transform:none}
+  .full-bleed-card .game-cover img{filter:none!important;transform:none!important}
+  .mobile-card-summary{
+    display:-webkit-box;
+    margin:8px 0 0;
+    overflow:hidden;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:2;
+    color:#c2cad7;
+    font-size:11px;
+    line-height:1.55;
+  }
+}
+
+@media (max-width:700px){
+  .game-card.full-bleed-card,
+  .game-grid .game-card.full-bleed-card:nth-child(-n+3){
+    min-height:0;
+    aspect-ratio:4/5;
+  }
+  .full-bleed-card .card-body{padding:92px 14px 14px!important}
+  .full-bleed-card h3{font-size:21px!important}
+  .full-bleed-card .live-signal-stack{grid-template-columns:1fr 1fr}
+  .full-bleed-card .trend-sparkline{display:none}
+}

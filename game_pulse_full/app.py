@@ -28,7 +28,6 @@ from db import (
     get_pulse_radar,
     get_pulse_why,
     get_release_calendar,
-    get_social_signals,
     get_source_status,
     get_watch_subscription,
     init_db,
@@ -64,7 +63,7 @@ _DEVICE_RE = re.compile(r"^[A-Za-z0-9_-]{8,80}$")
 _REFRESH_LOCK = threading.Lock()
 
 
-def _start_background_refresh(include_social=True):
+def _start_background_refresh():
     """Start one non-blocking refresh per web process.
 
     External API aggregation can exceed a web worker timeout on a cold database,
@@ -79,7 +78,7 @@ def _start_background_refresh(include_social=True):
             if effective_mode() == "live":
                 mark_live_sources_refreshing()
             set_source_status("Updater", "refreshing", "背景資料更新進行中")
-            refresh_all(include_social=include_social)
+            refresh_all()
             set_source_status("Updater", "ok", "背景資料更新完成")
         except Exception as exc:
             set_source_status("Updater", "error", f"背景更新失敗：{str(exc)[:180]}")
@@ -96,7 +95,7 @@ init_db()
 # Let Gunicorn become healthy immediately; live API work continues in the
 # background. Demo refresh is local-only and safe to complete synchronously.
 if effective_mode() == "live":
-    _start_background_refresh(include_social=False)
+    _start_background_refresh()
 elif not get_games("hot", 1):
     try:
         refresh_all()
@@ -565,18 +564,6 @@ def api_status():
     return jsonify({"mode": effective_mode(), "sources": get_source_status()})
 
 
-@app.get("/api/game/<path:identifier>/social")
-def api_game_social(identifier):
-    try:
-        history_days = max(0, min(30, int(request.args.get("history", "0"))))
-    except ValueError:
-        history_days = 0
-    payload = get_social_signals(identifier, history_days=history_days)
-    if payload is None:
-        abort(404)
-    return jsonify(payload)
-
-
 # ---- Anonymous watch + notification API ----------------------------------------
 @app.get("/api/watch/<path:identifier>")
 def api_watch_status(identifier):
@@ -681,7 +668,7 @@ def admin_logout():
 @app.post("/admin/refresh")
 @admin_required
 def admin_refresh():
-    started = _start_background_refresh(include_social=True)
+    started = _start_background_refresh()
     session["admin_flash"] = "背景更新已開始" if started else "資料更新已在進行中"
     return redirect(url_for("admin_page"))
 

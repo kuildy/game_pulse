@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="{{ game.title }}｜WAVESIG 遊戲詳細資訊">
+  <title>{{ game.title }}｜WAVESIG</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='branding/favicon.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='branding/wavesig-icon-512.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/logo-branding.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/wavesig-tech-editorial.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/game_detail.css') }}">
+</head>
+<body class="detail-page" data-game-identifier="{{ game.slug or game.game_key }}">
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+
+  <header class="nav detail-nav">
+    <a class="logo" href="{{ url_for('index') }}">
+      <img class="logo-image" src="{{ url_for('static', filename='branding/wavesig-mark.png') }}" alt="WAVESIG logo">
+      <span class="logo-copy"><b>WAVESIG</b><small>遊戲熱度偵測與解讀</small></span>
+    </a>
+    <div class="detail-nav-links">
+      <a class="detail-back" href="{{ url_for('index') }}#games">← 回到遊戲榜單</a>
+      <a class="detail-back" href="{{ url_for('release_calendar_page') }}">發售日曆</a>
+      <a class="detail-back notify-link" href="{{ url_for('notifications_page') }}">通知 <span id="notificationBadge" class="notification-badge">0</span></a>
+    </div>
+    <div class="mode-badge {{ 'live' if mode == 'live' else 'demo' }}">
+      {{ '● LIVE DATA' if mode == 'live' else '● DEMO MODE' }}
+    </div>
+  </header>
+  <nav class="subpage-mobile-nav" aria-label="手機頁面導覽">
+    <a href="{{ url_for('index') }}#games">🏆 熱門</a>
+    <a href="{{ url_for('release_calendar_page') }}">📅 日曆</a>
+    <a href="{{ url_for('notifications_page') }}">🔔 通知</a>
+  </nav>
+
+  <main class="detail-shell">
+    <section class="detail-hero">
+      <div class="detail-cover-wrap">
+        {% if game.cover_url %}
+          <img class="detail-cover" src="{{ game.cover_url }}" alt="{{ game.title }} 封面">
+        {% else %}
+          <div class="detail-cover detail-cover-fallback">{{ game.title }}</div>
+        {% endif %}
+      </div>
+
+      <div class="detail-copy">
+        <div class="detail-kicker">
+          <span>GAME DETAILS</span>
+          {% if game.section %}<span class="section-pill">{{ game.section|upper }}</span>{% endif %}
+        </div>
+
+        <h1>{{ game.title }}</h1>
+
+        <div class="detail-signals">
+          <div class="signal-box pulse-box">
+            <small>PULSE SCORE</small>
+            <strong>{{ game.pulse_score|round|int }}</strong>
+          </div>
+
+          {% if game.twitch_viewers is not none %}
+          <div class="signal-box">
+            <small>TWITCH VIEWERS</small>
+            <strong>{{ "{:,}".format(game.twitch_viewers) }}</strong>
+          </div>
+          {% endif %}
+
+          {% if game.steam_players is not none %}
+          <div class="signal-box">
+            <small>STEAM ONLINE</small>
+            <strong>{{ "{:,}".format(game.steam_players) }}</strong>
+          </div>
+          {% endif %}
+
+          {% if game.twitch_rank %}
+          <div class="signal-box">
+            <small>TWITCH RANK</small>
+            <strong>#{{ game.twitch_rank }}</strong>
+          </div>
+          {% endif %}
+
+          {% if game.rating %}
+          <div class="signal-box">
+            <small>IGDB RATING</small>
+            <strong>{{ game.rating|round(1) }}</strong>
+          </div>
+          {% endif %}
+        </div>
+
+        <p class="detail-summary">{{ game.summary or '目前暫無遊戲介紹。' }}</p>
+
+        <div class="detail-tags">
+          {% for genre in game.genres or [] %}<span>{{ genre }}</span>{% endfor %}
+          {% for theme in game.themes or [] %}<span>{{ theme }}</span>{% endfor %}
+        </div>
+
+        <div class="detail-store-row">
+          {% for store in game.stores or [] %}
+            <a href="{{ store.url }}" target="_blank" rel="noopener noreferrer" class="{{ 'direct' if store.direct else '' }}">
+              {{ store.name }} ↗
+            </a>
+          {% endfor %}
+        </div>
+
+        <div class="watch-panel" id="watchPanel">
+          <div class="watch-panel-head">
+            <div><small>WATCH & NOTIFY</small><b>追蹤這款遊戲</b></div>
+            <div class="watch-actions"><button id="watchToggle" class="watch-primary" type="button">追蹤通知</button><button id="watchRemove" class="watch-remove" type="button" hidden>取消追蹤</button></div>
+          </div>
+          <div class="watch-options" id="watchOptions">
+            <label><input id="notifyRelease" type="checkbox" checked> 上市前 7 天 / 上市日</label>
+            <label><input id="notifyPulse" type="checkbox" checked> 24H PULSE 大幅上升</label>
+            <label><input id="notifySteam" type="checkbox" checked> Steam 玩家明顯暴增</label>
+            <label><input id="notifyNews" type="checkbox" checked> Steam 新聞 / 更新</label>
+          </div>
+          <p>不需要登入；此瀏覽器會以匿名裝置 ID 保存追蹤清單。</p>
+        </div>
+      </div>
+    </section>
+
+    {% if detail_error %}
+      <div class="detail-notice">IGDB 詳細資料暫時無法更新；以下仍顯示 WAVESIG 已儲存的資料。</div>
+    {% endif %}
+
+    <section class="detail-layout">
+      <article class="detail-panel main-info-panel">
+        <span class="micro">OVERVIEW</span>
+        <h2>遊戲資訊</h2>
+
+        <div class="info-grid">
+          <div><small>發售日期</small><b>{{ game.release_date or '尚未公布' }}</b></div>
+          <div><small>開發商</small><b>{{ (game.developers or [])|join('、') or '資料整理中' }}</b></div>
+          <div><small>發行商</small><b class="company-links">{% if game.publisher_details %}{% for company in game.publisher_details %}{% if company.website %}<a href="{{ company.website }}" target="_blank" rel="noopener noreferrer">{{ company.name }} ↗</a>{% else %}<span>{{ company.name }}</span>{% endif %}{% if not loop.last %}<em>、</em>{% endif %}{% endfor %}{% else %}{{ (game.publishers or [])|join('、') or '資料整理中' }}{% endif %}</b></div>
+          <div><small>資料來源</small><b>{{ (game.sources or [])|join(' + ') or 'WAVESIG' }}</b></div>
+        </div>
+
+        <div class="info-group">
+          <small>平台</small>
+          <div class="detail-tags">
+            {% for platform in game.platforms or [] %}<span>{{ platform }}</span>{% endfor %}
+            {% if not game.platforms %}<span>平台資料整理中</span>{% endif %}
+          </div>
+        </div>
+
+        {% if game.storyline %}
+        <div class="story-block">
+          <small>STORYLINE</small>
+          <p>{{ game.storyline }}</p>
+        </div>
+        {% endif %}
+      </article>
+
+      <aside class="detail-panel side-panel">
+        <span class="micro">SIGNAL</span>
+        <h2>PULSE 訊號</h2>
+        <div class="signal-list">
+          <div><span>Pulse Score</span><b>{{ game.pulse_score|round(1) }}</b></div>
+          <div><span>Twitch Viewers*</span><b>{{ "{:,}".format(game.twitch_viewers) if game.twitch_viewers is not none else '—' }}</b></div>
+          <div><span>Twitch Channels</span><b>{{ game.twitch_channels if game.twitch_channels is not none else '—' }}</b></div>
+          <div><span>Twitch Rank</span><b>{{ ('#' ~ game.twitch_rank) if game.twitch_rank else '—' }}</b></div>
+          <div><span>Steam CCU</span><b>{{ "{:,}".format(game.steam_players) if game.steam_players is not none else '—' }}</b></div>
+          <div><span>IGDB Rating</span><b>{{ game.rating|round(1) if game.rating else '—' }}</b></div>
+        </div>
+        <p class="signal-footnote">* Twitch Viewers 為該遊戲目前觀看人數最高的前 100 個直播頻道合計。</p>
+      </aside>
+    </section>
+
+    <section class="media-section trend-section">
+      <div class="detail-section-head trend-head">
+        <div><span class="micro">HISTORY</span><h2>熱度趨勢</h2></div>
+        <div class="trend-controls">
+          <div class="trend-switch" id="trendMetric">
+            <button class="active" data-metric="pulse_score">PULSE</button>
+            <button data-metric="twitch_viewers">Twitch</button>
+            <button data-metric="steam_players">Steam</button>
+          </div>
+          <div class="trend-switch" id="trendRange">
+            <button class="active" data-range="24h">24H</button>
+            <button data-range="7d">7D</button>
+            <button data-range="30d">30D</button>
+          </div>
+        </div>
+      </div>
+      <div class="history-chart-card">
+        <div class="history-chart-meta"><b id="trendCurrent">--</b><span id="trendSummary">歷史資料累積中</span></div>
+        <svg id="historyChart" class="history-chart" viewBox="0 0 900 280" role="img" aria-label="PULSE 歷史趨勢圖">
+          <line x1="48" y1="242" x2="876" y2="242" class="axis-line"></line>
+          <polyline id="historyLine" points="" class="history-line"></polyline>
+        </svg>
+        <div class="history-empty" id="historyEmpty">需要至少兩個更新快照才能畫出趨勢。</div>
+      </div>
+    </section>
+
+    <section class="media-section reviews-section">
+      <div class="detail-section-head reviews-head">
+        <div><span class="micro">RECENT REVIEWS</span><h2>Steam 近期玩家評論</h2></div>
+        <span id="reviewsSource">STEAM USER REVIEWS</span>
+      </div>
+      <div class="review-filter" id="reviewFilter" aria-label="評論篩選">
+        <button class="active" type="button" data-review-type="all">全部</button>
+        <button type="button" data-review-type="positive">👍 推薦</button>
+        <button type="button" data-review-type="negative">👎 不推薦</button>
+      </div>
+      <div id="gameReviewsList" class="game-reviews-list"><div class="detail-notice">正在讀取 Steam 近期評論…</div></div>
+      <p class="review-disclaimer">評論為 Steam 使用者內容，WAVESIG 僅顯示短摘錄；完整內容與最新狀態以 Steam 為準。</p>
+    </section>
+
+    <section class="media-section news-section">
+      <div class="detail-section-head">
+        <div><span class="micro">NEWS & UPDATES</span><h2>最新消息 / 更新</h2></div>
+        <span id="newsSource">新聞來源</span>
+      </div>
+      <div id="newsList" class="news-list"><div class="detail-notice">正在讀取最新消息…</div></div>
+    </section>
+    {% if game.screenshots %}
+    <section class="media-section">
+      <div class="detail-section-head">
+        <div><span class="micro">SCREENSHOTS</span><h2>遊戲畫面</h2></div>
+        <span>{{ game.screenshots|length }} 張</span>
+      </div>
+      <div class="screenshot-grid">
+        {% for image in game.screenshots %}
+          <a href="{{ image }}" target="_blank" rel="noopener noreferrer">
+            <img src="{{ image }}" alt="{{ game.title }} 遊戲截圖" loading="lazy">
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    {% if game.videos %}
+    <section class="media-section">
+      <div class="detail-section-head">
+        <div><span class="micro">VIDEOS</span><h2>Trailer / Video</h2></div>
+      </div>
+      <div class="video-grid">
+        {% for video in game.videos[:2] %}
+          <article class="video-card">
+            <div class="video-frame">
+              <iframe src="{{ video.embed_url }}" title="{{ video.name }}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            </div>
+            <div class="video-title">{{ video.name }}</div>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+  </main>
+
+  <footer>
+    <div><b>WAVESIG</b><p>近日熱門・新上市・跨平台遊戲播報</p></div>
+    <p>資料與商標屬各自權利人所有。PULSE Score 為 WAVESIG 自訂指標。</p>
+  </footer>
+  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/game_detail.js') }}"></script>
+</body>
+</html>

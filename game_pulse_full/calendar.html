@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="WAVESIG 遊戲發售日曆">
+  <title>發售日曆｜WAVESIG</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='branding/favicon.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='branding/wavesig-icon-512.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/logo-branding.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/calendar.css') }}">
+</head>
+<body class="subpage">
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+
+  <header class="nav">
+    <a class="logo" href="{{ url_for('index') }}">
+      <img class="logo-image" src="{{ url_for('static', filename='branding/wavesig-mark.png') }}" alt="WAVESIG logo">
+      <span class="logo-copy"><b>WAVESIG</b><small>遊戲熱度偵測與解讀</small></span>
+    </a>
+    <nav class="nav-links">
+      <a class="nav-page-link" href="{{ url_for('index') }}#games">熱門榜</a>
+      <a class="nav-page-link active" href="{{ url_for('release_calendar_page') }}">發售日曆</a>
+      <a class="nav-page-link notify-link" href="{{ url_for('notifications_page') }}">通知 <span id="notificationBadge" class="notification-badge">0</span></a>
+    </nav>
+    <div class="mode-badge {{ 'live' if mode == 'live' else 'demo' }}">{{ '● LIVE DATA' if mode == 'live' else '● DEMO MODE' }}</div>
+  </header>
+  <nav class="subpage-mobile-nav" aria-label="手機頁面導覽">
+    <a href="{{ url_for('index') }}#games">🏆 熱門</a>
+    <a href="{{ url_for('release_calendar_page') }}">📅 日曆</a>
+    <a href="{{ url_for('notifications_page') }}">🔔 通知</a>
+  </nav>
+
+  <main class="calendar-shell">
+    <section class="calendar-hero">
+      <div>
+        <span class="micro">RELEASE CALENDAR</span>
+        <h1>遊戲發售日曆</h1>
+        <p>把近日上市與即將推出整理成月份視圖，快速查看 PC、PlayStation、Xbox 與 Nintendo 的發售安排。</p>
+      </div>
+      <div class="calendar-controls">
+        <button id="prevMonth" type="button">←</button>
+        <strong id="monthTitle">--</strong>
+        <button id="nextMonth" type="button">→</button>
+        <select id="calendarPlatform">
+          <option value="all">全部平台</option>
+          <option value="pc">PC</option>
+          <option value="playstation">PlayStation</option>
+          <option value="xbox">Xbox</option>
+          <option value="nintendo">Nintendo</option>
+        </select>
+      </div>
+    </section>
+
+    <p class="calendar-mobile-hint">手機版可左右滑動月份格；想快速找作品，也可以直接看下方「本月作品」。</p>
+
+    <section class="calendar-card">
+      <div class="weekday-row"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+      <div id="calendarGrid" class="calendar-grid"></div>
+    </section>
+
+    <section class="calendar-list-section">
+      <div class="detail-section-head">
+        <div><span class="micro">THIS MONTH</span><h2>本月作品</h2></div>
+        <span id="calendarCount">0 款</span>
+      </div>
+      <div id="calendarList" class="calendar-list"></div>
+      <p class="calendar-note">目前日曆使用 WAVESIG 已同步的「近日上市 + 即將推出」資料；超出目前同步範圍的月份可能暫時沒有資料。</p>
+    </section>
+  </main>
+
+  <footer>
+    <div><b>WAVESIG</b><p>近日熱門・新上市・跨平台遊戲播報</p></div>
+    <p>發售日期以資料來源最新同步內容為準。</p>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
+</body>
+</html>

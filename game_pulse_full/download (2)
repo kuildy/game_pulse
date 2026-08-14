@@ -1,0 +1,12 @@
+.env
+container.env
+.venv/
+__pycache__/
+*.py[cod]
+logs/
+run/
+
+# SQLite is runtime data. Never commit a live or demo database to GitHub.
+data/*.db
+data/*.db-shm
+data/*.db-wal

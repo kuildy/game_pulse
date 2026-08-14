@@ -1,6 +1,8 @@
 # GAME PULSE
 跨平台「近日熱門 / 新上市 / 即將推出」遊戲播報網站。
 
+Synology DS220j 安裝方式請看 `NAS_SETUP_DS220J_ZH-TW.md`。
+
 ## 你已經拿到的功能
 
 - Flask 後端
@@ -13,8 +15,6 @@
 - IGDB PopScore 熱門 primitives
 - Twitch Top Games
 - Steam current players（IGDB 能取得 Steam App ID 時）
-- YouTube 近期遊戲影片與觀看互動快照（選配 API Key）
-- Wikipedia 條目每日瀏覽量快照（免 API Key）
 - Steam / Epic / GOG / PlayStation / Xbox / Nintendo / 官方網站入口
 - 沒有 API Key 也能跑的 Demo Mode
 - 手動更新與每 3 小時更新工具
@@ -60,27 +60,6 @@ IGDB API 使用 Twitch Developer Application 的 Client ID / Secret。
 重新整理網站後，右上角應該會變成：
 
     LIVE DATA
-
-### YouTube、Wikipedia 社群訊號
-
-在 `.env` 設定下列選配欄位：
-
-    YOUTUBE_API_KEY=你的YouTubeDataAPIKey
-
-Wikipedia 不需要金鑰。每次排程更新只會針對熱門榜前 20 款蒐集，且同一來源 24 小時內使用 SQLite 快取，適合資源較小的 NAS。可用下列環境變數調整：
-
-    SOCIAL_SIGNAL_LIMIT=20
-    SOCIAL_SIGNAL_TTL_HOURS=24
-    SOCIAL_SIGNAL_WINDOW_HOURS=48
-
-兩個來源目前只累積獨立快照，不會改動 PULSE 排名。單款遊戲的最新訊號可由以下 API 查詢：
-
-    GET /api/game/<game_key-or-slug>/social
-    GET /api/game/<game_key-or-slug>/social?history=7
-
-完整的申請與 Render 設定步驟請看 `API_SETUP_ZH-TW.md`。
-
----
 
 # 3. 自動每 3 小時更新
 
@@ -162,7 +141,6 @@ B. 「去哪裡玩 / 買」
     ├─ db.py
     ├─ requirements.txt
     ├─ .env.example
-    ├─ API_SETUP_ZH-TW.md
     ├─ start.bat
     ├─ update_now.bat
     ├─ auto_update_3h.bat
@@ -171,10 +149,7 @@ B. 「去哪裡玩 / 買」
     │  ├─ aggregator.py
     │  ├─ igdb.py
     │  ├─ twitch.py
-    │  ├─ steam.py
-    │  ├─ youtube.py
-    │  ├─ wikipedia.py
-    │  └─ social_signals.py
+    │  └─ steam.py
     ├─ scripts/
     │  └─ update_games.py
     ├─ templates/
@@ -183,7 +158,7 @@ B. 「去哪裡玩 / 買」
     │  ├─ css/style.css
     │  └─ js/app.js
     └─ data/
-       └─ game_pulse.db
+       └─ game_pulse.db  # 啟動後自動建立，不放進 GitHub
 
 ---
 
