@@ -452,8 +452,6 @@ async function loadStatus(){
       { key:"IGDB", label:"IGDB", description:"遊戲資訊・發售日期・平台資料" },
       { key:"Twitch", label:"Twitch", description:"即時觀看・熱門趨勢" },
       { key:"Steam", label:"Steam", description:"即時玩家・遊戲消息" },
-      { key:"YouTube", label:"YouTube", description:"近期遊戲影片・觀看互動" },
-      { key:"Wikipedia", label:"Wikipedia", description:"百科條目・每日瀏覽量" },
     ];
 
     const statusText = status => ({
@@ -483,7 +481,7 @@ async function loadStatus(){
         <p>${escapeHtml(s.description)} · ${escapeHtml(statusText(s.status))}</p>
       </div>`).join("");
 
-    $("#lastStatus").textContent = live ? "5 DATA SOURCES" : "DEMO DATA";
+    $("#lastStatus").textContent = live ? "3 DATA SOURCES" : "DEMO DATA";
   }catch(e){
     const badge = $("#modeBadge");
     if(badge){
@@ -494,9 +492,7 @@ async function loadStatus(){
     if($("#sourceStatus")) $("#sourceStatus").innerHTML = [
       ["IGDB","遊戲資訊・發售日期・平台資料"],
       ["Twitch","即時觀看・熱門趨勢"],
-      ["Steam","即時玩家・遊戲消息"],
-      ["YouTube","近期遊戲影片・觀看互動"],
-      ["Wikipedia","百科條目・每日瀏覽量"]
+      ["Steam","即時玩家・遊戲消息"]
     ].map(([name,description])=>`<div class="source-card"><div class="head"><b>${name}</b><i class="status-dot error"></i></div><p>${description} · 暫時無法確認</p></div>`).join("");
   }
 }
@@ -583,6 +579,35 @@ async function loadRecentReviews(){
   }catch(_){
     grid.innerHTML = `<div class="recent-reviews-empty">近期評論暫時無法讀取，其他遊戲資料仍可正常瀏覽。</div>`;
     if(note) note.textContent = "Steam 評論來源暫時無法連線。";
+  }
+}
+
+function fourGamersNewsCard(article){
+  const published = article.published_at
+    ? new Date(article.published_at).toLocaleString("zh-TW", {month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit"})
+    : "";
+  return `<article class="fourgamers-news-card">
+    <div class="fourgamers-news-meta"><span>4GAMERS</span><time>${escapeHtml(published)}</time></div>
+    <h3>${escapeHtml(article.title || "4Gamers 遊戲新聞")}</h3>
+    <p>${escapeHtml(article.contents || "")}</p>
+    <a href="${escapeHtml(article.url || "https://www.4gamers.com.tw/news")}" target="_blank" rel="noopener noreferrer">前往 4Gamers 閱讀原文 ↗</a>
+  </article>`;
+}
+
+async function loadFourGamersNews(){
+  const section = $("#news4gamers");
+  const grid = $("#fourGamersNewsGrid");
+  if(!section || !grid) return;
+  try{
+    const data = await fetchJsonCached("/api/news/4gamers?limit=6", 300000);
+    const rows = Array.isArray(data.news) ? data.news : [];
+    if(!rows.length){
+      section.hidden = true;
+      return;
+    }
+    grid.innerHTML = rows.map(fourGamersNewsCard).join("");
+  }catch(_){
+    section.hidden = true;
   }
 }
 
@@ -707,4 +732,5 @@ loadTodaySummary();
 loadRadar();
 loadWhy();
 loadRecentReviews();
+loadFourGamersNews();
 loadSection("hot");
