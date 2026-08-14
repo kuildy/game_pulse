@@ -1,6 +1,7 @@
 import os
 import re
 import secrets
+import sqlite3
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -36,6 +37,7 @@ from db import (
     list_watch_subscriptions,
     mark_notification_read,
     mark_live_sources_refreshing,
+    recover_corrupt_database,
     set_source_status,
     upsert_twitch_override,
     upsert_watch_subscription,
@@ -91,8 +93,34 @@ def _start_background_refresh():
             set_source_status("Updater", "refreshing", "背景資料更新進行中")
             refresh_all()
             set_source_status("Updater", "ok", "背景資料更新完成")
+        except sqlite3.DatabaseError as exc:
+            recovered = False
+            try:
+                recovered = recover_corrupt_database(exc)
+            except Exception as recovery_exc:
+                print(f"WAVESIG SQLite recovery failed: {recovery_exc}", flush=True)
+
+            if recovered:
+                # Retry only once. If an external API or another DB write fails,
+                # keep the rebuilt database healthy and report the error.
+                try:
+                    set_source_status("Updater", "refreshing", "資料庫已重建，正在重新同步")
+                    refresh_all()
+                    set_source_status("Updater", "ok", "資料庫已重建並完成同步")
+                except Exception as retry_exc:
+                    try:
+                        set_source_status("Updater", "error", f"重新同步失敗：{str(retry_exc)[:160]}")
+                    except Exception:
+                        pass
+                    print(f"WAVESIG refresh retry failed: {retry_exc}", flush=True)
+            else:
+                print(f"WAVESIG database error: {exc}", flush=True)
         except Exception as exc:
-            set_source_status("Updater", "error", f"背景更新失敗：{str(exc)[:180]}")
+            try:
+                set_source_status("Updater", "error", f"背景更新失敗：{str(exc)[:180]}")
+            except Exception:
+                # Never let status reporting hide the original updater failure.
+                pass
             print("WAVESIG background refresh failed:", exc, flush=True)
         finally:
             _REFRESH_LOCK.release()

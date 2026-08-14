@@ -1,6 +1,8 @@
 import json
 import math
+import os
 import sqlite3
+import threading
 from datetime import datetime, timedelta, timezone
 
 from config import DATABASE_PATH
@@ -106,6 +108,14 @@ CREATE TABLE IF NOT EXISTS twitch_overrides (
 """
 
 
+_DB_RECOVERY_LOCK = threading.RLock()
+_CORRUPTION_MARKERS = (
+    "database disk image is malformed",
+    "file is not a database",
+    "file is encrypted or is not a database",
+)
+
+
 class _ClosingConnection(sqlite3.Connection):
     """Commit/rollback and then really close a ``with connect()`` connection.
 
@@ -131,17 +141,61 @@ def connect():
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA busy_timeout=3000")
     conn.execute("PRAGMA foreign_keys=ON")
+    if os.getenv("RENDER"):
+        # Render uses an ephemeral local database and one Gunicorn worker. FULL
+        # durability plus the rollback journal is slower than WAL, but avoids a
+        # damaged WAL leaving every public API unusable after a background sync.
+        conn.execute("PRAGMA synchronous=FULL")
     return conn
 
 
-def init_db():
+def is_database_corruption(error):
+    message = str(error or "").casefold()
+    return any(marker in message for marker in _CORRUPTION_MARKERS)
+
+
+def _database_is_healthy():
+    if not DATABASE_PATH.exists():
+        return True
+    try:
+        conn = sqlite3.connect(DATABASE_PATH, timeout=3)
+        try:
+            row = conn.execute("PRAGMA quick_check").fetchone()
+            return bool(row and str(row[0]).casefold() == "ok")
+        finally:
+            conn.close()
+    except sqlite3.DatabaseError as exc:
+        if is_database_corruption(exc):
+            return False
+        raise
+
+
+def _quarantine_database():
+    """Move a damaged DB and its sidecars aside instead of deleting user data."""
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    moved = []
+    for suffix in ("", "-wal", "-shm", "-journal"):
+        path = DATABASE_PATH.parent / f"{DATABASE_PATH.name}{suffix}"
+        if not path.exists():
+            continue
+        target = path.with_name(f"{path.name}.corrupt-{stamp}")
+        os.replace(path, target)
+        moved.append(str(target))
+    return moved
+
+
+def _initialize_database():
     with connect() as conn:
-        # WAL lets public API reads continue while the background refresh writes
-        # a new snapshot. This is essential when Flask and the updater share one
-        # SQLite database on Render or a NAS.
-        conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA synchronous=NORMAL")
-        conn.execute("PRAGMA wal_autocheckpoint=1000")
+        if os.getenv("RENDER"):
+            # Render has one worker and an ephemeral DB. A rollback journal is
+            # more conservative here and a fresh deploy does not need WAL files.
+            conn.execute("PRAGMA journal_mode=DELETE")
+            conn.execute("PRAGMA synchronous=FULL")
+        else:
+            # NAS deployments keep WAL so reads can continue during a refresh.
+            conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute("PRAGMA synchronous=NORMAL")
+            conn.execute("PRAGMA wal_autocheckpoint=1000")
         conn.executescript(SCHEMA)
 
         # Lightweight migration for users who already have the older DB.
@@ -170,6 +224,36 @@ def init_db():
     # at every startup, so deploying the filter also cleans an existing SQLite
     # database even when the next external API refresh is temporarily offline.
     purge_excluded_twitch_categories()
+
+
+def init_db():
+    """Initialize SQLite and rebuild it safely if an existing image is corrupt."""
+    with _DB_RECOVERY_LOCK:
+        if not _database_is_healthy():
+            moved = _quarantine_database()
+            print(f"WAVESIG quarantined corrupt SQLite files: {len(moved)}", flush=True)
+        try:
+            _initialize_database()
+        except sqlite3.DatabaseError as exc:
+            if not is_database_corruption(exc):
+                raise
+            moved = _quarantine_database()
+            print(f"WAVESIG rebuilt corrupt SQLite database: {len(moved)}", flush=True)
+            _initialize_database()
+
+
+def recover_corrupt_database(error=None):
+    """Recover a DB damaged while the background updater was running."""
+    if error is not None and not is_database_corruption(error):
+        return False
+    with _DB_RECOVERY_LOCK:
+        # Another request/thread may already have completed the recovery.
+        if _database_is_healthy():
+            return False
+        moved = _quarantine_database()
+        _initialize_database()
+        print(f"WAVESIG recovered SQLite database: {len(moved)} file(s) moved", flush=True)
+        return True
 
 
 def purge_excluded_twitch_categories():
