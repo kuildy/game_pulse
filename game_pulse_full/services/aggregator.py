@@ -8,7 +8,6 @@ from urllib.parse import quote_plus
 from config import (
     HOT_LIMIT,
     RECENT_LIMIT,
-    SOCIAL_SIGNAL_LIMIT,
     UPCOMING_LIMIT,
     STEAM_WEB_API_KEY,
     effective_mode
@@ -22,7 +21,6 @@ from services.igdb import IGDBClient
 from services.twitch import TwitchClient
 from services.steam import current_players_many
 from services.notifications import evaluate_notifications
-from services.social_signals import refresh_social_signals
 
 def norm_title(value):
     value = unicodedata.normalize("NFKD", value or "")
@@ -195,7 +193,7 @@ def finish_record(game, section, score=0, sources=None):
         "rating": game.get("rating"),
     }
 
-def refresh_live(include_social=True):
+def refresh_live():
     igdb = IGDBClient()
     twitch = TwitchClient()
 
@@ -578,11 +576,6 @@ def refresh_live(include_social=True):
     hot_records.sort(key=lambda x: x["pulse_score"], reverse=True)
     replace_section("hot", hot_records[:HOT_LIMIT])
 
-    # YouTube / Wikipedia are stored as independent historical signals.
-    # They deliberately do not affect PULSE until enough baseline data exists.
-    if include_social:
-        refresh_social_signals(hot_records[:min(HOT_LIMIT, SOCIAL_SIGNAL_LIMIT)])
-
     # 2) 近日上市：過去 30 天
     now = datetime.now(timezone.utc)
     try:
@@ -661,11 +654,11 @@ def refresh_demo():
     ]
     replace_section("upcoming", [finish_record({**g,"direct_links":{}}, "upcoming", 65-i*5, ["Demo"]) for i,g in enumerate(demo_up)])
 
-    for source in ("IGDB", "Twitch", "Steam", "YouTube", "Wikipedia"):
+    for source in ("IGDB", "Twitch", "Steam"):
         set_source_status(source, "demo", "尚未設定 API 金鑰，目前使用示範資料")
 
-def refresh_all(include_social=True):
+def refresh_all():
     if effective_mode() == "live":
-        refresh_live(include_social=include_social)
+        refresh_live()
     else:
         refresh_demo()
